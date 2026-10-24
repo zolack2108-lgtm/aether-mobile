@@ -259,6 +259,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
       <div><h3>Scan du corps · option</h3>
         <p class="sub">Deux photos en pied (demande à quelqu'un ou mets un minuteur) : <b>de face, bras écartés à l'horizontale</b>, puis <b>de profil</b>. L'appli estime ta carrure et tes proportions sur ton téléphone. Les photos ne sont ni gardées ni envoyées.</p></div>
       <label class="field" for="cm"><span>Ta taille réelle <em>en cm, conseillé</em></span><input id="cm" type="number" inputmode="numeric" min="120" max="230" step="1" placeholder="ex. 175" autocomplete="off"></label>
+      <label class="field" for="kg"><span>Ton poids <em>en kg, facultatif</em></span><input id="kg" type="number" inputmode="numeric" min="35" max="250" step="1" placeholder="ex. 70 : sinon il est estimé" autocomplete="off"></label>
       <p class="note">Une photo seule ne donne pas l'échelle : sans ta taille, l'avatar garde sa taille actuelle et seules les proportions sont estimées.</p>
       <div class="shots">
         <div class="shot" id="shotF"><div class="pic"><svg viewBox="0 0 60 80" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="30" cy="12" r="6"/><path d="M30 19v26M6 24h48M30 45l-8 28M30 45l8 28"/></svg><canvas id="cvF" hidden></canvas></div><span>De face, bras en T</span><label class="btn" for="fileF">Photo de face</label></div>
@@ -1200,6 +1201,8 @@ function frontMeasure(R){
   if(mk)[top,bot]=extentY(mk,W,H,cx,W*.06);
   if(top==null&&nose)top=nose[1]-(ank?(ank[1]-nose[1])*.14:0);
   if(bot==null&&ank)bot=ank[1]+(ank[1]-(nose?nose[1]:top))*.045;
+  // échelle verticale par le squelette (nez → chevilles ≈ 87 % de la taille) : le détourage seul déborde souvent (ombre, objets autour)
+  if(nose&&ank&&ank[1]-nose[1]>H*.3){const Hk=(ank[1]-nose[1])/.87;if(top==null||bot==null||Math.abs((bot-top)-Hk)>Hk*.08){top=nose[1]-.09*Hk;bot=top+Hk}}
   if(top==null||bot==null||bot-top<H*.35)return null;           // personne pas visible en entier
   const Hp=bot-top,o={Hp,kp:!!kp,mk:!!mk};
   if(kp&&kp.leftShoulder&&kp.rightShoulder)o.sh=Math.hypot(kp.leftShoulder[0]-kp.rightShoulder[0],kp.leftShoulder[1]-kp.rightShoulder[1])/Hp;
@@ -1229,17 +1232,20 @@ function sideMeasure(R){
 }
 const clamp1=v=>Math.max(-1,Math.min(1,v)),third=v=>Math.round(clamp1(v)*3)/3;
 // estimation : tour de taille ≈ ellipse (largeur de face × profondeur de profil), rapporté à la taille → corpulence
-function bodyEstimate(F,Sd,cm){
+function bodyEstimate(F,Sd,cm,kg){
   const e={b:A.unpackBody(look.body)};
   if(F&&F.waistW){   // les vêtements ajoutent de l'épaisseur : on retire une marge (t-shirt ample, plis)
     const a=F.waistW*.93/2,b=(Sd&&Sd.waistD?(Sd.waistD*.6+Sd.bellyD*.4)*.92:F.waistW*.68)/2;
-    const whtr=Math.PI*(3*(a+b)-Math.sqrt((3*a+b)*(a+3*b)))*1.03;e.whtr=whtr;e.bmi=Math.max(16,Math.min(42,52*whtr-1.5));e.b.bd=third((e.bmi-23)/5.5)}
+    const whtr=Math.PI*(3*(a+b)-Math.sqrt((3*a+b)*(a+3*b)))*1.03;e.whtr=whtr;
+    // une photo habillée exagère toujours un peu : on reste prudent (rapproché de la moyenne, plafonné)
+    const raw=Math.max(16,Math.min(40,52*whtr-1.5));e.bmi=Math.max(17,Math.min(33,22.5+(raw-22.5)*.55));e.b.bd=third((e.bmi-23)/5.5)}
+  if(cm&&kg){const m=cm/100;e.bmi=kg/(m*m);e.kgGiven=kg;e.b.bd=third((e.bmi-23)/5.5)}   // poids indiqué : il fait foi
   const bd=e.b.bd||0;
   // repères moyens (adulte) : épaules (points des articulations) ≈ 0,197 × taille, hanches (silhouette habillée) ≈ 0,205, hanche → cheville ≈ 0,475
   if(F&&F.sh)e.b.sh=third((F.sh-.197)/.016-.4*bd);
   if(F&&F.hipW)e.b.hp=third((F.hipW-.205)/.018-.8*bd);
   if(F&&F.leg)e.b.lg=third((F.leg-.475)/.02);
-  if(cm&&e.bmi){const m=cm/100;e.kg=[Math.round(e.bmi*m*m*.91),Math.round(e.bmi*m*m*1.09)]}
+  if(cm&&e.bmi&&!e.kgGiven){const m=cm/100;e.kg=[Math.round(e.bmi*m*m*.92),Math.round(e.bmi*m*m*1.08)]}
   return e;
 }
 // dessin : silhouette pleine (pas la photo) + squelette + lignes de mesure
@@ -1259,12 +1265,12 @@ function bodyChips(e,cm){
   const box=$("bFound");box.innerHTML="";
   const add=(k,v,cls)=>{const s=document.createElement("span");s.className="chip"+(cls?" "+cls:"");s.append(k+" : ");const b=document.createElement("b");b.textContent=v;s.append(b);box.append(s)};
   add("Taille",cm?cm+" cm (indiquée)":"non indiquée, avatar inchangé");
-  if(e.kg)add("Poids estimé",e.kg[0]+" à "+e.kg[1]+" kg","est");
+  if(e.kgGiven)add("Poids",e.kgGiven+" kg (indiqué)");else if(e.kg)add("Poids estimé",e.kg[0]+" à "+e.kg[1]+" kg","est");
   const b=A.unpackBody(look.body),nm=(k)=>A.BODY_NAMES[k][Math.round(b[k]*3)+3].toLowerCase();
   add("Corpulence",nm("bd"));add("Épaules",nm("sh"));add("Hanches",nm("hp"));add("Jambes",nm("lg"));
 }
 function bodyApply(){
-  const cm=+$("cm").value||0,e=bodyEstimate(BODY.f,BODY.s,cm>=120&&cm<=230?cm:0);
+  const cm=+$("cm").value||0,kg=+$("kg").value||0,e=bodyEstimate(BODY.f,BODY.s,cm>=120&&cm<=230?cm:0,kg>=35&&kg<=250?kg:0);
   look.body=A.packBody(e.b);if(cm>=120&&cm<=230)look.height=hOf(hIndex(cm/REF_CM));
   refresh();setView("body");bodyChips(e,cm>=120&&cm<=230?cm:0);
   return e;
@@ -1292,6 +1298,8 @@ async function onBodyFile(e,side){
 $("fileF").onchange=e=>onBodyFile(e,false);$("fileS").onchange=e=>onBodyFile(e,true);
 $("cm").onchange=()=>{const v=+$("cm").value;if(v>=120&&v<=230){store("am_cm",String(Math.round(v)));if(BODY.f||BODY.s)bodyApply();else{look.height=hOf(hIndex(v/REF_CM));refresh()}}else if($("cm").value)toast("Taille entre 120 et 230 cm")};
 {const c=load("am_cm");if(c)$("cm").value=c}
+$("kg").onchange=()=>{const v=+$("kg").value;if(v>=35&&v<=250){store("am_kg",String(Math.round(v)));if(BODY.f||BODY.s)bodyApply();else if(+$("cm").value){const m=+$("cm").value/100,bm=A.unpackBody(look.body);bm.bd=third((v/(m*m)-23)/5.5);look.body=A.packBody(bm);refresh()}}else if($("kg").value)toast("Poids entre 35 et 250 kg")};
+{const k=load("am_kg");if(k)$("kg").value=k}
 
 // ---------- onglets ----------
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
