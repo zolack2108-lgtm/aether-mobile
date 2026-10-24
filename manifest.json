@@ -1,0 +1,1 @@
+{"name": "Aether Mobile", "short_name": "Aether", "start_url": ".", "display": "standalone", "background_color": "#080d1c", "theme_color": "#080d1c", "lang": "fr", "icons": [{"src": "icone-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icone-512.png", "sizes": "512x512", "type": "image/png"}]}

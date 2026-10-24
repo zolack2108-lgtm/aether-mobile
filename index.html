@@ -1,0 +1,1450 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080d1c"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="manifest" href="manifest.json"><link rel="icon" href="icone-192.png"><link rel="apple-touch-icon" href="icone-192.png"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style></head><body><title>Aether Mobile</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Une appli de poche du royaume : nuit bleu profond, verre sombre, liserés de cristal, accents d'or.
+   Une colonne, onglets en bas, scène 3D en tête. */
+:root{
+  --night:#080d1c; --night-2:#0f1730; --glass:#141f3dcc; --glass-2:#0d1530; --line:#2c3b66; --line-2:#3f5291;
+  --text:#ecf0fa; --muted:#93a0c4; --gold:#f1cf7a; --gold-2:#b98a35; --crystal:#7cc4ff; --ok:#6fe0a0; --warn:#ff8f7f;
+  --display:"Cinzel","Marcellus SC",Georgia,serif; --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--night);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent;
+  background-image:radial-gradient(ellipse 120% 55% at 50% -12%,#22336a 0%,transparent 60%),radial-gradient(1px 1px at 12% 18%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 78% 9%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 55% 27%,#fff7 50%,transparent 51%),radial-gradient(1px 1px at 33% 40%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 88% 36%,#fff6 50%,transparent 51%),radial-gradient(1px 1px at 22% 62%,#fff4 50%,transparent 51%);
+  background-attachment:fixed}
+button,input,select{font:inherit;color:inherit}
+.app{max-width:540px;margin:0 auto;display:flex;flex-direction:column;gap:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 104px}
+
+/* ---------- écran de chargement ---------- */
+#splash{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 40%,#16244d 0%,var(--night) 70%);transition:opacity .6s ease,visibility .6s}
+#splash.done{opacity:0;visibility:hidden}
+.sp{display:flex;flex-direction:column;align-items:center;gap:18px;padding:24px;text-align:center}
+.sp-emb{position:relative;width:150px;height:170px}
+.sp-emb svg.emb{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 0 22px #4a8fe099);animation:float 3.2s ease-in-out infinite}
+.sp-ring{position:absolute;left:50%;top:44%;width:190px;height:52px;margin:-26px 0 0 -95px;border-radius:50%;border:2px solid transparent;border-top-color:var(--gold);border-right-color:#f1cf7a55;animation:orbit 1.6s linear infinite;transform:rotate(-14deg)}
+.sp-ring.b{width:220px;height:62px;margin:-31px 0 0 -110px;border-top-color:transparent;border-bottom-color:var(--crystal);animation-duration:2.4s;animation-direction:reverse;opacity:.6}
+@keyframes orbit{to{transform:rotate(346deg)}}
+@keyframes float{50%{transform:translateY(-7px)}}
+.sp .wordmark{font-size:34px}
+.bar{width:220px;height:4px;border-radius:4px;background:#1c2950;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--crystal),var(--gold));border-radius:4px;transition:width .25s ease}
+.sp-txt{font-size:13px;color:var(--muted);min-height:1.4em}
+@media (prefers-reduced-motion:reduce){.sp-ring,.sp-emb svg.emb{animation:none}}
+
+/* ---------- en-tête ---------- */
+header{display:flex;align-items:center;gap:12px;padding-block:6px 2px}
+header svg.emb{width:46px;height:54px;flex:none;filter:drop-shadow(0 0 10px #4a8fe066)}
+.wordmark{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.16em;line-height:1;background:linear-gradient(180deg,#fff0c2 0%,#f1cf7a 55%,#b98a35 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.wordmark small{display:block;font-family:var(--body);font-weight:500;font-size:10.5px;letter-spacing:.34em;color:var(--crystal);-webkit-text-fill-color:var(--crystal);margin-top:5px;text-transform:uppercase}
+.who{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-width:0}
+.who img{width:30px;height:30px;border-radius:50%;border:1px solid var(--line)}
+.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px}
+
+h2{font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.07em;margin:0;text-wrap:balance;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:7px;height:7px;background:var(--gold);transform:rotate(45deg);box-shadow:0 0 8px #f1cf7a88;flex:none}
+h3{margin:0;font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.sub{color:var(--muted);font-size:13.5px;margin:4px 0 0}
+section[data-tab]{display:flex;flex-direction:column;gap:16px}
+.card{position:relative;background:linear-gradient(180deg,#18244699,#0e1630ee);border:1px solid #33437599;border-radius:18px;padding:16px;box-shadow:inset 0 0 40px #3a5bd81a,0 10px 30px #0007;display:flex;flex-direction:column;gap:14px}
+.card::before{content:"";position:absolute;top:-1px;left:30%;right:30%;height:1px;background:linear-gradient(90deg,transparent,#f1cf7acc,transparent)}
+
+/* ---------- scène 3D ---------- */
+.stage{position:relative;height:min(62vh,440px);min-height:330px;border-radius:20px;overflow:hidden;border:1px solid #33437599;
+  background:radial-gradient(ellipse 70% 50% at 50% 92%,#2a3d78 0%,transparent 70%),radial-gradient(ellipse at 50% 30%,#141f42 0%,#0a1024 75%);box-shadow:inset 0 0 70px #4a8fe022,0 12px 34px #0008}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.stage .top{position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;pointer-events:none}
+.badge{font-family:var(--mono);font-size:12px;padding:5px 10px;border-radius:999px;background:#0a1024cc;border:1px solid var(--line);color:var(--gold);pointer-events:auto}
+.views{display:flex;gap:4px;padding:3px;border-radius:999px;background:#0a1024cc;border:1px solid var(--line);pointer-events:auto}
+.views button{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;cursor:pointer}
+.views button[aria-pressed=true]{background:#24346a;color:var(--text)}
+.stage .hint{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:12px;color:var(--muted);pointer-events:none}
+.stage .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px}
+
+/* ---------- photo ---------- */
+.photo{display:grid;grid-template-columns:128px 1fr;gap:14px;align-items:start}
+.frame{position:relative;width:128px;aspect-ratio:4/5;max-width:100%;border-radius:14px;overflow:hidden;border:1px dashed var(--line-2);background:#0b1228;display:grid;place-items:center;color:var(--muted);font-size:12px;text-align:center}
+.frame canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.frame .scan{position:absolute;left:0;right:0;height:38%;top:-40%;background:linear-gradient(180deg,transparent,#7cc4ff44 70%,#bfe6ff 100%);border-bottom:1px solid #d6efff;pointer-events:none;opacity:0}
+.frame.scanning .scan{opacity:1;animation:scan 1.1s ease-in-out infinite}
+@keyframes scan{0%{top:-40%}100%{top:102%}}
+.photo p{margin:0;font-size:13.5px;color:var(--muted)}
+.photo.has{grid-template-columns:1fr}.photo.has .frame{width:100%;aspect-ratio:4/3;border-style:solid}
+.photo .col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.found{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;padding:4px 10px;border-radius:999px;background:#0b1228;border:1px solid var(--line);color:var(--muted)}
+.chip b{color:var(--text);font-weight:600}
+.chip.warn{color:var(--warn);border-color:#7a3a35}
+.status{font-size:12.5px;color:var(--crystal);min-height:1.3em}
+.aitog{display:flex;gap:10px;align-items:flex-start;text-align:left;background:#0b1228;border:1px solid var(--line);border-radius:12px;padding:9px 11px;color:var(--muted);font:inherit;font-size:12.5px;line-height:1.4;cursor:pointer}
+.aitog b{color:var(--text);font-weight:600}
+.aitog .sw2{flex:none;width:30px;height:18px;border-radius:9px;background:#26304f;position:relative;margin-top:1px;transition:background .2s}
+.aitog .sw2::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#8b96b8;transition:transform .2s,background .2s}
+.aitog[aria-pressed=true] .sw2{background:#2a5f9e}.aitog[aria-pressed=true] .sw2::after{transform:translateX(12px);background:#d6efff}
+.ai-run{display:inline-flex;align-items:center;gap:8px}.ai-run::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid #7cc4ff55;border-top-color:#d6efff;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.chip.ai{border-color:#4a3a7a;background:linear-gradient(90deg,#1a1640,#0b1228)}.chip.ai b{color:#e6dcff}
+/* ---------- scan du corps ---------- */
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shot{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px;border:1px dashed var(--line-2);border-radius:14px;background:#0b1228;text-align:center;font-size:12.5px;color:var(--muted);min-width:0}
+.shot .pic{position:relative;aspect-ratio:3/4;display:grid;place-items:center;border-radius:10px;background:radial-gradient(ellipse at 50% 40%,#16244d,#0a1024 75%);overflow:hidden;color:#5f74b3}
+.shot .pic svg{width:44%;height:auto}
+.shot canvas{position:absolute;inset:0;width:100%;height:100%}
+.shot.done{border-style:solid;border-color:#3f529199}
+.shot .btn{padding:8px 10px;font-size:13px}
+input[type=number]{font:500 15px var(--body);color:var(--text);background:#0b1228;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0;width:100%}
+.found .chip.est b{color:var(--gold)}
+
+/* ---------- boutons et contrôles ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:14px;border-radius:12px;border:1px solid var(--line-2);background:#1b2850;color:var(--text);padding:10px 14px;cursor:pointer;text-transform:none;letter-spacing:0}
+.btn:hover{border-color:var(--crystal)}
+.btn.primary{background:linear-gradient(180deg,#f8e2a0,#d9ae4f);color:#1b1406;border-color:#f1cf7a;box-shadow:0 4px 16px #d9ae4f33}
+.btn:disabled{opacity:.5;cursor:default}
+.btn svg{width:18px;height:18px}
+:focus-visible{outline:2px solid var(--crystal);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.group{display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid #2c3b6655}
+.group:first-of-type{border-top:0;padding-top:0}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.field>span{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.field>span em{font-style:normal;color:var(--text);font-weight:600}
+input[type=text]{font:500 15px var(--body);color:var(--text);background:#0b1228;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0;width:100%}
+.swatches{display:flex;gap:7px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid #0b1228;box-shadow:0 0 0 1px var(--line);padding:0;cursor:pointer;transition:transform .12s}
+.sw[aria-pressed=true]{box-shadow:0 0 0 2px var(--gold);transform:scale(1.08)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:#0b1228;color:var(--muted);font-size:13px;font-weight:500;padding:6px 11px;border-radius:999px;cursor:pointer}
+.pill[aria-pressed=true]{border-color:var(--gold);color:var(--text);background:#2a2412}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);background:#0b1228;border-radius:12px;padding:9px 12px;cursor:pointer;font-size:14px}
+.tog i{width:34px;height:20px;border-radius:999px;background:#253259;position:relative;flex:none;transition:background .15s}
+.tog i::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#c7d0ea;transition:left .15s}
+.tog[aria-pressed=true]{border-color:var(--gold)}
+.tog[aria-pressed=true] i{background:var(--gold-2)}
+.tog[aria-pressed=true] i::after{left:17px;background:#fff3cf}
+input[type=range]{width:100%;accent-color:var(--gold)}
+
+.code{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.code output{font-family:var(--mono);font-size:25px;letter-spacing:.12em;color:var(--gold);overflow-wrap:anywhere}
+.code output.long{font-size:clamp(15px,4.6vw,21px);letter-spacing:.05em}
+.badge.long{font-size:clamp(9.5px,2.7vw,12px);letter-spacing:0;white-space:nowrap;padding:5px 8px}
+.note{font-size:12.5px;color:var(--muted);border-left:2px solid var(--line-2);padding-left:10px;margin:0}
+
+/* ---------- amis ---------- */
+.friends{display:flex;flex-direction:column;gap:8px}
+.friend{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;padding:8px 10px;border-radius:14px;background:#0b1228;border:1px solid var(--line)}
+.friend img,.friend .ph{width:52px;height:52px;border-radius:50%;background:#16224a;border:1px solid var(--line-2);object-fit:cover}
+.friend .n{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friend .c{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.dot{font-size:12px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.dot::before{content:"";width:8px;height:8px;border-radius:50%;background:#55607f}
+.dot.on{color:var(--ok)} .dot.on::before{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow-y:auto;padding-right:2px}
+.msg{max-width:84%;padding:8px 11px;border-radius:14px;background:#17224a;border:1px solid var(--line);align-self:flex-start;min-width:0;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:#2a2412;border-color:#5b4a1f}
+.msg .a{font-size:11.5px;color:var(--crystal);font-weight:600;margin-bottom:2px}
+.msg.me .a{color:var(--gold)}
+.msg time{font-size:10.5px;color:var(--muted);margin-left:6px;font-weight:400}
+.send{display:flex;gap:8px}.send input{flex:1}
+.empty{color:var(--muted);font-size:13.5px;text-align:center;padding:18px 8px}
+
+/* ---------- jeu ---------- */
+.hero{align-items:center;text-align:center;gap:6px;padding:22px 14px 18px}
+.hero svg{width:140px;height:162px;filter:drop-shadow(0 0 24px #4a8fe077)}
+.hero .wordmark{font-size:38px}
+.steps{margin:0;padding-left:20px;color:var(--muted);font-size:13.5px;display:flex;flex-direction:column;gap:7px}
+.steps b{color:var(--text)}
+.link{font-family:var(--mono);font-size:12px;background:#0b1228;border:1px solid var(--line);border-radius:10px;padding:8px 10px;overflow-wrap:anywhere;color:var(--crystal)}
+
+/* ---------- onglets ---------- */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#080d1cee;backdrop-filter:blur(10px);border-top:1px solid var(--line);
+  padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+nav.tabs .in{max-width:540px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+nav.tabs button{position:relative;background:transparent;border:1px solid transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;padding:6px;border-radius:12px;cursor:pointer}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button[aria-selected=true]{color:var(--gold);border-color:#33437599;background:#121c3a}
+nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px;left:28%;right:28%;height:2px;border-radius:2px;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1b2850;border:1px solid var(--crystal);color:var(--text);padding:9px 14px;border-radius:12px;font-size:13.5px;z-index:30;max-width:calc(100% - 32px)}
+@media (max-width:400px){.toggles{grid-template-columns:1fr}.photo{grid-template-columns:104px 1fr}.frame{width:104px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<radialGradient id="e-halo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#5aa8ff" stop-opacity=".55"/><stop offset=".55" stop-color="#3a5bd8" stop-opacity=".18"/><stop offset="1" stop-color="#1b2a6b" stop-opacity="0"/></radialGradient>
+<linearGradient id="e-gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a87a2a"/><stop offset=".5" stop-color="#f6dc92"/><stop offset="1" stop-color="#b8862e"/></linearGradient>
+<linearGradient id="e-goldv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0c2"/><stop offset=".55" stop-color="#f1cf7a"/><stop offset="1" stop-color="#b98a35"/></linearGradient>
+<linearGradient id="e-rock" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a5f78"/><stop offset=".5" stop-color="#383c52"/><stop offset="1" stop-color="#1c1f30"/></linearGradient>
+<linearGradient id="e-grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd18a"/><stop offset="1" stop-color="#3f7a4a"/></linearGradient>
+<radialGradient id="e-bg" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#22357a"/><stop offset=".55" stop-color="#111a3a"/><stop offset="1" stop-color="#070b18"/></radialGradient>
+<symbol id="emblem" viewBox="150 120 724 840"><circle cx="512" cy="490.0" r="300.0" fill="url(#e-halo)"/>
+<g transform="rotate(-14 512 480.0)"><path d="M 172.0 480.0 A 340.0 92.0 0 0 1 852.0 480.0" fill="none" stroke="url(#e-gold)" stroke-width="13.0" opacity=".55"/></g>
+<path d="M 270.0,717.0 Q 512.0,655.0 754.0,717.0 L 712.0,753.0 L 650.0,805.0 L 600.0,865.0 L 560.0,845.0 L 530.0,945.0 L 498.0,885.0 L 458.0,915.0 L 430.0,835.0 L 372.0,805.0 L 316.0,757.0 Z" fill="url(#e-rock)"/>
+<path d="M 270.0,717.0 Q 512.0,657.0 754.0,717.0 Q 512.0,745.0 270.0,717.0 Z" fill="url(#e-grass)"/>
+<path d="M 626.0,712.0 L 632.0,632.0 L 626.0,632.0 L 626.0,620.0 L 634.0,620.0 L 634.0,626.0 L 641.0,626.0 L 641.0,620.0 L 649.0,620.0 L 649.0,626.0 L 656.0,626.0 L 656.0,620.0 L 664.0,620.0 L 664.0,632.0 L 658.0,632.0 L 664.0,712.0 Z" fill="#2a2f48"/>
+<path d="M 633.0,620.0 L 645.0,566.0 L 657.0,620.0 Z" fill="#2a2f48"/>
+<path d="M 641.0,660.0 L 649.0,660.0 L 649.0,674.0 L 641.0,674.0 Z" fill="#ffd27a" opacity=".9"/>
+<path d="M 351.0,710.0 L 360.0,684.0 L 369.0,710.0 Z" fill="#2f5a3c"/>
+<path d="M 373.0,710.0 L 382.0,676.0 L 391.0,710.0 Z" fill="#2f5a3c"/>
+<path d="M 395.0,710.0 L 404.0,688.0 L 413.0,710.0 Z" fill="#2f5a3c"/>
+<path d="M 691.0,710.0 L 700.0,686.0 L 709.0,710.0 Z" fill="#2f5a3c"/>
+<polygon points="512.0,150.0 410.0,430.0 512.0,430.0" fill="#e6f7ff"/>
+<polygon points="512.0,150.0 512.0,430.0 614.0,430.0" fill="#8cc8ff"/>
+<polygon points="410.0,430.0 512.0,640.0 512.0,430.0" fill="#4f8fea"/>
+<polygon points="512.0,430.0 512.0,640.0 614.0,430.0" fill="#2c4fb0"/>
+<polyline points="410.0,430.0 512.0,430.0 614.0,430.0" fill="none" stroke="#ffffff99" stroke-width="3.0"/>
+<polygon points="512.0,150.0 410.0,430.0 512.0,640.0 614.0,430.0" fill="none" stroke="#dff4ff" stroke-width="4.0" stroke-linejoin="round"/>
+<polygon points="512.0,168.0 470.0,300.0 512.0,276.0" fill="#ffffff" opacity=".7"/>
+<polygon points="372.0,288.4 353.8,330.0 372.0,358.6 390.2,330.0" fill="#bfe6ff" opacity="0.85"/>
+<polygon points="660.0,258.0 646.0,290.0 660.0,312.0 674.0,290.0" fill="#bfe6ff" opacity="0.8"/>
+<polygon points="640.0,536.0 629.5,560.0 640.0,576.5 650.5,560.0" fill="#bfe6ff" opacity="0.7"/>
+<polygon points="360.0,540.8 351.6,560.0 360.0,573.2 368.4,560.0" fill="#bfe6ff" opacity="0.6"/>
+<g transform="rotate(-14 512 480.0)"><path d="M 172.0 480.0 A 340.0 92.0 0 0 0 852.0 480.0" fill="none" stroke="url(#e-gold)" stroke-width="13.0"/></g>
+<polygon points="512.0,92.0 516.9,113.1 538.0,118.0 516.9,122.9 512.0,144.0 507.1,122.9 486.0,118.0 507.1,113.1" fill="#fff6d6"/></symbol></defs></svg>
+
+<div id="splash" role="status" aria-live="polite">
+  <div class="sp">
+    <div class="sp-emb"><span class="sp-ring b"></span><svg class="emb" aria-hidden="true"><use href="#emblem"/></svg><span class="sp-ring"></span></div>
+    <div class="wordmark">AETHER<small>Mobile</small></div>
+    <div class="bar"><i id="spBar"></i></div>
+    <div class="sp-txt" id="spTxt">Ouverture du royaume…</div>
+  </div>
+</div>
+
+<div class="app">
+  <header>
+    <svg class="emb" aria-hidden="true"><use href="#emblem"/></svg>
+    <div class="wordmark">AETHER<small>Mobile</small></div>
+    <div class="who" id="who" hidden><span id="whoName"></span><span class="lvb" id="whoLv" hidden></span></div>
+  </header>
+
+  <!-- ===================== AVATAR ===================== -->
+  <section data-tab="avatar">
+    <div>
+      <h2>Ton avatar</h2>
+      <p class="sub">Prends une photo de face : l'appli repère ton visage, sa forme, tes yeux, ton nez, ta bouche, tes cheveux, ta barbe et tes lunettes, puis sculpte ton personnage. Ajoute un scan du corps pour ta silhouette.</p>
+    </div>
+    <div class="stage" id="stage">
+      <canvas id="three" aria-label="Aperçu 3D de ton avatar"></canvas>
+      <div class="loading" id="stageLoading">Sculpture de l'avatar…</div>
+      <div class="top"><span class="badge" id="lookBadge">AE-·······</span>
+        <div class="views" role="group" aria-label="Cadrage"><button type="button" id="vBody" aria-pressed="true">Corps</button><button type="button" id="vFace" aria-pressed="false">Visage</button></div></div>
+      <span class="hint">Glisse pour tourner</span>
+    </div>
+
+    <div class="card">
+      <div class="photo">
+        <div class="frame" id="frame"><span id="frameTxt">Ta photo</span><canvas id="photoCv" hidden></canvas><span class="scan"></span></div>
+        <div class="col">
+          <p>Visage de face, bien éclairé, cheveux visibles. L'IA du visage repère 478 points sur ton téléphone pour sculpter tes traits.</p>
+          <button type="button" class="aitog" id="tAi" aria-pressed="true"><span class="sw2" aria-hidden="true"></span><span><b>IA Claude</b> : recrée aussi ton style. Envoie un recadrage du visage à Claude, avec ton accord.</span></button>
+          <div class="row">
+            <label class="btn primary" for="fileCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Prendre une photo</label>
+            <label class="btn" for="fileLib">Choisir une image</label>
+          </div>
+          <input id="fileCam" type="file" accept="image/*" capture="user" hidden>
+          <input id="fileLib" type="file" accept="image/*" hidden>
+          <div class="status" id="status"></div>
+          <div class="found" id="found"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="scanCard">
+      <div><h3>Scan du corps · option</h3>
+        <p class="sub">Deux photos en pied (demande à quelqu'un ou mets un minuteur) : <b>de face, bras écartés à l'horizontale</b>, puis <b>de profil</b>. L'appli estime ta carrure et tes proportions sur ton téléphone. Les photos ne sont ni gardées ni envoyées.</p></div>
+      <label class="field" for="cm"><span>Ta taille réelle <em>en cm, conseillé</em></span><input id="cm" type="number" inputmode="numeric" min="120" max="230" step="1" placeholder="ex. 175" autocomplete="off"></label>
+      <p class="note">Une photo seule ne donne pas l'échelle : sans ta taille, l'avatar garde sa taille actuelle et seules les proportions sont estimées.</p>
+      <div class="shots">
+        <div class="shot" id="shotF"><div class="pic"><svg viewBox="0 0 60 80" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="30" cy="12" r="6"/><path d="M30 19v26M6 24h48M30 45l-8 28M30 45l8 28"/></svg><canvas id="cvF" hidden></canvas></div><span>De face, bras en T</span><label class="btn" for="fileF">Photo de face</label></div>
+        <div class="shot" id="shotS"><div class="pic"><svg viewBox="0 0 60 80" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="31" cy="12" r="6"/><path d="M30 19c-2 9-1 17 0 26M30 24l2 20M30 45l-2 28M30 45l3 28M28 73h6"/></svg><canvas id="cvS" hidden></canvas></div><span>De profil, bras le long du corps</span><label class="btn" for="fileS">Photo de profil</label></div>
+      </div>
+      <input id="fileF" type="file" accept="image/*" capture="environment" hidden>
+      <input id="fileS" type="file" accept="image/*" capture="environment" hidden>
+      <div class="status" id="bStatus"></div>
+      <div class="found" id="bFound"></div>
+    </div>
+
+    <div class="card">
+      <div class="group">
+        <label class="field" for="pseudo"><span>Pseudo dans le jeu</span><input id="pseudo" type="text" maxlength="18" placeholder="Aventurier" autocomplete="off"></label>
+      </div>
+      <div class="group">
+        <h3>Visage</h3>
+        <div class="field"><span>Peau <em id="nSkin"></em></span><div class="swatches" id="swSkin"></div></div>
+        <div class="field"><span>Yeux <em id="nEyes"></em></span><div class="swatches" id="swEyes"></div></div>
+        <div class="field"><span>Forme du visage <em id="nFaceShape"></em></span><div class="chips" id="cFaceShape"></div></div>
+        <div class="field"><span>Forme des yeux <em id="nEyeShape"></em></span><div class="chips" id="cEyeShape"></div></div>
+        <div class="field"><span>Sourcils</span><div class="chips" id="cBrows"></div></div>
+        <div class="field"><span>Nez</span><div class="chips" id="cNose"></div></div>
+        <div class="field"><span>Bouche</span><div class="chips" id="cMouth"></div></div>
+        <div class="toggles"><button type="button" class="tog" id="tBeard" aria-pressed="false">Barbe<i></i></button><button type="button" class="tog" id="tGlasses" aria-pressed="false">Lunettes<i></i></button></div>
+        <div class="field" id="fGlasses" hidden><span>Monture</span><div class="chips" id="cGlasses"></div></div>
+      </div>
+      <div class="group">
+        <h3>Cheveux</h3>
+        <div class="field"><span>Coupe</span><div class="chips" id="cHair"></div></div>
+        <div class="field"><span>Couleur <em id="nHairC"></em></span><div class="swatches" id="swHairC"></div></div>
+      </div>
+      <div class="group">
+        <h3>Tenue</h3>
+        <div class="field"><span>Haut <em id="nTop"></em></span><div class="swatches" id="swTop"></div></div>
+        <div class="field"><span>Bas <em id="nBot"></em></span><div class="swatches" id="swBot"></div></div>
+        <div class="field"><span>Cape</span><div class="chips" id="cCape"></div></div>
+      </div>
+      <div class="group">
+        <h3>Silhouette</h3>
+        <label class="field" for="height"><span>Taille <em id="nHeight"></em></span><input id="height" type="range" min="0" max="28" step="1"></label>
+        <label class="field" for="bBd"><span>Corpulence <em id="nBd"></em></span><input id="bBd" type="range" min="-3" max="3" step="1"></label>
+        <label class="field" for="bSh"><span>Épaules <em id="nSh"></em></span><input id="bSh" type="range" min="-3" max="3" step="1"></label>
+        <label class="field" for="bHp"><span>Hanches <em id="nHp"></em></span><input id="bHp" type="range" min="-3" max="3" step="1"></label>
+        <label class="field" for="bLg"><span>Jambes <em id="nLg"></em></span><input id="bLg" type="range" min="-3" max="3" step="1"></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="code">
+        <div><div class="sub" style="margin:0 0 2px">Code avatar à entrer dans le jeu</div><output id="code">AE-·······</output></div>
+        <div class="row"><button class="btn" id="copy" type="button">Copier</button><button class="btn primary" id="publish" type="button">Partager avec mes amis</button></div>
+      </div>
+      <p class="note">Dans Aether : <b>Menu → Avatar → Code Aether Mobile</b>, puis tape ce code. Ton personnage du jeu devient celui de la photo.</p>
+    </div>
+  </section>
+
+  <!-- ===================== AMIS ===================== -->
+  <section data-tab="amis" hidden>
+    <div>
+      <h2>Amis</h2>
+      <p class="sub">Ajoute des aventuriers, vois leur niveau et parle-leur en privé.</p>
+    </div>
+
+    <div class="card">
+      <h3>Mon profil</h3>
+      <div class="me-row">
+        <div class="me-pic" id="mePic"></div>
+        <div class="me-id"><div class="n" id="meName">Aventurier</div><div class="lv" id="meLv">Niveau ?</div></div>
+      </div>
+      <form class="send" id="lvForm"><input id="lvCode" type="text" maxlength="9" placeholder="Code profil du jeu (NV-XXXX)" autocomplete="off" autocapitalize="characters"><button class="btn" id="lvBtn">Valider</button></form>
+      <p class="note">Dans Aether : <b>Menu → Amis</b>, ton code profil est affiché en bas. Il met ton niveau à jour ici.</p>
+    </div>
+
+    <div class="card" id="reqCard" hidden>
+      <h3>Demandes d'ami</h3>
+      <div class="friends" id="requests"></div>
+    </div>
+
+    <div class="card">
+      <h3>Mes amis</h3>
+      <div class="friends" id="friends"><div class="empty">Pas encore d'amis. Ajoute des aventuriers ci-dessous.</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Tous les aventuriers</h3>
+      <div class="friends" id="everyone"><div class="empty">Personne pour l'instant. Partage ton avatar depuis l'onglet Avatar pour apparaître ici.</div></div>
+    </div>
+    <p class="note" id="soNote" hidden></p>
+  </section>
+
+  <!-- ===================== TAVERNE ===================== -->
+  <section data-tab="taverne" hidden>
+    <div>
+      <h2>Taverne</h2>
+      <p class="sub">Le chat de tous les aventuriers. Le point vert indique qui a l'appli ouverte.</p>
+    </div>
+    <div class="card">
+      <div class="online" id="onlineBar"></div>
+      <div class="chat" id="chat" aria-live="polite"><div class="empty">Aucun message. Lance la conversation !</div></div>
+      <form class="send" id="sendForm"><input id="msg" type="text" maxlength="280" placeholder="Écris à la taverne…" autocomplete="off"><button class="btn primary" id="sendBtn">Envoyer</button></form>
+      <p class="note" id="chatNote" hidden></p>
+    </div>
+  </section>
+
+  <!-- ===================== JEU ===================== -->
+  <section data-tab="jeu" hidden>
+    <div class="card hero">
+      <svg aria-hidden="true"><use href="#emblem"/></svg>
+      <div class="wordmark">AETHER<small>Le royaume flottant</small></div>
+    </div>
+    <div class="card">
+      <h2>Installer l'appli sur ton téléphone</h2>
+      <ol class="steps">
+        <li>Ouvre ce lien sur ton téléphone, dans <b>Safari</b> (iPhone) ou <b>Chrome</b> (Android).</li>
+        <li>iPhone : touche <b>Partager</b> puis <b>Sur l'écran d'accueil</b>. Android : menu <b>⋮</b> puis <b>Ajouter à l'écran d'accueil</b>.</li>
+        <li>L'icône <b>Aether</b> apparaît avec tes applis : elle s'ouvre directement ici.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h2>Le royaume</h2>
+      <ol class="steps">
+        <li>Lance <b>Aether</b> sur ton PC (casque VR avec SteamVR, ou ton Quest avec Steam Link).</li>
+        <li>Dans le menu, ouvre <b>Avatar → Code Aether Mobile</b> et tape ton code.</li>
+        <li>Dans <b>Amis</b>, ton code profil fait apparaître ton niveau ici.</li>
+        <li><b>Rejoindre le monde</b> : un seul serveur pour tout le monde, chat vocal de proximité.</li>
+      </ol>
+      <p class="note">Il y a mille ans, le monde s'est brisé. De ses éclats sont nées des îles, suspendues entre ciel et néant : le royaume d'Aether. En son cœur se dresse la Tour.</p>
+    </div>
+  </section>
+
+  <!-- ===================== MESSAGES PRIVÉS ===================== -->
+  <div class="dm" id="dm" hidden role="dialog" aria-modal="true" aria-labelledby="dmName">
+    <div class="dm-in">
+      <div class="dm-top">
+        <button type="button" class="btn" id="dmBack" aria-label="Retour">‹</button>
+        <div class="dm-pic" id="dmPic"></div>
+        <div style="min-width:0"><div class="n" id="dmName"></div><div class="lv" id="dmLv"></div></div>
+        <span class="lock" title="Chiffré de bout en bout">🔒 privé</span>
+      </div>
+      <div class="chat dm-chat" id="dmChat" aria-live="polite"></div>
+      <form class="send" id="dmForm"><input id="dmMsg" type="text" maxlength="280" placeholder="Message privé…" autocomplete="off"><button class="btn primary" id="dmSend">Envoyer</button></form>
+      <p class="note" id="dmNote" hidden></p>
+    </div>
+  </div>
+</div>
+
+<style>
+.me-row{display:flex;align-items:center;gap:12px}
+.me-pic,.dm-pic{width:56px;height:56px;border-radius:50%;background:#16224a;border:1px solid var(--line-2);overflow:hidden;flex:none}
+.me-pic img,.dm-pic img{width:100%;height:100%;object-fit:cover}
+.dm-pic{width:40px;height:40px}
+.me-id .n,.dm-top .n{font-weight:600;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lv{font-family:var(--mono);font-size:12px;color:var(--gold)}
+.lvb{display:inline-block;font-family:var(--mono);font-size:11px;color:#1b1406;background:linear-gradient(180deg,#f8e2a0,#d9ae4f);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+.friend .act{display:flex;gap:6px;align-items:center}
+.friend .act .btn{padding:7px 10px;font-size:13px;border-radius:10px}
+.friend .meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+.online{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.online .o{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:3px 9px;background:#0b1228}
+.online .o::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.msg .live{font-size:10px;color:var(--crystal);margin-left:6px;font-weight:500}
+.dm{position:fixed;inset:0;z-index:40;background:#050915e8;backdrop-filter:blur(6px);display:flex;justify-content:center;
+  padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dm-in{width:100%;max-width:540px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.dm-top{display:flex;align-items:center;gap:10px}
+.dm-top .btn{padding:6px 12px;font-size:20px;line-height:1}
+.lock{margin-left:auto;font-size:12px;color:var(--ok);white-space:nowrap}
+.dm-chat{flex:1;max-height:none;min-height:0}
+nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
+</style>
+
+<nav class="tabs" role="tablist">
+  <div class="in">
+    <button role="tab" data-go="avatar" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Avatar</button>
+    <button role="tab" data-go="amis" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.6 3.6-5.5 6.5-5.5s5.5 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.9.7 3 2.4 3.6 5.2"/></svg>Amis<span class="badge-n" id="reqBadge" hidden></span></button>
+    <button role="tab" data-go="taverne" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v10H9l-5 4z"/></svg>Taverne</button>
+    <button role="tab" data-go="jeu" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l3 7-3 4-3-4z"/><path d="M4 15q8-3 16 0l-4 3-4 4-4-4z"/></svg>Le jeu</button>
+  </div>
+</nav>
+<style>.badge-n{position:absolute;top:2px;right:18%;min-width:16px;height:16px;border-radius:8px;background:var(--warn);color:#1b0806;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}</style>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Avatar Aether en 3D (three.js r128) — mêmes pièces sculptées et mêmes palettes que le jeu.
+(function () {
+  const A = {};
+  A.SKINS = [[.98,.86,.76],[.94,.78,.64],[.82,.62,.45],[.62,.43,.30],[.42,.28,.20],[.90,.72,.58],[.72,.52,.36],[.32,.21,.15]];
+  A.SKIN_NAMES = ["Porcelaine","Claire","Mate","Ambrée","Brune","Rosée","Caramel","Ébène"];
+  A.HAIR_NAMES = ["Rasé","Court","Mi-long","Long","Queue de cheval","Pointes","Bouclé","Afro","Chignon","Long ondulé","Mèche","Tresses","Dégradé",
+                  "Long lisse","Épis en couches","Carré","Mi-long en couches","Très long","Couettes","Queue basse","Raie au milieu","Courte (pixie)","Plaqué en arrière"];
+  // styles du visage (pièces sculptées : variante 0 = pièce d'origine, sinon suffixe « _N »)
+  A.EYE_SHAPE_NAMES = ["Classiques","Ronds","En amande","Étirés","Tombants","Relevés","Paupière lisse","Grands"];
+  A.BROW_NAMES = ["Classiques","Droits","Arqués","Épais","Fins","Froncés","Doux"];
+  A.NOSE_NAMES = ["Classique","Petit","Fin","Large","Retroussé","Arête marquée"];
+  A.MOUTH_NAMES = ["Classique","Fine","Pleine","Large","Petite","Souriante"];
+  A.FACE_SHAPE_NAMES = ["En V","Ovale","Rond","Carré","En cœur","Allongé"];
+  A.GLASSES_NAMES = ["Ovales","Rondes","Rectangulaires","Fines","Demi-cerclées","Épaisses"];
+  // forme du visage → déformation (r : menton arrondi, q : mâchoire carrée, c : pommettes / menton fin, l : visage allongé)
+  A.FACE_SHAPES = [[0,0,0,0],[.45,0,0,.15],[.85,0,0,-.4],[0,.75,0,0],[0,0,1,.2],[.25,0,0,1]];
+  // nez → déformation (largeur, saillie, bout relevé) + petit trait sculpté « nez_N »
+  A.NOSES = [[0,0,0],[-.25,-.4,0],[-.2,.35,0],[.45,-.1,0],[0,-.15,.7],[-.05,.7,-.2]];
+  // silhouette : corpulence, épaules, hanches, jambes (7 crans chacun, 3 = neutre) + 2 bits de taille fine
+  A.BODY_KEYS = ["bd","sh","hp","lg"];
+  A.BODY_NAMES = { bd: ["Très mince","Mince","Svelte","Moyenne","Robuste","Forte","Très forte"], sh: ["Très étroites","Étroites","Fines","Moyennes","Larges","Très larges","Massives"],
+    hp: ["Très étroites","Étroites","Fines","Moyennes","Larges","Très larges","Pleines"], lg: ["Très courtes","Courtes","Un peu courtes","Moyennes","Un peu longues","Longues","Très longues"] };
+  A.BODY_NEUTRAL = 1755;
+  A.HAIR_COLORS = [[.15,.14,.17],[.36,.22,.13],[.78,.60,.36],[.96,.88,.62],[.80,.30,.16],[.82,.85,.92],[.28,.42,.85],[.92,.56,.72],
+                   [.24,.15,.10],[.56,.38,.22],[.62,.26,.15],[.88,.64,.43],[.55,.56,.60],[.07,.07,.09],[.95,.95,.97],[.42,.33,.27]];
+  A.HAIR_COLOR_NAMES = ["Noir","Brun","Blond foncé","Blond","Roux","Argent","Bleu","Rose","Châtain foncé","Châtain","Auburn","Blond vénitien","Gris","Noir de jais","Blanc","Brun cendré"];
+  A.EYES = [[.25,.15,.08],[.20,.45,.85],[.25,.60,.30],[.60,.60,.65],[.80,.20,.20],[.90,.70,.20],[.45,.35,.15],[.40,.50,.60]];
+  A.EYE_NAMES = ["Marron","Bleus","Verts","Gris","Rouges","Dorés","Noisette","Bleu-gris"];
+  A.OUTFITS = [[.12,.12,.14],[.92,.92,.95],[.15,.25,.55],[.55,.12,.12],[.20,.42,.22],[.45,.30,.18],[.40,.20,.50],[.85,.70,.30]];
+  A.OUTFIT_NAMES = ["Noir","Blanc","Bleu nuit","Rouge","Vert forêt","Cuir","Violet","Or"];
+  A.CAPES = [null,[.08,.08,.10],[.90,.90,.92],[.60,.08,.10],[.12,.20,.50]];
+  A.CAPE_NAMES = ["Aucune","Noire","Blanche","Rouge","Bleue"];
+  A.ALPH = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+
+  // code identique au jeu (AetherNetPlayer.PackLook)
+  const hsteps = h => Math.max(0, Math.min(31, Math.round(((h || 1) - .85) / .0125)));   // taille par crans de 1,25 %
+  A.pack = l => {
+    const hi = hsteps(l.height) >> 2;
+    return ((l.skin & 7) | (l.beard ? 8 : 0) | (l.hair & 15) << 4 | (l.hairColor & 15) << 8 | (l.eyes & 15) << 12 | (l.top & 15) << 16 | (l.bottom & 15) << 20
+      | (l.cape & 7) << 24 | (l.glasses ? 1 : 0) << 27 | (hi << 28)) >>> 0;
+  };
+  A.unpack = v => ({ skin: v & 7, beard: !!((v >> 3) & 1), hair: (v >> 4) & 15, hairColor: (v >> 8) & 15, eyes: (v >> 12) & 15, top: (v >> 16) & 15,
+    bottom: (v >> 20) & 15, cape: (v >> 24) & 7, glasses: !!((v >> 27) & 1), height: .85 + ((v >>> 28) & 7) * .05 });
+  // traits du visage lus sur la photo (8 réglages, 7 crans chacun : 3 = neutre) → suffixe du code « -XXXXX »
+  A.FACE_KEYS = ["fw", "fl", "jaw", "chin", "es", "ed", "nose", "mouth"];
+  A.FACE_NEUTRAL = A.FACE_KEYS.reduce((v, k, i) => v | (3 << (i * 3)), 0);
+  A.packFace = m => A.FACE_KEYS.reduce((v, k, i) => v | (Math.max(0, Math.min(6, Math.round((m[k] || 0) * 3) + 3)) << (i * 3)), 0) >>> 0;
+  A.unpackFace = v => { const m = {}; if (v == null) v = A.FACE_NEUTRAL; A.FACE_KEYS.forEach((k, i) => { m[k] = (Math.min(6, (v >> (i * 3)) & 7) - 3) / 3; }); return m; };
+  const b32 = (v, n) => { let s = ""; for (let i = 0; i < n; i++) { s = A.ALPH[v % 32] + s; v = Math.floor(v / 32); } return s; };
+  // styles (20 bits) : forme des yeux, sourcils, nez, bouche, forme du visage, monture (3 bits chacun) + 2 bits hauts de la coiffure
+  A.packStyle = l => ((l.eyeShape & 7) | (l.brows & 7) << 3 | (l.nose & 7) << 6 | (l.mouth & 7) << 9 | (l.faceShape & 7) << 12 | (l.glassesStyle & 7) << 15 | ((l.hair >> 4) & 3) << 18) >>> 0;
+  A.unpackStyle = v => ({ eyeShape: v & 7, brows: (v >> 3) & 7, nose: (v >> 6) & 7, mouth: (v >> 9) & 7, faceShape: (v >> 12) & 7, glassesStyle: (v >> 15) & 7, hairHi: (v >> 18) & 3 });
+  A.packBody = m => A.BODY_KEYS.reduce((v, k, i) => v | (Math.max(0, Math.min(6, Math.round((m[k] || 0) * 3) + 3)) << (i * 3)), 0) >>> 0;
+  A.unpackBody = v => { const m = {}; if (v == null) v = A.BODY_NEUTRAL; A.BODY_KEYS.forEach((k, i) => { m[k] = (Math.min(6, (v >> (i * 3)) & 7) - 3) / 3; }); return m; };
+  const bodyCode = l => ((l.body == null ? A.BODY_NEUTRAL : l.body) & 0xfff) | ((hsteps(l.height) & 3) << 12);
+  // code : "AE-XXXXXXX" (apparence) [+ "-YYYYY" (traits du visage)] [+ "-SSSSBBB" (styles + silhouette)] — les anciens codes restent valides
+  A.encode = l => {
+    const face = l.face == null ? A.FACE_NEUTRAL : l.face >>> 0, st = A.packStyle(l), bo = bodyCode(l), ext = st !== 0 || bo !== A.BODY_NEUTRAL;
+    return "AE-" + b32(A.pack(l), 7) + (ext || face !== A.FACE_NEUTRAL ? "-" + b32(face, 5) : "") + (ext ? "-" + b32(st, 4) + b32(bo, 3) : "");
+  };
+  // lecture d'un code (même logique que MenuBootstrap.TryDecodeLook dans le jeu) → apparence complète, ou null
+  A.decode = code => {
+    let c = String(code || "").toUpperCase().replace(/\s/g, "");
+    if (c.startsWith("AE-")) c = c.slice(3); else if (c.startsWith("AE")) c = c.slice(2);   // un code valide ne commence jamais par « A »
+    c = c.replace(/-/g, "");
+    if (c.length !== 7 && c.length !== 12 && c.length !== 19) return null;
+    const num = t => { let v = 0; for (const ch of t) { const k = A.ALPH.indexOf(ch); if (k < 0) return NaN; v = v * 32 + k; } return v; };
+    const v = num(c.slice(0, 7)); if (!(v >= 0 && v <= 0xffffffff)) return null;
+    const l = A.unpack(v >>> 0); l.face = A.FACE_NEUTRAL; l.body = A.BODY_NEUTRAL;
+    Object.assign(l, { eyeShape: 0, brows: 0, nose: 0, mouth: 0, faceShape: 0, glassesStyle: 0 });
+    if (c.length >= 12) { const f = num(c.slice(7, 12)); if (!(f >= 0 && f < 1 << 24)) return null; l.face = f; }
+    if (c.length === 19) {
+      const st = num(c.slice(12, 16)), bo = num(c.slice(16, 19)); if (!(st >= 0 && st < 1 << 20) || !(bo >= 0 && bo < 1 << 15)) return null;
+      const s = A.unpackStyle(st); l.hair = l.hair | (s.hairHi << 4); delete s.hairHi; Object.assign(l, s);
+      l.body = bo & 0xfff; l.height = Math.round((l.height + ((bo >> 12) & 3) * .0125) * 10000) / 10000;
+    }
+    return l;
+  };
+  const sfx = i => i > 0 ? "_" + i : "";
+  // extras de déformation du visage dus aux styles (forme du visage + nez)
+  A.styleMorph = l => {
+    const f = A.FACE_SHAPES[l.faceShape | 0] || A.FACE_SHAPES[0], n = A.NOSES[l.nose | 0] || A.NOSES[0];
+    return { r: f[0], q: f[1], c: f[2], l: f[3], nx: n[0], nz: n[1], ny: n[2] };
+  };
+  // déformation du visage (espace de la tête, en mètres) — identique à AetherAvatar.Morph côté jeu
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  // largeur visée / largeur réelle de la mâchoire, de y = -0.03 à -0.09 (pas de 0.005) : U arrondi (R) et mâchoire carrée (Q)
+  const JAW_R = [1, 1.038, 1.089, 1.145, 1.221, 1.284, 1.355, 1.432, 1.502, 1.585, 1.71, 1.992, 2.404];
+  const JAW_Q = [1, 1, 1.041, 1.111, 1.208, 1.306, 1.429, 1.58, 1.742, 1.928, 2.181, 2.652, 2.75];
+  const jawTab = (T, y) => { const f = Math.min(12, Math.max(0, (-0.03 - y) / 0.005)), i = Math.min(11, Math.floor(f)); return T[i] + (T[i + 1] - T[i]) * (f - i); };
+  // repères (espace tête) : centre de l'œil (±0.032, 0.0), nez y≈-0.025, bouche y≈-0.055, menton y≈-0.065…-0.098
+  A.morph = (x, y, z, m) => {
+    const s = x < 0 ? -1 : 1, dx = Math.abs(x) - 0.032, dy = y - 0.0, d = Math.hypot(dx, dy);
+    const we = ss(0.038, 0.014, d) * ss(0.035, 0.06, z);
+    if (we > 0) { const k = 1 + 0.16 * m.es * we; x = s * (0.032 + dx * k + 0.005 * m.ed * we); y = 0.0 + dy * k; }
+    const wn = ss(0.03, 0.008, Math.hypot(x, (y + 0.025) * 0.8)) * ss(0.06, 0.09, z); x *= 1 + 0.25 * m.nose * wn;
+    if (m.nx || m.nz || m.ny) {   // style de nez : largeur, saillie de l'arête, bout relevé
+      const wN = ss(0.022, 0.006, Math.hypot(x * 1.2, (y + 0.024) * 0.7)) * ss(0.072, 0.086, z); x *= 1 + 0.35 * (m.nx || 0) * wN;
+      const wZ = ss(1.0, 0.35, Math.hypot(x / 0.0058, (y + 0.022) / 0.0135)) * ss(0.07, 0.08, z); z += 0.0028 * (m.nz || 0) * wZ;
+      const wT = ss(0.009, 0.002, Math.hypot(x * 1.1, y + 0.0295)) * ss(0.075, 0.086, z); y += 0.0022 * (m.ny || 0) * wT;
+    }
+    const wm = ss(0.028, 0.01, Math.hypot(x * 0.8, (y + 0.055) * 1.6)) * ss(0.05, 0.08, z); x *= 1 + 0.25 * m.mouth * wm;
+    x *= 1 + 0.12 * m.jaw * ss(-0.01, -0.08, y);
+    const wc = ss(-0.065, -0.098, y) * ss(0.0, 0.04, z); y -= 0.009 * m.chin * wc; x *= 1 - 0.12 * m.chin * wc;
+    if (m.r || m.q || m.c || m.l) {   // forme du visage : la ligne de la mâchoire (V) devient U (r) ou carrée (q)
+      const fz = ss(0.0, 0.04, z);
+      x *= 1 + ((m.r || 0) * (jawTab(JAW_R, y) - 1) + (m.q || 0) * (jawTab(JAW_Q, y) - 1)) * ss(0.0, 0.03, z);
+      x *= 1 + 0.1 * (m.c || 0) * ss(0.04, 0.06, Math.abs(x)) * ss(-0.055, -0.025, y) * ss(0.015, -0.015, y) - 0.2 * (m.c || 0) * ss(-0.06, -0.1, y) * fz;
+      if (y < 0.0) { y *= 1 + 0.09 * (m.l || 0); x *= 1 - 0.04 * (m.l || 0) * ss(-0.02, -0.08, y); }
+    }
+    if (y < 0.0) y = 0.0 + (y - 0.0) * (1 + 0.07 * m.fl);
+    x *= 1 + 0.06 * m.fw;
+    return [x, y, z];
+  };
+  const morphCache = {};
+  function morphed(THREE, parts, name, face, sx) {
+    const g = geo(THREE, parts, name); if (face == null) face = A.FACE_NEUTRAL;
+    const plain = !sx || !Object.values(sx).some(v => v);
+    if (!g || ((face >>> 0) === A.FACE_NEUTRAL && plain)) return g;
+    const key = name + ":" + face + ":" + (plain ? "" : Object.values(sx).join(",")); if (morphCache[key]) return morphCache[key];
+    const m = Object.assign(A.unpackFace(face), plain ? {} : sx), c = g.clone(), p = c.attributes.position.array;
+    c.attributes.position = c.attributes.position.clone();
+    const q = c.attributes.position.array;
+    for (let i = 0; i < q.length; i += 3) { const r = A.morph(p[i], p[i + 1], p[i + 2], m); q[i] = r[0]; q[i + 1] = r[1]; q[i + 2] = r[2]; }
+    c.computeVertexNormals(); if (name === "tete" || name === "barbe" || name.startsWith("cheveux")) smoothNormals(c, name === "tete" ? 4 : 3); if (name === "tete" || name === "barbe") faceNormals(c);
+    return morphCache[key] = c;
+  }
+
+  const geoCache = {};
+  function geo(THREE, parts, name) {
+    if (geoCache[name]) return geoCache[name];
+    const p = parts[name]; if (!p) return null;
+    const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0)).buffer;
+    const q = new Int16Array(b(p.p)), pos = new Float32Array(q.length);
+    for (let i = 0; i < q.length; i++) pos[i] = q[i] / 32767 * p.s;
+    const idx = p.n < 65535 ? new Uint16Array(b(p.i)) : new Uint32Array(b(p.i));
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setIndex(new THREE.BufferAttribute(idx, 1));
+    g.computeVertexNormals();
+    if (name === "tete" || name === "torse" || name === "barbe" || name.startsWith("cheveux")) smoothNormals(g, name === "tete" ? 4 : 3);
+    if (name === "tete" || name === "barbe") faceNormals(g);
+    if (name.startsWith("yeux_blanc") || name.startsWith("yeux_iris")) { THREE_ = THREE; eyeShade(g, name); }
+    if (name.startsWith("cheveux") || name === "barbe") hairCreases(THREE, g);
+    return geoCache[name] = g;
+  }
+  // normales lissées (moyenne des voisins) : ombrage anime net, sans taches
+  function smoothNormals(g, it) {
+    const n = g.attributes.normal.array, idx = g.index.array, cnt = n.length / 3;
+    for (let k = 0; k < it; k++) {
+      const acc = new Float32Array(n.length);
+      for (let t = 0; t < idx.length; t += 3) {
+        const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
+        for (let j = 0; j < 3; j++) { const s = n[a + j] + n[b + j] + n[c + j]; acc[a + j] += s; acc[b + j] += s; acc[c + j] += s; }
+      }
+      for (let i = 0; i < cnt; i++) { const x = acc[i * 3], y = acc[i * 3 + 1], z = acc[i * 3 + 2], l = Math.hypot(x, y, z) || 1; n[i * 3] = x / l; n[i * 3 + 1] = y / l; n[i * 3 + 2] = z / l; }
+    }
+    g.attributes.normal.needsUpdate = true;
+  }
+  // visage anime : normales tirées vers celles d'un ellipsoïde lisse → ombre propre, sans taches (nez/bouche/joues)
+  function faceNormals(g) {
+    const p = g.attributes.position.array, n = g.attributes.normal.array;
+    for (let i = 0; i < p.length; i += 3) {
+      const x = p[i], y = p[i + 1], z = p[i + 2];
+      const w = Math.min(1, Math.max(0, (z + 0.01) / 0.05)) * Math.min(1, Math.max(0, (y + 0.105) / 0.02)) * Math.min(1, Math.max(0, (0.07 - y) / 0.03)) * 0.8
+        * (1 - 0.9 * Math.exp(-((x / 0.0075) ** 2 + ((y + 0.029) / 0.0075) ** 2)));   // le bout du nez garde son ombre (petite touche)
+      if (w <= 0) continue;
+      let ex = x / 0.0049, ey = (y + 0.01) / 0.0121, ez = (z + 0.005) / 0.0081; const el = Math.hypot(ex, ey, ez) || 1;
+      let nx = n[i] * (1 - w) + ex / el * w, ny = n[i + 1] * (1 - w) + ey / el * w, nz = n[i + 2] * (1 - w) + ez / el * w; const l = Math.hypot(nx, ny, nz) || 1;
+      n[i] = nx / l; n[i + 1] = ny / l; n[i + 2] = nz / l;
+    }
+    g.attributes.normal.needsUpdate = true;
+  }
+  const C = (THREE, c) => new THREE.Color(c[0], c[1], c[2]).convertSRGBToLinear();
+  // ombrage anime en 2 tons : zone éclairée = couleur de base exacte (jamais surexposée), ombre froide (bleutée/rosée)
+  let ramp = null;
+  function toonRamp(THREE) {
+    if (ramp) return ramp;
+    const s = [84, 74, 112], l = [255, 255, 255], d = new Uint8Array([].concat(s, s, s, l, l));
+    ramp = new THREE.DataTexture(d, 5, 1, THREE.RGBFormat); ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.generateMipmaps = false; ramp.needsUpdate = true;
+    return ramp;
+  }
+  // 2 tons nets pilotés par la lumière principale (1re lumière directionnelle) ; ombre teintée (froide/rosée)
+  function celPatch(m, hairBand, tint) {
+    const T = tint || [.62, .62, .78];
+    m.onBeforeCompile = sh => {
+      if (hairBand) {
+        sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vHP; varying vec3 vHN;")
+          .replace("#include <begin_vertex>", "#include <begin_vertex>\nvHP = position; vHN = normal;");
+        sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vHP; varying vec3 vHN;");
+      }
+      sh.fragmentShader = sh.fragmentShader.replace("gl_FragColor = vec4( outgoingLight, diffuseColor.a );",
+        "{ float lum = dot(outgoingLight, vec3(.3, .59, .11)) / max(1e-4, dot(diffuseColor.rgb, vec3(.3, .59, .11)));\n" +
+        "  float ndl = 1.0;\n#if NUM_DIR_LIGHTS > 0\n  ndl = dot(normal, directionalLights[0].direction);\n#endif\n" +
+        "  float lit = smoothstep(0.06, 0.1, ndl);\n" +
+        "  outgoingLight = diffuseColor.rgb * mix(vec3(" + T.map(v => v.toFixed(3)).join(",") + "), vec3(1.0), lit) * min(1.0, lum * 1.6);\n" +
+        (hairBand ? "  float a = atan(vHP.x, vHP.z + 0.02); float yb = 0.084 - 0.035 * (1.0 - cos(a));\n" +
+          "  float fa = fract(a * 4.2 + 0.5); float w = 0.0062 * max(0.0, 1.0 - abs(fa - 0.5) * 2.6) * (0.6 + 0.4 * fract(sin(floor(a * 4.2 + 0.5) * 91.7) * 437.5));\n" +
+          "  float bd = step(abs(vHP.y - yb - w * 0.4), w); bd *= smoothstep(0.25, 0.45, normalize(vHN).z * 0.55 + normalize(vHN).y * 0.6) * lit;\n" +
+          "  bd *= step(0.0, cos(a) + 0.2); outgoingLight = mix(outgoingLight, diffuseColor.rgb * 1.2 + 0.05, bd * 0.26);\n" : "") +
+        "}\ngl_FragColor = vec4( outgoingLight, diffuseColor.a );");
+    };
+    m.customProgramCacheKey = () => "cel" + (hairBand ? "h" : "") + T.join(",");
+    return m;
+  }
+  // dégradés des yeux (couleur par sommet) : ombre de la paupière sur le blanc, iris sombre en haut → clair en bas
+  function eyeShade(g, name) {
+    if (g.attributes.color) return g;
+    const p = g.attributes.position.array, c = new Float32Array(p.length);
+    for (let i = 0; i < p.length; i += 3) {
+      const y = p[i + 1];
+      let r, gg, b;
+      if (name.startsWith("yeux_blanc")) { const t = Math.min(1, Math.max(0, (y - 0.0035) / 0.0065)); r = 1 - .2 * t; gg = 1 - .18 * t; b = 1 - .08 * t; }
+      else { const t = Math.min(1, Math.max(0, (y + 0.0135) / 0.022)); r = gg = b = 1.0 - 0.62 * Math.pow(t, 1.3); }
+      c[i] = r; c[i + 1] = gg; c[i + 2] = b;
+    }
+    g.setAttribute("color", new THREE_.BufferAttribute(c, 3));
+    return g;
+  }
+  let THREE_ = null;
+  // creux entre les mèches (concavité locale) → traits/ombres fines dans la masse des cheveux
+  function hairCreases(THREE, g) {
+    const p = g.attributes.position.array, n = g.attributes.normal.array, idx = g.index.array, N = p.length / 3;
+    const acc = new Float32Array(N * 3), cnt = new Float32Array(N), el = new Float32Array(N);
+    for (let t = 0; t < idx.length; t += 3) for (let k = 0; k < 3; k++) {
+      const a = idx[t + k], b = idx[t + (k + 1) % 3];
+      const dx = p[b * 3] - p[a * 3], dy = p[b * 3 + 1] - p[a * 3 + 1], dz = p[b * 3 + 2] - p[a * 3 + 2], d = Math.hypot(dx, dy, dz);
+      acc[a * 3] += dx; acc[a * 3 + 1] += dy; acc[a * 3 + 2] += dz; cnt[a]++; el[a] += d;
+      acc[b * 3] -= dx; acc[b * 3 + 1] -= dy; acc[b * 3 + 2] -= dz; cnt[b]++; el[b] += d;
+    }
+    let c = new Float32Array(N);
+    for (let i = 0; i < N; i++) { if (!cnt[i]) continue; const e = el[i] / cnt[i] || 1; c[i] = (acc[i * 3] * n[i * 3] + acc[i * 3 + 1] * n[i * 3 + 1] + acc[i * 3 + 2] * n[i * 3 + 2]) / cnt[i] / e; }
+    for (let it = 0; it < 1; it++) {   // léger lissage pour des traits continus
+      const s2 = new Float32Array(N), k2 = new Float32Array(N);
+      for (let t = 0; t < idx.length; t += 3) for (let k = 0; k < 3; k++) { const a = idx[t + k]; for (let j = 0; j < 3; j++) { s2[a] += c[idx[t + j]]; k2[a]++; } }
+      for (let i = 0; i < N; i++) c[i] = k2[i] ? s2[i] / k2[i] : c[i];
+    }
+    const col = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) { const t = Math.min(1, Math.max(0, (c[i] - 0.05) / 0.2)), v = 1 - 0.5 * t * t * (3 - 2 * t); col[i * 3] = v; col[i * 3 + 1] = v; col[i * 3 + 2] = Math.min(1, v * 1.08); }
+    g.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  }
+  function outline(THREE, mesh, color, w) {
+    const m = new THREE.ShaderMaterial({ uniforms: { c: { value: color }, w: { value: w } }, side: THREE.BackSide,
+      vertexShader: "uniform float w; void main(){ vec3 p = position + normal * w; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }",
+      fragmentShader: "uniform vec3 c; void main(){ gl_FragColor = vec4(c, 1.0); }" });
+    const o = new THREE.Mesh(mesh.geometry, m); o.renderOrder = -1; mesh.add(o); return o;
+  }
+  // silhouette (espace du torse, origine à la taille) — identique à AetherAvatar.BodyMorph côté jeu
+  A.bodyMorph = (x, y, z, b) => {
+    const g = 1 + 0.14 * b.bd, u = ss(0.1, 0.42, y);
+    const f = g * (1 + 0.14 * b.hp * (1 - u) + 0.14 * b.sh * u * ss(0.05, 0.13, Math.abs(x)));
+    return [x * f, y, z * (1 + 0.17 * b.bd)];
+  };
+  // proportions dérivées : longueur des jambes, carrure, position des épaules, épaisseur des bras et des jambes
+  A.bodyDims = b => ({ leg: 1 + 0.06 * b.lg, shoulder: (1 + 0.14 * b.bd) * (1 + 0.14 * b.sh), legW: (1 + 0.14 * b.bd) * (1 + 0.11 * b.hp), legD: 1 + 0.15 * b.bd, arm: 1 + 0.2 * b.bd });
+  A.headY = l => 1.6 + 0.92 * (A.bodyDims(A.unpackBody(l.body)).leg - 1);
+  // échelle globale : la taille demandée reste la vraie hauteur (sommet du crâne ≈ 1,73 m à l'échelle 1)
+  A.rootScale = l => (l.height || 1) * 1.73 / (1.73 + 0.92 * (A.bodyDims(A.unpackBody(l.body)).leg - 1));
+  const bodyCache = {};
+  function bodied(THREE, parts, name, body) {
+    const g = geo(THREE, parts, name); if (!g || body == null || (body & 0xfff) === A.BODY_NEUTRAL) return g;
+    const key = name + ":" + (body & 0xfff); if (bodyCache[key]) return bodyCache[key];
+    const b = A.unpackBody(body), c = g.clone(), p = c.attributes.position.array;
+    c.attributes.position = c.attributes.position.clone(); const q = c.attributes.position.array;
+    for (let i = 0; i < q.length; i += 3) { const r = A.bodyMorph(p[i], p[i + 1], p[i + 2], b); q[i] = r[0]; q[i + 1] = r[1]; q[i + 2] = r[2]; }
+    c.computeVertexNormals(); if (name === "torse") smoothNormals(c, 3);
+    return bodyCache[key] = c;
+  }
+  A.build = function (THREE, parts, l, opts) {
+    opts = opts || {};
+    const anime = opts.anime !== false;
+    const root = new THREE.Group();
+    const M = (c, rough = .6, metal = 0, extra, band, tint) => anime && !(extra && extra.emissive) && metal < .5
+      ? celPatch(new THREE.MeshToonMaterial(Object.assign({ color: C(THREE, c), gradientMap: toonRamp(THREE), toneMapped: false }, extra || {})), band, tint)
+      : new THREE.MeshStandardMaterial(Object.assign({ color: C(THREE, c), roughness: rough, metalness: metal }, extra || {}));
+    const skinC = A.SKINS[l.skin] || A.SKINS[1], hairC = A.HAIR_COLORS[l.hairColor] || A.HAIR_COLORS[0], eyeC = A.EYES[l.eyes] || A.EYES[0];
+    const skin = M(skinC, .55, 0, null, false, [.86, .72, .78]), hair = M(hairC, .42, 0, { vertexColors: true }, true), top = M(A.OUTFITS[l.top] || A.OUTFITS[0], .75), bot = M((A.OUTFITS[l.bottom] || A.OUTFITS[0]).map(v => v * .85), .8);
+    const leather = M([.2, .13, .09], .55), white = new THREE.MeshBasicMaterial({ color: C(THREE, [.9, .9, .93]), vertexColors: true, toneMapped: false }), dark = new THREE.MeshBasicMaterial({ color: C(THREE, eyeC.map(v => v * .16 + .015)), toneMapped: false });
+    const iris = new THREE.MeshBasicMaterial({ color: C(THREE, eyeC.map(v => Math.min(1, v * 1.15 + .08))), vertexColors: true, toneMapped: false });
+    const lips = M([skinC[0] * .62 + .1, skinC[1] * .42 + .02, skinC[2] * .42 + .03], .4), brows = M(hairC.map(v => v * .7), .7), metal = M([.12, .12, .13], .3, .8);
+    const beardM = M(hairC.map((v, i) => v * .55 + skinC[i] * .45), .7, 0, null, false, [.8, .74, .84]);
+    const OUT = { tete: .0008, jambes: .004, bottes: .004, torse: .004, ceinture: .003, cape: .004, bras: .045, main: .05 };
+    const OUTC = { tete: .42, barbe: .35 };
+    const HEADP = /^(tete|levres|yeux_|cils|sourcils|barbe|lunettes|cheveux|nez)/, BODYP = /^(torse|ceinture|cape)$/;
+    const sx = A.styleMorph(l), bd = A.unpackBody(l.body), dims = A.bodyDims(bd), dl = 0.92 * (dims.leg - 1);
+    const pick = (base, i) => i > 0 && parts[base + sfx(i)] ? base + sfx(i) : base;
+    const add = (parent, name, m, x = 0, y = 0, z = 0) => { const g = HEADP.test(name) ? morphed(THREE, parts, name, l.face, sx) : BODYP.test(name) ? bodied(THREE, parts, name, l.body) : geo(THREE, parts, name); if (!g) return null; const o = new THREE.Mesh(g, m); o.position.set(x, y, z); parent.add(o);
+      const w = name.startsWith("cheveux") ? .0011 : OUT[name.replace(/_\d+$/, "")];
+      if (anime && w && m.color) outline(THREE, o, m.color.clone().multiplyScalar(name.startsWith("cheveux") ? .28 : (OUTC[name] || .18)), w);
+      return o; };
+    const legs = new THREE.Group(); legs.scale.set(dims.legW, dims.leg, dims.legD); root.add(legs);
+    add(legs, "jambes", bot); add(legs, "bottes", leather);
+    const torso = new THREE.Group(); torso.position.y = .92 + dl; root.add(torso);
+    add(torso, "torse", top); add(torso, "ceinture", leather);
+    if (l.cape > 0 && A.CAPES[l.cape]) add(torso, "cape", M(A.CAPES[l.cape], .85, 0, { side: THREE.DoubleSide }));
+    const head = new THREE.Group(); head.position.y = 1.6 + dl; root.add(head);
+    const es = l.eyeShape | 0;
+    add(head, "tete", skin); add(head, pick("levres", l.mouth | 0), lips); add(head, pick("yeux_blanc", es), white); add(head, pick("yeux_iris", es), iris); add(head, pick("yeux_pupille", es), dark);
+    add(head, pick("sourcils", l.brows | 0), brows); add(head, "cheveux_" + Math.max(0, Math.min(A.HAIR_NAMES.length - 1, l.hair | 0)), hair);
+    add(head, pick("cils", es), new THREE.MeshBasicMaterial({ color: C(THREE, [.07, .05, .055]), toneMapped: false })); add(head, pick("yeux_reflet", es), new THREE.MeshBasicMaterial({ color: C(THREE, [.97, .97, .98]), toneMapped: false }));
+    if ((l.nose | 0) > 0) add(head, "nez_" + (l.nose | 0), M(skinC.map(v => v * .7), .6));
+    if (l.beard) add(head, "barbe", beardM);
+    if (l.glasses) add(head, pick("lunettes", l.glassesStyle | 0), metal);
+    for (const s of [-1, 1]) {
+      const sh = new THREE.Vector3(s * .22 * dims.shoulder, 1.42 + dl, 0), hd = new THREE.Vector3(s * (.28 + .22 * (dims.shoulder - 1)), .95 + dl, .05);
+      const d = hd.clone().sub(sh), len = d.length();
+      const arm = add(root, "bras", top); if (arm) { arm.position.copy(sh.clone().add(hd).multiplyScalar(.5)); arm.scale.set(.09 * dims.arm, len / 2, .09 * dims.arm); arm.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
+      const hand = add(root, "main", skin); if (hand) { hand.position.copy(hd); hand.scale.set(.085 * s, .085, .085); if (s < 0) { const hm = skin.clone(); if (anime) celPatch(hm, false, [.86, .72, .78]); hm.side = THREE.BackSide; hand.material = hm; } }
+    }
+    root.userData.head = head;
+    root.scale.setScalar(A.rootScale(l)); root.userData.headY = (1.6 + dl) * A.rootScale(l);
+    return root;
+  };
+  window.AetherAvatar3D = A;
+})();
+
+</script>
+<script>
+const A=window.AetherAvatar3D;
+const $=id=>document.getElementById(id);
+const css=c=>`rgb(${c.map(v=>Math.round(v*255)).join(",")})`;
+function store(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
+// taille : crans de 1,25 % de 85 % à 120 % (1,00 ≈ 173 cm)
+const H0=.85,HSTEP=.0125,HMAX=28,REF_CM=173;
+const hIndex=h=>Math.max(0,Math.min(HMAX,Math.round(((h||1)-H0)/HSTEP))),hOf=i=>Math.round((H0+i*HSTEP)*10000)/10000;
+let look={skin:1,hair:1,hairColor:0,eyes:0,top:0,bottom:0,cape:0,height:1,beard:false,glasses:false,
+  eyeShape:0,brows:0,nose:0,mouth:0,faceShape:0,glassesStyle:0,body:A.BODY_NEUTRAL};
+let pseudo="",PARTS=null;
+function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2800)}
+
+// ---------- chargement (écran d'accueil animé) ----------
+async function loadParts(){
+  const bar=$("spBar"),txt=$("spTxt");
+  try{
+    const r=await fetch("avatar-parts.json");
+    if(!r.ok)throw new Error(r.status);
+    const total=+r.headers.get("content-length")||1700000;
+    let got=0;const chunks=[];
+    if(r.body&&r.body.getReader){const rd=r.body.getReader();txt.textContent="Chargement des pièces de l'avatar…";
+      for(;;){const {done,value}=await rd.read();if(done)break;chunks.push(value);got+=value.length;bar.style.width=Math.min(96,got/total*100)+"%"}
+      const all=new Uint8Array(got);let o=0;for(const c of chunks){all.set(c,o);o+=c.length}
+      PARTS=JSON.parse(new TextDecoder().decode(all));
+    }else PARTS=await r.json();
+  }catch(e){PARTS=null;txt.textContent="Aperçu 3D indisponible, le reste de l'appli fonctionne."}
+  bar.style.width="100%";txt.textContent=PARTS?"Le royaume est prêt":txt.textContent;
+  setTimeout(()=>$("splash").classList.add("done"),PARTS?350:1200);
+}
+
+// ---------- contrôles ----------
+function swatches(el,list,key){el.innerHTML="";list.forEach((c,i)=>{if(!c)return;const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=css(c);b.dataset.i=i;b.setAttribute("aria-label",key+" "+(i+1));b.onclick=()=>{look[key]=i;refresh()};el.appendChild(b)})}
+function pills(el,names,key){el.innerHTML="";names.forEach((n,i)=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.i=i;b.onclick=()=>{look[key]=i;refresh()};el.appendChild(b)})}
+swatches($("swSkin"),A.SKINS,"skin");swatches($("swEyes"),A.EYES,"eyes");swatches($("swHairC"),A.HAIR_COLORS,"hairColor");
+swatches($("swTop"),A.OUTFITS,"top");swatches($("swBot"),A.OUTFITS,"bottom");
+pills($("cHair"),A.HAIR_NAMES,"hair");pills($("cCape"),A.CAPE_NAMES,"cape");
+pills($("cFaceShape"),A.FACE_SHAPE_NAMES,"faceShape");pills($("cEyeShape"),A.EYE_SHAPE_NAMES,"eyeShape");pills($("cBrows"),A.BROW_NAMES,"brows");
+pills($("cNose"),A.NOSE_NAMES,"nose");pills($("cMouth"),A.MOUTH_NAMES,"mouth");pills($("cGlasses"),A.GLASSES_NAMES,"glassesStyle");
+$("tBeard").onclick=()=>{look.beard=!look.beard;refresh()};$("tGlasses").onclick=()=>{look.glasses=!look.glasses;refresh()};
+$("height").oninput=e=>{look.height=hOf(+e.target.value);refresh()};
+// silhouette : 4 réglages de −3 à +3 (packés dans look.body, même format que le jeu)
+const BODY_IN={bd:"bBd",sh:"bSh",hp:"bHp",lg:"bLg"};
+for(const k in BODY_IN)$(BODY_IN[k]).oninput=e=>{const b=A.unpackBody(look.body);b[k]=+e.target.value/3;look.body=A.packBody(b);refresh()};
+$("pseudo").oninput=e=>{pseudo=e.target.value.trim();store("am_pseudo",pseudo)};
+function mark(el,v){[...el.children].forEach(b=>b.setAttribute("aria-pressed",+b.dataset.i===v))}
+function refresh(){
+  mark($("swSkin"),look.skin);mark($("swEyes"),look.eyes);mark($("swHairC"),look.hairColor);mark($("swTop"),look.top);mark($("swBot"),look.bottom);mark($("cHair"),look.hair);mark($("cCape"),look.cape);
+  $("nSkin").textContent=A.SKIN_NAMES[look.skin];$("nEyes").textContent=A.EYE_NAMES[look.eyes];$("nHairC").textContent=A.HAIR_COLOR_NAMES[look.hairColor];
+  $("nTop").textContent=A.OUTFIT_NAMES[look.top];$("nBot").textContent=A.OUTFIT_NAMES[look.bottom];
+  const hi=hIndex(look.height);$("height").value=hi;$("nHeight").textContent=(Math.round(hOf(hi)*1000)/10).toString().replace(".",",")+" % · ≈ "+Math.round(hOf(hi)*REF_CM)+" cm";
+  mark($("cFaceShape"),look.faceShape|0);mark($("cEyeShape"),look.eyeShape|0);mark($("cBrows"),look.brows|0);mark($("cNose"),look.nose|0);mark($("cMouth"),look.mouth|0);mark($("cGlasses"),look.glassesStyle|0);
+  $("nFaceShape").textContent=A.FACE_SHAPE_NAMES[look.faceShape|0];$("nEyeShape").textContent=A.EYE_SHAPE_NAMES[look.eyeShape|0];
+  $("fGlasses").hidden=!look.glasses;
+  const bm=A.unpackBody(look.body);for(const k in BODY_IN){const v=Math.round(bm[k]*3);$(BODY_IN[k]).value=v;$("n"+k[0].toUpperCase()+k[1]).textContent=A.BODY_NAMES[k][v+3]}
+  $("tBeard").setAttribute("aria-pressed",!!look.beard);$("tGlasses").setAttribute("aria-pressed",!!look.glasses);
+  const code=A.encode(look);$("code").textContent=code;$("code").classList.toggle("long",code.length>10);$("lookBadge").textContent=code;$("lookBadge").classList.toggle("long",code.length>10);
+  store("am_look",JSON.stringify(look));buildAvatar();
+}
+$("copy").onclick=async()=>{const t=$("code").textContent;try{await navigator.clipboard.writeText(t);toast("Code copié : "+t)}catch(e){const r=document.createRange();r.selectNodeContents($("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Code sélectionné : copie-le")}};
+
+// ---------- scène 3D ----------
+let renderer,scene,camera,avatar,yaw=0.45,vel=0,dragging=false,lastX=0,view="body",camT={p:new THREE.Vector3(0,1.05,3.9),l:new THREE.Vector3(0,.95,0)},camL=new THREE.Vector3(0,.95,0),motes;
+function initThree(){
+  if(!window.THREE){$("stageLoading").textContent="Aperçu 3D indisponible";return}
+  const cv=$("three");
+  try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){$("stageLoading").textContent="Aperçu 3D indisponible sur cet appareil";return}
+  renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(30,1,.05,60);camera.position.copy(camT.p);
+  scene.add(new THREE.HemisphereLight(0xc4d2ff,0x261d33,.75));
+  const key=new THREE.DirectionalLight(0xfff0dc,1.15);key.position.set(1.4,2.6,2.6);scene.add(key);
+  const rim=new THREE.DirectionalLight(0x7cc4ff,.9);rim.position.set(-2.2,2.2,-2.4);scene.add(rim);
+  const fill=new THREE.PointLight(0xf1cf7a,.35,6);fill.position.set(-1.4,1.2,1.8);scene.add(fill);
+  const ped=new THREE.Mesh(new THREE.CylinderGeometry(.6,.68,.14,64),new THREE.MeshStandardMaterial({color:0x1f2a4f,roughness:.45,metalness:.3}));ped.position.y=-.07;scene.add(ped);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(.52,.6,96),new THREE.MeshBasicMaterial({color:0x7cc4ff,transparent:true,opacity:.6,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.003;scene.add(ring);
+  const gold=new THREE.Mesh(new THREE.TorusGeometry(.66,.006,8,120),new THREE.MeshBasicMaterial({color:0xf1cf7a}));gold.rotation.x=-Math.PI/2;gold.position.y=-.005;scene.add(gold);
+  // poussière de cristal
+  const g=new THREE.BufferGeometry(),n=70,pos=new Float32Array(n*3);for(let i=0;i<n;i++){const a=Math.random()*6.28,r=.5+Math.random()*1.1;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=Math.random()*2.2;pos[i*3+2]=Math.sin(a)*r}
+  g.setAttribute("position",new THREE.BufferAttribute(pos,3));motes=new THREE.Points(g,new THREE.PointsMaterial({color:0x9fd6ff,size:.018,transparent:true,opacity:.7,depthWrite:false}));scene.add(motes);
+  cv.addEventListener("pointerdown",e=>{dragging=true;lastX=e.clientX;vel=0;cv.setPointerCapture(e.pointerId)});
+  cv.addEventListener("pointermove",e=>{if(dragging){const d=(e.clientX-lastX)*.012;yaw+=d;vel=d;lastX=e.clientX}});
+  const up=()=>dragging=false;cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  const resize=()=>{const r=cv.getBoundingClientRect();if(!r.width)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix()};
+  new ResizeObserver(resize).observe(cv);resize();
+  const still=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  const tick=t=>{
+    if(avatar){if(!dragging){yaw+=vel;vel*=.92;if(!still&&Math.abs(vel)<.0005&&view==="body")yaw+=.0035}avatar.rotation.y=yaw;
+      avatar.position.y=still?0:Math.sin(t/900)*.004;const h=avatar.userData.head;if(h&&!still){h.rotation.y=Math.sin(t/2300)*.12;h.rotation.x=Math.sin(t/3100)*.03}}
+    if(motes&&!still){motes.rotation.y=t/9000;}
+    camera.position.lerp(camT.p,.08);camL.lerp(camT.l,.08);camera.lookAt(camL);
+    renderer.render(scene,camera);requestAnimationFrame(tick)};
+  requestAnimationFrame(tick);
+}
+function setView(v){view=v;$("vBody").setAttribute("aria-pressed",v==="body");$("vFace").setAttribute("aria-pressed",v==="face");
+  const hy=A.headY(look)*A.rootScale(look);if(v==="face"){camT={p:new THREE.Vector3(0,hy+.015,.68),l:new THREE.Vector3(0,hy-.01,0)};yaw=0;vel=0}else camT={p:new THREE.Vector3(0,1.05,3.9),l:new THREE.Vector3(0,.95,0)}}
+$("vBody").onclick=()=>setView("body");$("vFace").onclick=()=>setView("face");
+function buildAvatar(){
+  if(!scene||!PARTS)return;
+  if(avatar){scene.remove(avatar);avatar.traverse(o=>{if(o.material)o.material.dispose()})}
+  avatar=A.build(THREE,PARTS,look);scene.add(avatar);$("stageLoading").hidden=true;
+  if(view==="face")setView("face");
+}
+
+// ---------- portraits (amis) ----------
+let pr=null;const portraits={};
+function portrait(code){
+  if(portraits[code])return portraits[code];if(!PARTS||!window.THREE)return null;
+  try{if(!pr){const c=document.createElement("canvas");c.width=c.height=128;const r=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true,preserveDrawingBuffer:true});r.outputEncoding=THREE.sRGBEncoding;r.toneMapping=THREE.ACESFilmicToneMapping;
+      const s=new THREE.Scene();s.add(new THREE.HemisphereLight(0xc4d2ff,0x261d33,.85));const k=new THREE.DirectionalLight(0xfff0dc,1.1);k.position.set(1,2,2.5);s.add(k);const cam=new THREE.PerspectiveCamera(22,1,.05,10);pr={c,r,s,cam}}
+    let l=null;if(/^AE/i.test(code))l=A.decode(code);if(!l){const [lk,fc]=code.split(":");l={...A.unpack(parseInt(lk,10)>>>0),face:fc!=null?parseInt(fc,10)>>>0:A.FACE_NEUTRAL}}const a=A.build(THREE,PARTS,l);a.rotation.y=.35;pr.s.add(a);
+    const hy=a.userData.headY||1.6*l.height;pr.cam.position.set(0,hy+.01,.85);pr.cam.lookAt(0,hy-.03,0);pr.r.setClearColor(0x16224a,1);pr.r.render(pr.s,pr.cam);
+    const url=pr.c.toDataURL("image/png");pr.s.remove(a);a.traverse(o=>{if(o.material)o.material.dispose()});return portraits[code]=url;
+  }catch(e){return null}
+}
+
+// ---------- analyse de la photo ----------
+function lab(c){let [r,g,b]=c.map(v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4));let x=(r*.4124+g*.3576+b*.1805)/.95047,y=r*.2126+g*.7152+b*.0722,z=(r*.0193+g*.1192+b*.9505)/1.08883;
+  const f=t=>t>.008856?Math.cbrt(t):7.787*t+16/116;return[116*f(y)-16,500*(f(x)-f(y)),200*(f(y)-f(z))]}
+const dE=(a,b)=>{const A1=lab(a),B=lab(b);return Math.hypot(A1[0]-B[0],A1[1]-B[1],A1[2]-B[2])};
+function nearest(c,list,skipFantasy){let bi=0,bd=1e9;list.forEach((p,i)=>{if(!p)return;if(skipFantasy&&skipFantasy.includes(i))return;const d=dE(c,p);if(d<bd){bd=d;bi=i}});return bi}
+const median=l=>{if(!l.length)return null;const m=k=>{const s=l.map(c=>c[k]).sort((a,b)=>a-b);return s[s.length>>1]};return[m(0),m(1),m(2)]};
+const L=c=>lab(c)[0];
+// ---------- IA du visage : maillage dense (Human / MediaPipe Face Mesh, 478 points) ----------
+const HUMAN_URL="https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/dist/human.js";
+let HU=null;
+async function loadHuman(){
+  if(HU!==null)return HU;
+  try{
+    if(!window.Human)await new Promise((ok,ko)=>{const s=document.createElement("script");s.src=HUMAN_URL;s.onload=ok;s.onerror=ko;document.head.appendChild(s)});
+    const off={enabled:false};
+    const h=new Human.Human({modelBasePath:"hm/",backend:"webgl",warmup:"none",debug:false,cacheSensitivity:0,
+      face:{enabled:true,detector:{enabled:true,rotation:true,maxDetected:1,minConfidence:.25,modelPath:"blazeface.json"},mesh:{enabled:true,modelPath:"facemesh.json"},iris:{enabled:true,modelPath:"iris.json"},
+        attention:off,description:off,emotion:off,antispoof:off,liveness:off,gear:off,ssrnet:off,mobilefacenet:off,insightface:off},
+      body:off,hand:off,object:off,gesture:off,segmentation:off,filter:off});
+    await h.load();HU=h;
+  }catch(e){console.warn("visage",e);HU=false}
+  return HU;
+}
+// repères « 68 points » pris dans le maillage de 478 points
+const M68=[234,93,132,58,172,136,150,149,152,378,379,365,397,288,361,323,454, 70,63,105,66,107, 336,296,334,293,300, 168,6,197,195, 98,97,2,326,327,
+  33,160,158,133,153,144, 362,385,387,263,373,380, 61,39,37,0,267,269,291,405,314,17,84,181, 78,82,13,312,308,317,14,87];
+// traits du visage (proportions → réglages −1..1 du code)
+function faceTraits(M){
+  const d=(a,b)=>Math.hypot(M[a][0]-M[b][0],M[a][1]-M[b][1],(M[a][2]||0)-(M[b][2]||0));
+  const W=d(234,454),H=d(10,152),c=(v,m,s)=>Math.max(-1,Math.min(1,(v-m)/s));
+  const ew=(d(33,133)+d(362,263))/2;
+  return{fw:c(W/H,.78,.07),fl:c(d(2,152)/H,.39,.035),jaw:c(d(172,397)/W,.72,.06),chin:c(d(17,152)/H,.22,.03),
+    es:c(ew/W,.205,.025),ed:c(d(133,362)/W,.225,.03),nose:c(d(129,358)/W,.25,.035),mouth:c(d(61,291)/W,.35,.04)};
+}
+function traitWords(m){const w=[];
+  w.push(m.fw>.35?"large":m.fw<-.35?"fin":"ovale");if(m.jaw>.35)w.push("mâchoire carrée");else if(m.jaw<-.35)w.push("menton en V");
+  if(m.es>.35)w.push("grands yeux");else if(m.es<-.35)w.push("yeux en amande");if(m.ed>.4)w.push("yeux écartés");if(m.mouth>.4)w.push("grand sourire");if(m.nose>.4)w.push("nez marqué");
+  return w.join(", ")}
+// ---------- styles du visage lus sur le maillage (sans IA) : yeux, sourcils, nez, bouche, forme du visage ----------
+function faceStyles(M,S,skin){
+  // repère redressé : coins externes des yeux à l'horizontale (tête penchée)
+  const cx=(M[33][0]+M[263][0])/2,cy=(M[33][1]+M[263][1])/2,an=-Math.atan2(M[263][1]-M[33][1],M[263][0]-M[33][0]),co=Math.cos(an),si=Math.sin(an);
+  const R=i=>{const x=M[i][0]-cx,y=M[i][1]-cy;return[x*co-y*si,x*si+y*co,M[i][2]||0]};
+  const d=(a,b)=>{const p=R(a),q=R(b);return Math.hypot(p[0]-q[0],p[1]-q[1])};
+  const deg=r=>r*180/Math.PI,Wf=d(234,454),Hf=d(10,152),ewR=d(33,133),ewL=d(362,263),ew=(ewR+ewL)/2,sL=L(skin);
+  // yeux : inclinaison (coin externe plus haut = +), ouverture, taille, pli de la paupière (ligne sombre entre paupière et sourcil)
+  const tilt=(deg(Math.atan2(R(133)[1]-R(33)[1],R(133)[0]-R(33)[0]))+deg(Math.atan2(R(362)[1]-R(263)[1],R(263)[0]-R(362)[0])))/2;
+  const open=(d(159,145)/ewR+d(386,374)/ewL)/2,size=ew/Wf;
+  const crease=(lid,brow)=>{const a=M[lid],b=M[brow],pr=[];
+    for(let k=0;k<=24;k++){const t=.12+.74*k/24,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t,c=[S.at(x-1,y),S.at(x,y),S.at(x+1,y)].filter(Boolean);if(!c.length)return 9;pr.push(c.reduce((s,v)=>s+L(v),0)/c.length)}
+    let best=0;for(let i=3;i<pr.length-3;i++)best=Math.max(best,Math.min(Math.max(...pr.slice(0,i)),Math.max(...pr.slice(i+1)))-pr[i]);return best};
+  const cr=Math.min(crease(159,52),crease(386,282));
+  let eyeShape=0;
+  if(cr<2.2&&open<.3)eyeShape=6;else if(tilt>9.5)eyeShape=5;else if(tilt<.5)eyeShape=4;else if(open<.24)eyeShape=3;
+  else if(open>.41&&size>.205)eyeShape=7;else if(open>.4)eyeShape=1;else if(tilt>6&&open<.33)eyeShape=2;
+  // sourcils : arc, pente (côté nez plus bas = froncés), épaisseur mesurée sur l'image
+  const brow=(up,s,ewx)=>{const p=up.map(R),a=p[0],b=p[p.length-1],dx=b[0]-a[0],dy=b[1]-a[1],ln=Math.hypot(dx,dy)||1;
+    return{arch:Math.max(...p.slice(1,-1).map(q=>((q[0]-a[0])*dy-(q[1]-a[1])*dx)/ln*s))/ewx,slope:(b[1]-a[1])/ewx}};
+  const bR=brow([70,63,105,66,107],1,ewR),bL=brow([300,293,334,296,336],-1,ewL),arch=(bR.arch+bL.arch)/2,slope=(bR.slope+bL.slope)/2;
+  const thick=[[105,52],[66,65],[334,282],[296,295]].map(([u,l])=>{const x=(M[u][0]+M[l][0])/2;let n=0;for(let y=M[u][1]-.35*ew;y<=M[l][1]+.3*ew;y+=1){const c=S.at(x,y);if(c&&L(c)<sL-14)n++}return n/ew}).sort((a,b)=>a-b);
+  const bth=(thick[1]+thick[2])/2;
+  let brows=0;
+  if(bth>.34)brows=3;else if(bth<.12)brows=4;else if(slope>-.1)brows=5;else if(slope<-.48)brows=6;else if(arch>.31)brows=2;else if(arch<.12)brows=1;
+  // nez : largeur des ailes, saillie (profondeur du maillage), bout relevé
+  const wN=d(129,358)/Wf,proj=((M[50][2]+M[280][2])/2-M[1][2])/Wf,up=(R(2)[1]-R(1)[1])/Hf;
+  let nose=0;
+  if(wN>.35)nose=3;else if(proj>.42)nose=5;else if(up>.045)nose=4;else if(wN<.255)nose=1;else if(wN<.275)nose=2;
+  // bouche : largeur, épaisseur des lèvres, coins relevés
+  const mw=d(61,291)/Wf,lips=(d(0,13)+d(14,17))/d(61,291),smile=((R(13)[1]+R(14)[1])/2-(R(61)[1]+R(291)[1])/2)/d(61,291);
+  let mouth=0;
+  if(smile>.09)mouth=5;else if(lips>.45)mouth=2;else if(lips<.15)mouth=1;else if(mw>.46)mouth=3;else if(mw<.3)mouth=4;
+  // forme du visage : longueur / largeur, mâchoire, menton, front
+  const hw=Hf/Wf,jw=d(172,397)/Wf,cw=d(150,379)/Wf,fh=d(54,284)/Wf;
+  let faceShape=1;
+  if(hw>1.32)faceShape=5;else if(jw>.84&&cw>.6)faceShape=3;else if(hw<1.1&&jw>.78)faceShape=2;else if(fh>.9&&jw<.74)faceShape=4;else if(jw<.72)faceShape=0;
+  return{eyeShape,brows,nose,mouth,faceShape,raw:{tilt,open,size,cr,arch,slope,bth,wN,proj,up,mw,lips,smile,hw,jw,cw,fh}};
+}
+// coiffure d'après les mesures (longueur, frange, volume, texture) ; indices de A.HAIR_NAMES. −1 = zone hors de la photo
+function pickHair(m){
+  const k=v=>v!=null&&v>=0;
+  if(m.bald)return 0;
+  if(m.above>.45&&m.templeF>.45)return 7;                                   // afro / gros volume
+  if(m.belowF>.3){if(m.chestF>.3)return 17;if(m.curl>1.3)return 9;return m.bangsF>.55?3:13}   // longs
+  if(m.sideF>.22){if(m.belowF>.12)return 16;if(m.bangsF>.55&&m.curl<1.1)return 15;return 2}    // mi-longs
+  if(m.curl>1.45)return 6;                                                   // bouclé court
+  if(k(m.templeF)&&m.templeF<.12)return m.vol!=null&&m.vol>.85&&k(m.bangsF)&&m.bangsF<.2?22:12;   // tempes dégagées : plaqué ou dégradé
+  if(!k(m.bangsF))return 1;
+  if(m.bangsF<.18)return k(m.centreF)&&m.centreF<.15&&m.sideForeF>.3?20:22; // front dégagé : raie au milieu ou plaqué
+  if(m.bangsF<.45)return m.sideForeF>m.centreF+.15?20:10;                   // frange partielle : rideau ou mèche balayée
+  return m.vol!=null&&m.vol>.85?14:1;                                        // frange pleine : épis en couches ou court
+}
+// monture : épaisseur du cadre sous l'œil et sur le bord externe (pixels sombres)
+function frameStyle(S,M,skin){
+  const sL=L(skin);let dk=0,n=0;
+  for(const [o,i] of [[33,133],[263,362]]){const ex=(M[o][0]+M[i][0])/2,ey=(M[o][1]+M[i][1])/2,ew=Math.hypot(M[o][0]-M[i][0],M[o][1]-M[i][1]),s=Math.sign(M[o][0]-M[i][0]);
+    for(let y=ey+.4*ew;y<=ey+.8*ew;y+=1)for(let x=ex-.6*ew;x<=ex+.6*ew;x+=2){const c=S.at(x,y);if(c){n++;if(L(c)<sL-22)dk++}}
+    for(let x=ex+s*.75*ew;Math.abs(x-ex)<=1.05*ew;x+=s)for(let y=ey-.3*ew;y<=ey+.4*ew;y+=2){const c=S.at(x,y);if(c){n++;if(L(c)<sL-22)dk++}}}
+  const f=n?dk/n:0;return f>.26?5:f<.09?3:2;
+}
+// silhouette de la personne (segmentation « selfie », sur le téléphone) → fonction (x, y) → vrai si personne
+async function segMask(h,cv){
+  try{
+    const t=await h.segmentation(cv,{segmentation:{enabled:true,modelPath:"selfie.json",mode:"alpha"}});if(!t||!t.shape)return null;
+    const mh=t.shape[0],mw=t.shape[1],a=await t.data();if(t.dispose)t.dispose();
+    let on=0;for(let i=0;i<a.length;i+=7)if(a[i]>127)on++;if(on<a.length/7*.02)return null;
+    const W=cv.width,H=cv.height;
+    return (x,y)=>{x=Math.round(x*mw/W);y=Math.round(y*mh/H);return x>=0&&y>=0&&x<mw&&y<mh&&a[y*mw+x]>127};
+  }catch(e){console.warn("silhouette",e);return null}
+}
+// animation du scan : le maillage se dessine de haut en bas, puis les 478 points s'allument
+async function drawMesh(ctx,M,tri){
+  const T=[];for(let i=0;i+2<tri.length;i+=3){const a=M[tri[i]],b=M[tri[i+1]],c=M[tri[i+2]];if(a&&b&&c)T.push([a,b,c,(a[1]+b[1]+c[1])/3])}
+  T.sort((p,q)=>p[3]-q[3]);
+  ctx.lineWidth=.6;ctx.strokeStyle="rgba(124,196,255,.55)";const step=Math.max(1,Math.ceil(T.length/26));
+  for(let i=0;i<T.length;i+=step){for(let k=i;k<Math.min(T.length,i+step);k++){const [a,b,c]=T[k];ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.lineTo(c[0],c[1]);ctx.closePath();ctx.stroke()}
+    await new Promise(r=>setTimeout(r,28))}
+  ctx.fillStyle="#d6efff";for(let i=0;i<M.length;i++){ctx.beginPath();ctx.arc(M[i][0],M[i][1],i>=468?1.6:.9,0,7);ctx.fill();if(i%60===59)await new Promise(r=>setTimeout(r,16))}
+}
+// Claude regarde la photo (avec l'accord de la personne) et choisit les pièces qui ressemblent le plus
+let SAMPLE;
+async function getSample(){if(SAMPLE!==undefined)return SAMPLE;try{SAMPLE=window.claude&&claude.use?await claude.use("sample"):null}catch(e){SAMPLE=null}return SAMPLE}
+async function aiCrop(img,box,sc){
+  const [bx,by,bw,bh]=box.map(v=>v*sc);const x0=Math.max(0,bx-bw*.55),y0=Math.max(0,by-bh*.75),x1=Math.min(img.width,bx+bw*1.55),y1=Math.min(img.height,by+bh*1.75);
+  const w=x1-x0,h=y1-y0,k=Math.min(1,640/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);
+  c.getContext("2d").drawImage(img,x0,y0,w,h,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,"image/jpeg",.88));
+}
+async function aiRead(blob){
+  const S=await getSample();if(!S||!blob)return null;
+  const lim=await S.limits().catch(()=>null);if(!lim||!lim.images)return null;
+  const L2=n=>n.map((x,i)=>i+" = "+x).join(", ");
+  const prompt=`Tu crées l'avatar d'un joueur pour Aether, un jeu en réalité virtuelle au style anime (inspiré de Sword Art Online). Regarde la personne sur la photo et choisis, dans chaque liste, l'indice qui la recrée le plus fidèlement.
+Teint de peau : ${L2(A.SKIN_NAMES)}
+Coiffure (longueur et forme réelles) : ${L2(A.HAIR_NAMES)}
+Couleur des cheveux : ${L2(A.HAIR_COLOR_NAMES)}
+Couleur des yeux : ${L2(A.EYE_NAMES)}
+Couleur du haut porté : ${L2(A.OUTFIT_NAMES)}
+Forme du visage (faceShape) : ${L2(A.FACE_SHAPE_NAMES)}
+Forme des yeux (eyeShape) : ${L2(A.EYE_SHAPE_NAMES)}
+Sourcils (brows) : ${L2(A.BROW_NAMES)}
+Nez (nose) : ${L2(A.NOSE_NAMES)}
+Bouche (mouth) : ${L2(A.MOUTH_NAMES)}
+Monture de lunettes (glassesStyle, seulement si "glasses" = true) : ${L2(A.GLASSES_NAMES)}
+Règles : "beard" = true seulement pour une vraie barbe bien fournie (une barbe de quelques jours ou un duvet = false). Pour les cheveux, regarde attentivement la couleur réelle sous la lumière (châtain clair, châtain, brun…) et la coupe réelle (longueur, frange, épis, raie, attache). "glasses" = true seulement si la personne porte des lunettes. Pour le visage, les yeux, les sourcils, le nez et la bouche, choisis la forme la plus proche de la vraie personne (même si le rendu reste anime).
+Réponds UNIQUEMENT avec ce JSON, sans texte autour :
+{"skin":0,"hair":0,"hairColor":0,"eyes":0,"beard":false,"glasses":false,"glassesStyle":0,"top":0,"faceShape":0,"eyeShape":0,"brows":0,"nose":0,"mouth":0,"traits":"une courte phrase en français (12 mots maximum) décrivant son visage comme un personnage d'anime"}`;
+  return await S.json(prompt,{images:[blob],modelTier:"default"});
+}
+function useAi(){const t=$("tAi");return !t||t.getAttribute("aria-pressed")==="true"}
+
+function sampler(px,W,H){
+  const at=(x,y)=>{x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=W||y>=H)return null;const i=(y*W+x)*4;return[px[i]/255,px[i+1]/255,px[i+2]/255]};
+  const disc=(cx,cy,r)=>{const o=[];for(let y=-r;y<=r;y+=1.5)for(let x=-r;x<=r;x+=1.5)if(x*x+y*y<=r*r){const c=at(cx+x,cy+y);if(c)o.push(c)}return o};
+  const rect=(x0,y0,x1,y1)=>{const o=[];for(let y=Math.max(0,y0);y<Math.min(H,y1);y+=2)for(let x=Math.max(0,x0);x<Math.min(W,x1);x+=2){const c=at(x,y);if(c)o.push(c)}return o};
+  // pixels (pas de 2) dont la position vérifie ok(x,y) ; fraction de positions qui vérifient pred(couleur,x,y)
+  const rectP=(x0,y0,x1,y1,ok,st=2)=>{const o=[];for(let y=Math.max(0,y0);y<Math.min(H,y1);y+=st)for(let x=Math.max(0,x0);x<Math.min(W,x1);x+=st){if(!ok(x,y))continue;const c=at(x,y);if(c)o.push(c)}return o};
+  const frac=(x0,y0,x1,y1,pred)=>{let n=0,k=0;for(let y=Math.max(0,y0);y<Math.min(H,y1);y+=2)for(let x=Math.max(0,x0);x<Math.min(W,x1);x+=2){const c=at(x,y);if(!c)continue;n++;if(pred(c,x,y))k++}return n>=8?k/n:-1};   // −1 : zone hors de l'image (inconnue)
+  return{at,disc,rect,rectP,frac};
+}
+function lapEnergy(px,W,H,x0,y0,x1,y1){let s=0,n=0;const g=(x,y)=>{const i=(y*W+x)*4;return px[i]*.3+px[i+1]*.59+px[i+2]*.11};
+  for(let y=Math.max(2,y0|0);y<Math.min(H-2,y1);y+=2)for(let x=Math.max(2,x0|0);x<Math.min(W-2,x1);x+=2){s+=Math.abs(4*g(x,y)-g(x-2,y)-g(x+2,y)-g(x,y-2)-g(x,y+2));n++}return n?s/n:0}
+
+let busy=false;
+async function analyse(img){
+  if(busy)return;busy=true;
+  try{
+  const fr=$("frame"),st=$("status");
+  const W=480,H=Math.round(img.height*W/img.width),cv=document.createElement("canvas"),ctx=cv.getContext("2d",{willReadFrequently:true});
+  cv.width=W;cv.height=H;ctx.drawImage(img,0,0,W,H);
+  const dv=$("photoCv"),dx=dv.getContext("2d");fr.parentElement.classList.add("has");
+  // affichage : recadré sur le visage (4:3), le maillage y est dessiné à la bonne échelle
+  const show=(bx)=>{const cx=bx?bx[0]+bx[2]/2:W/2,cy=bx?bx[1]+bx[3]*.48:H*.42,sz=bx?Math.max(bx[2],bx[3])*1.25:Math.min(W,H)*.9;
+    const w=sz*4/3,h=sz;dv.width=480;dv.height=360;const k=480/w;dx.setTransform(1,0,0,1,0,0);dx.fillStyle="#0b1228";dx.fillRect(0,0,480,360);
+    dx.setTransform(k,0,0,k,-(cx-w/2)*k,-(cy-h/2)*k);dx.drawImage(cv,0,0)};
+  show(null);dv.hidden=false;$("frameTxt").hidden=true;fr.classList.add("scanning");$("found").innerHTML="";
+  st.textContent="Chargement de l'IA du visage…";
+  const px=ctx.getImageData(0,0,W,H).data;const S=sampler(px,W,H);
+  let M=null,box=null,tri=null;
+  const h=await loadHuman();
+  if(h){st.textContent="Recherche du visage…";
+    try{const r=await h.detect(cv,{face:{enabled:true},body:{enabled:false}});const f=r&&r.face&&r.face[0];if(f&&f.mesh&&f.mesh.length>=468){M=f.mesh;tri=h.faceTriangulation;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(let i=0;i<468;i++){const q=M[i];x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1])}box=[x0,y0,x1-x0,y1-y0]}}catch(e){console.warn(e)}}
+  let res,traits=null,styles=null;
+  if(M){st.textContent=M.length+" points du visage trouvés : maillage en cours…";
+    show(box);const seg=segMask(h,cv);await drawMesh(dx,M,tri||[]);
+    st.textContent="Détourage des cheveux et lecture des traits…";const mk=await seg;
+    const P=M68.map(i=>[M[i][0],M[i][1]]);
+    res=readWithLandmarks(px,W,H,S,P,M,mk);
+    traits=faceTraits(M);res.look.face=A.packFace(traits);
+    styles=faceStyles(M,S,res.skin);window.__styles=styles.raw;
+    for(const k of ["eyeShape","brows","nose","mouth","faceShape"])res.look[k]=styles[k];
+  }else{st.textContent="Lecture approximative (visage non repéré)…";res=readRough(px,W,H,S)}
+  Object.assign(look,res.look);
+  fr.classList.remove("scanning");
+  const chips=()=>{$("found").innerHTML="";
+    const c=[["Peau",A.SKIN_NAMES[look.skin]],["Cheveux",A.HAIR_NAMES[look.hair].toLowerCase()+", "+A.HAIR_COLOR_NAMES[look.hairColor].toLowerCase()],["Yeux",A.EYE_NAMES[look.eyes].toLowerCase()]];
+    if(traits)c.push(["Visage",A.FACE_SHAPE_NAMES[look.faceShape|0].toLowerCase()+", "+traitWords(traits)]);
+    if(styles)c.push(["Yeux (forme)",A.EYE_SHAPE_NAMES[look.eyeShape|0].toLowerCase()],["Sourcils",A.BROW_NAMES[look.brows|0].toLowerCase()],["Nez",A.NOSE_NAMES[look.nose|0].toLowerCase()],["Bouche",A.MOUTH_NAMES[look.mouth|0].toLowerCase()]);
+    c.push(["Barbe",look.beard?"oui":"non"],["Lunettes",look.glasses?A.GLASSES_NAMES[look.glassesStyle|0].toLowerCase():"non"]);
+    c.forEach(([k,v])=>{const s=document.createElement("span");s.className="chip";s.append(k+" : ");const b=document.createElement("b");b.textContent=v;s.append(b);$("found").append(s)})};
+  chips();
+  if(!M){const s=document.createElement("span");s.className="chip warn";s.textContent="Visage mal repéré : ajuste à la main";$("found").append(s)}
+  refresh();setView("face");
+  // ---- Claude affine les choix (couleurs, coiffure, barbe, lunettes) ----
+  if(M&&box&&useAi()){
+    st.innerHTML="";const sp=document.createElement("span");sp.className="ai-run";sp.textContent="L'IA Claude étudie ton visage…";st.append(sp);
+    try{
+      const blob=await aiCrop(img,box,img.width/W);const r=await aiRead(blob);
+      if(r&&typeof r==="object"){
+        const I=(v,n)=>Number.isInteger(v)&&v>=0&&v<n;
+        if(I(r.skin,A.SKINS.length))look.skin=r.skin;if(I(r.hair,A.HAIR_NAMES.length))look.hair=r.hair;if(I(r.hairColor,A.HAIR_COLORS.length))look.hairColor=r.hairColor;
+        if(I(r.eyes,A.EYES.length))look.eyes=r.eyes;if(I(r.top,A.OUTFITS.length))look.top=r.top;if(typeof r.beard==="boolean")look.beard=r.beard;if(typeof r.glasses==="boolean")look.glasses=r.glasses;
+        for(const [k,n] of [["faceShape",A.FACE_SHAPE_NAMES],["eyeShape",A.EYE_SHAPE_NAMES],["brows",A.BROW_NAMES],["nose",A.NOSE_NAMES],["mouth",A.MOUTH_NAMES],["glassesStyle",A.GLASSES_NAMES]])if(I(r[k],n.length))look[k]=r[k];
+        refresh();chips();
+        if(typeof r.traits==="string"&&r.traits.trim()){const s=document.createElement("span");s.className="chip ai";s.append("IA : ");const b=document.createElement("b");b.textContent=r.traits.trim().slice(0,90);s.append(b);$("found").append(s)}
+        st.textContent="Avatar recréé par l'IA d'après ta photo. Ajuste un détail si besoin.";toast("L'IA a recréé ton visage");
+      }else st.textContent="Avatar sculpté d'après ton visage ("+M.length+" points). Ajuste un détail si besoin.";
+    }catch(e){
+      const c=e&&e.code;st.textContent=c==="not_granted"?"IA refusée : avatar fait avec les "+M.length+" points du visage seulement.":c==="rate_limited"?"IA occupée : réessaie dans un moment. Avatar fait avec les points du visage.":"Avatar sculpté d'après les "+M.length+" points de ton visage.";
+    }
+  }else{st.textContent=M?"Avatar sculpté d'après les "+M.length+" points de ton visage. Ajuste un détail si besoin.":"Essaie une photo de face, bien éclairée, pour un meilleur résultat.";toast("Avatar créé à partir de ta photo")}
+  setTimeout(()=>setView("body"),3200);
+  }finally{busy=false}
+}
+function readWithLandmarks(px,W,H,S,P,M,mk){
+  const mid=(a,b)=>[(P[a][0]+P[b][0])/2,(P[a][1]+P[b][1])/2],avg=ids=>ids.reduce((s,i)=>[s[0]+P[i][0]/ids.length,s[1]+P[i][1]/ids.length],[0,0]);
+  const faceW=Math.hypot(P[16][0]-P[0][0],P[16][1]-P[0][1]),browY=Math.min(P[19][1],P[24][1]),chinY=P[8][1],faceH=chinY-browY,cx=(P[0][0]+P[16][0])/2;
+  const ok=c=>{const l=L(c);return l>12&&l<92};
+  // peau : deux joues + front
+  const cl=avg([1,31,41,48]),cr=avg([15,35,46,54]);const r=Math.max(3,faceW*.07);
+  const skinPx=[...S.disc(cl[0],cl[1],r),...S.disc(cr[0],cr[1],r)].filter(ok);const skin=median(skinPx)||[.8,.62,.5];
+  // fond : coins hauts (ou tout ce qui est hors de la silhouette quand la segmentation a marché)
+  const inP=(x,y)=>!mk||mk(x,y);
+  const bg=(mk&&median(S.rectP(0,0,W,H,(x,y)=>!mk(x,y),6)))||median([...S.rect(0,0,W*.12,H*.12),...S.rect(W*.88,0,W,H*.12)])||[0,0,0];
+  // cheveux : bande au-dessus du front
+  const top=browY-faceH*.95,hb=(mk?S.rectP(cx-faceW*.35,top,cx+faceW*.35,browY-faceH*.32,inP):S.rect(cx-faceW*.35,top,cx+faceW*.35,browY-faceH*.32)).filter(c=>dE(c,bg)>14);
+  const nonSkin=hb.filter(c=>dE(c,skin)>16);
+  const bald=hb.length>20&&nonSkin.length/hb.length<.25;
+  const hairC=median(nonSkin.length>10?nonSkin:hb)||[.2,.15,.1];
+  const isHair=c=>dE(c,hairC)<20&&dE(c,skin)>12&&(mk||dE(c,bg)>12);
+  const fr=(x0,y0,x1,y1)=>S.frac(x0,y0,x1,y1,(c,x,y)=>inP(x,y)&&isHair(c)),av=(...v)=>{const k=v.filter(x=>x>=0);return k.length?k.reduce((a,b)=>a+b)/k.length:-1};
+  // longueur : côtés du visage sous les oreilles, sous le menton, sur la poitrine
+  const sideF=av(fr(P[0][0]-faceW*.32,P[3][1],P[0][0]-faceW*.02,chinY+faceH*.35),fr(P[16][0]+faceW*.02,P[13][1],P[16][0]+faceW*.32,chinY+faceH*.35));
+  const belowF=av(fr(P[0][0]-faceW*.3,chinY+faceH*.3,P[0][0]+faceW*.1,chinY+faceH*.8),fr(P[16][0]-faceW*.1,chinY+faceH*.3,P[16][0]+faceW*.3,chinY+faceH*.8));
+  const chestY=chinY+faceH*1.15,chestF=av(fr(P[0][0]-faceW*.3,chestY,P[0][0]+faceW*.05,chestY+faceH*.4),fr(P[16][0]-faceW*.05,chestY,P[16][0]+faceW*.3,chestY+faceH*.4));
+  // volume au-dessus de la tête et sur les tempes
+  const above=fr(cx-faceW*.4,browY-faceH*1.45,cx+faceW*.4,browY-faceH*1.05);
+  const templeF=av(fr(P[0][0]-faceW*.35,browY-faceH*.4,P[0][0]-faceW*.08,P[2][1]),fr(P[16][0]+faceW*.08,browY-faceH*.4,P[16][0]+faceW*.35,P[14][1]));
+  // frange : front couvert (centre / côtés) → frange droite, mèche balayée, raie au milieu, front dégagé
+  const bangsF=fr(cx-faceW*.22,browY-faceH*.42,cx+faceW*.22,browY-faceH*.06);
+  const centreF=fr(cx-faceW*.06,browY-faceH*.42,cx+faceW*.06,browY-faceH*.12);
+  const sideForeF=av(fr(cx-faceW*.34,browY-faceH*.42,cx-faceW*.16,browY-faceH*.06),fr(cx+faceW*.16,browY-faceH*.42,cx+faceW*.34,browY-faceH*.06));
+  // hauteur de la masse de cheveux au-dessus des sourcils (silhouette segmentée)
+  let vol=null;if(mk){let ty=browY;for(let y=Math.max(0,browY|0);y>=0;y-=2){let n=0;for(let x=cx-faceW*.3;x<=cx+faceW*.3;x+=3)if(mk(x,y))n++;if(n>=3)ty=y;else if(y<browY-faceH*.3)break}vol=(browY-ty)/faceH}
+  // texture : boucles
+  const curl=lapEnergy(px,W,H,cx-faceW*.3,browY-faceH*.85,cx+faceW*.3,browY-faceH*.35)/Math.max(8,L(hairC)*1.2+8);
+  const hm={bald,above,templeF,sideF,belowF,chestF,curl,bangsF,centreF,sideForeF,vol};
+  const hair=pickHair(hm);window.__hair=hm;
+  // yeux : iris sans pupille ni reflets
+  const eyeC=e=>{const ids=e?[42,43,44,45,46,47]:[36,37,38,39,40,41];const c=avg(ids),w=Math.hypot(P[ids[3]][0]-P[ids[0]][0],P[ids[3]][1]-P[ids[0]][1]);return S.disc(c[0],c[1],Math.max(2,w*.2)).filter(x=>{const l=L(x);return l>18&&l<70})};
+  const irisPx=M&&M.length>=478?[468,473].flatMap(k=>{const r=Math.max(1.5,Math.hypot(M[k+1][0]-M[k+3][0],M[k+1][1]-M[k+3][1])*.32);return S.disc(M[k][0],M[k][1],r).filter(x=>{const l=L(x);return l>12&&l<75})}):[];
+  const iris=median(irisPx.length>6?irisPx:[...eyeC(0),...eyeC(1)])||[.3,.2,.12];
+  const [il,ia,ib]=lab(iris);let eyes=0;
+  if(ib<-4&&ia<6)eyes=il>48?7:1;else if(ia<-5&&ib<12)eyes=2;else if(Math.hypot(ia,ib)<7&&il>40)eyes=3;else if(ib>14&&il>38)eyes=6;else eyes=0;
+  // barbe : bas du visage plus sombre que les joues et proche des cheveux
+  const chin=[...S.disc(P[8][0],P[8][1]-faceH*.06,faceW*.08),...S.disc(P[57][0],(P[57][1]+P[8][1])/2,faceW*.06),...S.disc(P[33][0],(P[33][1]+P[51][1])/2,faceW*.035)].filter(c=>L(c)>5);
+  const chinC=median(chin)||skin;const beard=dE(chinC,skin)>14&&L(chinC)<L(skin)-8;
+  // lunettes : arêtes nettes sur l'arête du nez et autour des yeux
+  const bridge=lapEnergy(px,W,H,P[39][0],P[27][1]-faceH*.05,P[42][0],P[28][1]);
+  const cheek=lapEnergy(px,W,H,cl[0]-r,cl[1]-r,cl[0]+r,cl[1]+r)+1;
+  const ring=lapEnergy(px,W,H,P[36][0]-faceW*.05,P[37][1]-faceH*.12,P[45][0]+faceW*.05,P[37][1]-faceH*.05)+1;
+  const glasses=bridge/cheek>3.2&&ring/cheek>2.6;
+  const glassesStyle=glasses?frameStyle(S,M,skin):look.glassesStyle|0;
+  // vêtement : sous le menton
+  const shirt=median(S.rect(cx-faceW*.5,chinY+faceH*.55,cx+faceW*.5,chinY+faceH*1.1).filter(c=>dE(c,bg)>10))||[.15,.15,.18];
+  // dessin des repères
+  return{look:{skin:nearest(skin,A.SKINS),hair,hairColor:bald?look.hairColor:nearest(hairC,A.HAIR_COLORS,[4,6,7]),eyes,beard,glasses,glassesStyle,top:nearest(shirt,A.OUTFITS)},skin};
+}
+function readRough(px,W,H,S){
+  const isSkin=c=>{const [R,G,B]=c.map(v=>v*255);return R>60&&G>30&&B>15&&R>G&&R>B&&(R-Math.min(G,B))>12&&R-B<170};
+  let sx=0,sy=0,n=0;for(let y=H*.1|0;y<H*.8;y+=3)for(let x=W*.15|0;x<W*.85;x+=3){const c=S.at(x,y);if(c&&isSkin(c)){sx+=x;sy+=y;n++}}
+  const cx=n?sx/n:W/2,cy=n?sy/n:H*.42,fw=W*.38,fh=fw*1.3;
+  const skin=median(S.disc(cx,cy+fh*.1,fw*.12).filter(isSkin))||[.85,.68,.55];
+  const hairC=median(S.rect(cx-fw*.3,cy-fh*.75,cx+fw*.3,cy-fh*.5))||[.2,.15,.1];
+  const shirt=median(S.rect(cx-fw*.4,cy+fh*.9,cx+fw*.4,cy+fh*1.3))||[.15,.15,.18];
+  return{look:{skin:nearest(skin,A.SKINS),hair:dE(hairC,skin)<14?0:1,hairColor:nearest(hairC,A.HAIR_COLORS,[4,6,7]),top:nearest(shirt,A.OUTFITS)}};
+}
+function onFile(e){const file=e.target.files&&e.target.files[0];e.target.value="";if(!file)return;const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{analyse(img).catch(()=>toast("Analyse impossible, réessaie"));URL.revokeObjectURL(url)};img.onerror=()=>toast("Impossible de lire cette image");img.src=url}
+$("fileCam").onchange=onFile;$("fileLib").onchange=onFile;
+$("tAi").onclick=()=>{const t=$("tAi"),v=t.getAttribute("aria-pressed")!=="true";t.setAttribute("aria-pressed",v);store("am_ai",v?"1":"0")};
+if(load("am_ai")==="0")$("tAi").setAttribute("aria-pressed","false");
+getSample().then(S=>{if(!S)$("tAi").hidden=true;else S.limits().then(l=>{if(!l||!l.images)$("tAi").hidden=true}).catch(()=>$("tAi").hidden=true)});
+
+// ---------- scan du corps (option) : silhouette + 17 points du corps, calculés sur le téléphone ----------
+// Seules les mesures (des rapports de longueurs) sont gardées en mémoire, jamais les photos.
+const BODY={f:null,s:null};let bBusy=false;
+async function bodyRead(img){
+  const W=Math.min(480,img.width),H=Math.round(img.height*W/img.width),cv=document.createElement("canvas");cv.width=W;cv.height=H;cv.getContext("2d").drawImage(img,0,0,W,H);
+  const h=await loadHuman();if(!h)return null;
+  let kp=null;
+  try{const r=await h.detect(cv,{face:{enabled:false},body:{enabled:true,modelPath:"movenet-lightning.json",maxDetected:1,minConfidence:.15}});
+    const b=r&&r.body&&r.body[0];if(b&&b.keypoints){kp={};for(const k of b.keypoints)if(k.score>.25&&k.position)kp[k.part]=k.position}}catch(e){console.warn("corps",e)}
+  const mk=await segMask(h,cv);
+  cv.width=1;   // l'image est oubliée tout de suite
+  return{W,H,kp:kp&&Object.keys(kp).length>=5?kp:null,mk};
+}
+const mid2=(kp,a,b)=>kp&&kp[a]&&kp[b]?[(kp[a][0]+kp[b][0])/2,(kp[a][1]+kp[b][1])/2]:kp&&(kp[a]||kp[b])?(kp[a]||kp[b]).slice(0,2):null;
+// largeur de la silhouette sur la ligne y, autour de x0 (petits trous tolérés), moyenne sur 5 lignes
+function spanAt(mk,W,y,x0){const ws=[];for(let dy=-2;dy<=2;dy++){const yy=y+dy;if(!mk(x0,yy))continue;let l=x0,r=x0,g=0;
+  for(let x=x0-1;x>=0;x--){if(mk(x,yy)){l=x;g=0}else if(++g>2)break}g=0;for(let x=x0+1;x<W;x++){if(mk(x,yy)){r=x;g=0}else if(++g>2)break}ws.push(r-l+1)}
+  return ws.length?ws.sort((a,b)=>a-b)[ws.length>>1]:0}
+function extentY(mk,W,H,x0,band){let top=null,bot=null;
+  for(let y=0;y<H&&top==null;y+=1)for(let x=x0-band;x<=x0+band;x+=2)if(mk(x,y)){top=y;break}
+  for(let y=H-1;y>=0&&bot==null;y-=1)for(let x=x0-band*1.6;x<=x0+band*1.6;x+=2)if(mk(x,y)){bot=y;break}
+  return[top,bot]}
+function centreX(mk,W,H){let s=0,n=0;for(let y=0;y<H;y+=4)for(let x=0;x<W;x+=4)if(mk(x,y)){s+=x;n++}return n?s/n:W/2}
+function frontMeasure(R){
+  const {W,H,kp,mk}=R,hip=mid2(kp,"leftHip","rightHip"),sh=mid2(kp,"leftShoulder","rightShoulder"),ank=mid2(kp,"leftAnkle","rightAnkle"),nose=kp&&kp.nose;
+  const cx=Math.round(hip?hip[0]:sh?sh[0]:mk?centreX(mk,W,H):W/2);
+  let top=null,bot=null;
+  if(mk)[top,bot]=extentY(mk,W,H,cx,W*.06);
+  if(top==null&&nose)top=nose[1]-(ank?(ank[1]-nose[1])*.14:0);
+  if(bot==null&&ank)bot=ank[1]+(ank[1]-(nose?nose[1]:top))*.045;
+  if(top==null||bot==null||bot-top<H*.35)return null;           // personne pas visible en entier
+  const Hp=bot-top,o={Hp,kp:!!kp,mk:!!mk};
+  if(kp&&kp.leftShoulder&&kp.rightShoulder)o.sh=Math.hypot(kp.leftShoulder[0]-kp.rightShoulder[0],kp.leftShoulder[1]-kp.rightShoulder[1])/Hp;
+  const hipY=hip?hip[1]:top+.52*Hp,shY=sh?sh[1]:top+.19*Hp;
+  if(mk){o.hipW=spanAt(mk,W,Math.round(hipY),cx)/Hp;o.waistW=spanAt(mk,W,Math.round(shY+(hipY-shY)*.62),cx)/Hp}
+  if(hip&&ank)o.leg=(ank[1]-hip[1])/Hp;
+  const wr=kp&&kp.leftWrist&&kp.rightWrist;if(wr)o.span=Math.abs(kp.leftWrist[0]-kp.rightWrist[0])/Hp;
+  // garde-fous : il faut voir les jambes, et des proportions humaines plausibles (sinon ce n'est pas une photo en pied)
+  if(kp&&!(kp.leftAnkle||kp.rightAnkle||kp.leftKnee||kp.rightKnee))return null;
+  const okR=(v,a,b)=>v==null||(v>a&&v<b);
+  if(!okR(o.hipW,.08,.4)||!okR(o.waistW,.06,.4)||!okR(o.sh,.1,.35)||!okR(o.leg,.3,.62))return null;
+  o.armsDown=!!(kp&&hip&&kp.leftWrist&&kp.rightWrist&&(kp.leftWrist[1]+kp.rightWrist[1])/2>(sh?sh[1]+(hipY-sh[1])*.6:hipY-.1*Hp));
+  o.draw={W,H,mk,kp,lines:[[hipY,o.hipW],[shY+(hipY-shY)*.62,o.waistW]],cx,top,bot};
+  return o;
+}
+function sideMeasure(R){
+  const {W,H,kp,mk}=R;if(!mk)return null;
+  const cx=Math.round(centreX(mk,W,H)),[top,bot]=extentY(mk,W,H,cx,W*.08);if(top==null||bot==null||bot-top<H*.35)return null;
+  const Hp=bot-top,row=f=>{const y=Math.round(top+f*Hp);let l=null,r=null;for(let x=0;x<W;x++)if(mk(x,y)){if(l==null)l=x;r=x}return l==null?0:r-l+1};
+  let belly=0;for(let f=.36;f<=.5;f+=.02)belly=Math.max(belly,row(f));
+  const o={Hp,chestD:row(.27)/Hp,waistD:row(.4)/Hp,bellyD:belly/Hp,draw:{W,H,mk,kp,lines:[],cx,top,bot}};
+  if(!(o.chestD>.05&&o.chestD<.35&&o.waistD>.05&&o.waistD<.35&&o.bellyD<.4))return null;   // pas une silhouette de profil en pied
+  return o;
+}
+const clamp1=v=>Math.max(-1,Math.min(1,v)),third=v=>Math.round(clamp1(v)*3)/3;
+// estimation : tour de taille ≈ ellipse (largeur de face × profondeur de profil), rapporté à la taille → corpulence
+function bodyEstimate(F,Sd,cm){
+  const e={b:A.unpackBody(look.body)};
+  if(F&&F.waistW){const a=F.waistW/2,b=(Sd&&Sd.waistD?Math.max(Sd.waistD,Sd.bellyD*.92):F.waistW*.72)/2;
+    const whtr=Math.PI*(3*(a+b)-Math.sqrt((3*a+b)*(a+3*b)))*1.03;e.whtr=whtr;e.bmi=Math.max(16,Math.min(42,52*whtr-1.5));e.b.bd=third((e.bmi-23)/5.5)}
+  const bd=e.b.bd||0;
+  // repères moyens (adulte) : épaules (points des articulations) ≈ 0,197 × taille, hanches (silhouette habillée) ≈ 0,205, hanche → cheville ≈ 0,475
+  if(F&&F.sh)e.b.sh=third((F.sh-.197)/.016-.4*bd);
+  if(F&&F.hipW)e.b.hp=third((F.hipW-.205)/.018-.8*bd);
+  if(F&&F.leg)e.b.lg=third((F.leg-.475)/.02);
+  if(cm&&e.bmi){const m=cm/100;e.kg=[Math.round(e.bmi*m*m*.91),Math.round(e.bmi*m*m*1.09)]}
+  return e;
+}
+// dessin : silhouette pleine (pas la photo) + squelette + lignes de mesure
+const SKEL=[["leftShoulder","rightShoulder"],["leftShoulder","leftElbow"],["leftElbow","leftWrist"],["rightShoulder","rightElbow"],["rightElbow","rightWrist"],["leftShoulder","leftHip"],["rightShoulder","rightHip"],["leftHip","rightHip"],["leftHip","leftKnee"],["leftKnee","leftAnkle"],["rightHip","rightKnee"],["rightKnee","rightAnkle"]];
+function drawBody(cvs,D){
+  const cw=240,ch=320;cvs.width=cw;cvs.height=ch;const g=cvs.getContext("2d");g.clearRect(0,0,cw,ch);
+  const k=Math.min(cw/D.W,ch*.92/(D.bot-D.top||D.H)),ox=cw/2-D.cx*k,oy=ch*.04-D.top*k;
+  if(D.mk){const im=g.createImageData(cw,ch);for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){if(D.mk((x-ox)/k,(y-oy)/k)){const i=(y*cw+x)*4;im.data[i]=62;im.data[i+1]=104;im.data[i+2]=178;im.data[i+3]=200}}g.putImageData(im,0,0)}
+  g.strokeStyle="#f1cf7a";g.lineWidth=2;g.setLineDash([4,3]);
+  for(const [y,w] of D.lines)if(w){g.beginPath();g.moveTo(D.cx*k+ox-w*(D.bot-D.top)*k/2,y*k+oy);g.lineTo(D.cx*k+ox+w*(D.bot-D.top)*k/2,y*k+oy);g.stroke()}
+  g.setLineDash([]);
+  if(D.kp){g.strokeStyle="#d6efff";g.lineWidth=2;for(const [a,b] of SKEL)if(D.kp[a]&&D.kp[b]){g.beginPath();g.moveTo(D.kp[a][0]*k+ox,D.kp[a][1]*k+oy);g.lineTo(D.kp[b][0]*k+ox,D.kp[b][1]*k+oy);g.stroke()}
+    g.fillStyle="#fff";for(const p in D.kp){g.beginPath();g.arc(D.kp[p][0]*k+ox,D.kp[p][1]*k+oy,2.6,0,7);g.fill()}}
+  cvs.hidden=false;cvs.previousElementSibling&&(cvs.previousElementSibling.style.visibility="hidden");
+}
+function bodyChips(e,cm){
+  const box=$("bFound");box.innerHTML="";
+  const add=(k,v,cls)=>{const s=document.createElement("span");s.className="chip"+(cls?" "+cls:"");s.append(k+" : ");const b=document.createElement("b");b.textContent=v;s.append(b);box.append(s)};
+  add("Taille",cm?cm+" cm (indiquée)":"non indiquée, avatar inchangé");
+  if(e.kg)add("Poids estimé",e.kg[0]+" à "+e.kg[1]+" kg","est");
+  const b=A.unpackBody(look.body),nm=(k)=>A.BODY_NAMES[k][Math.round(b[k]*3)+3].toLowerCase();
+  add("Corpulence",nm("bd"));add("Épaules",nm("sh"));add("Hanches",nm("hp"));add("Jambes",nm("lg"));
+}
+function bodyApply(){
+  const cm=+$("cm").value||0,e=bodyEstimate(BODY.f,BODY.s,cm>=120&&cm<=230?cm:0);
+  look.body=A.packBody(e.b);if(cm>=120&&cm<=230)look.height=hOf(hIndex(cm/REF_CM));
+  refresh();setView("body");bodyChips(e,cm>=120&&cm<=230?cm:0);
+  return e;
+}
+async function onBodyFile(e,side){
+  const file=e.target.files&&e.target.files[0];e.target.value="";if(!file||bBusy)return;bBusy=true;
+  const st=$("bStatus"),url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url});
+    st.innerHTML="";const sp=document.createElement("span");sp.className="ai-run";sp.textContent="Repérage de ta silhouette sur le téléphone…";st.append(sp);
+    const R=await bodyRead(img);URL.revokeObjectURL(url);img.src="";
+    if(!R){st.textContent="Analyse du corps indisponible sur cet appareil : règle la silhouette à la main ci-dessous.";return}
+    const m=side?sideMeasure(R):frontMeasure(R);
+    if(!m){st.textContent=side?"Profil non repéré : mets-toi en entier dans l'image, de côté, sur un fond dégagé.":"Corps non repéré en entier : de la tête aux pieds, de face, bras écartés, sur un fond dégagé.";return}
+    if(side)BODY.s={Hp:m.Hp,chestD:m.chestD,waistD:m.waistD,bellyD:m.bellyD};else BODY.f={Hp:m.Hp,sh:m.sh,hipW:m.hipW,waistW:m.waistW,leg:m.leg,span:m.span};
+    drawBody($(side?"cvS":"cvF"),m.draw);$(side?"shotS":"shotF").classList.add("done");
+    bodyApply();
+    const miss=[];if(!$("cm").value)miss.push("indique ta taille pour estimer ton poids");if(!BODY.s)miss.push("ajoute la photo de profil pour affiner la corpulence");if(!BODY.f)miss.push("ajoute la photo de face");
+    st.textContent=(m.armsDown?"Bras le long du corps : écarte-les à l'horizontale pour une mesure plus juste. ":"")+"Estimation appliquée à ton avatar"+(miss.length?" — "+miss.join(", ")+".":". Ajuste si besoin.");
+    if(!R.mk)st.textContent+=" (Silhouette non détourée : corpulence non estimée.)";
+    window.__bodyF=BODY.f;window.__bodyS=BODY.s;
+  }catch(err){console.warn(err);st.textContent="Impossible de lire cette image."}
+  finally{bBusy=false}
+}
+$("fileF").onchange=e=>onBodyFile(e,false);$("fileS").onchange=e=>onBodyFile(e,true);
+$("cm").onchange=()=>{const v=+$("cm").value;if(v>=120&&v<=230){store("am_cm",String(Math.round(v)));if(BODY.f||BODY.s)bodyApply();else{look.height=hOf(hIndex(v/REF_CM));refresh()}}else if($("cm").value)toast("Taille entre 120 et 230 cm")};
+{const c=load("am_cm");if(c)$("cm").value=c}
+
+// ---------- onglets ----------
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
+function show(t){document.querySelectorAll("section[data-tab]").forEach(s=>s.hidden=s.dataset.tab!==t);document.querySelectorAll("[data-go]").forEach(b=>b.setAttribute("aria-selected",b.dataset.go===t));store("am_tab",t);
+  if(t==="avatar")setTimeout(()=>window.dispatchEvent(new Event("resize")),30);if(t==="amis")renderFriends()}
+
+// ---------- amis, taverne, messages privés (version hébergée : base Supabase partagée avec le jeu) ----------
+// Comptes : pseudo + mot de passe (adresse e-mail interne dérivée du pseudo, identique au jeu : AetherSocial.MailOf).
+const SB_URL="https://gnbucrallwtnrrnxykuj.supabase.co",SB_KEY="sb_publishable_RhF1vOpjcUTXoXe3qU_gGw_BqBZ0ZgF",MAIL_DOMAIN="@joueurs.aether.invalid";
+let sess=null,profils={},links=[],msgs=[],lastId=0,dmWith=null,everyone=[];
+const online=new Set();
+try{sess=JSON.parse(load("am_sb")||"null")}catch(e){sess=null}
+
+function mailOf(p){p=p.trim().toLowerCase().normalize("NFD");let o="";for(let i=0;i<p.length;i++){const ch=p[i],c=p.charCodeAt(i);
+  if(/\p{Mn}/u.test(ch))continue;if((c>=97&&c<=122)||(c>=48&&c<=57))o+=ch;else o+="-"+c.toString(16)}return o+MAIL_DOMAIN}
+async function sb(method,path,body,auth=true){
+  const h={"apikey":SB_KEY,"Content-Type":"application/json"};if(auth&&sess)h.Authorization="Bearer "+sess.access;
+  if(method==="POST"&&path.startsWith("/rest/"))h.Prefer="return=minimal";
+  const r=await fetch(SB_URL+path,{method,headers:h,body:body?JSON.stringify(body):undefined});
+  let j=null;const t=await r.text();try{j=t?JSON.parse(t):null}catch(e){}
+  if(r.status===401&&auth&&sess&&!path.startsWith("/auth/")){if(await refreshSess())return sb(method,path,body,auth)}
+  return{ok:r.ok,status:r.status,data:j};
+}
+function keep(a){sess={access:a.access_token,refresh:a.refresh_token,exp:Date.now()+(a.expires_in-120)*1000,id:(a.user&&a.user.id)||(sess&&sess.id),pseudo:sess&&sess.pseudo};store("am_sb",JSON.stringify(sess))}
+async function refreshSess(){if(!sess||!sess.refresh)return false;const r=await sb("POST","/auth/v1/token?grant_type=refresh_token",{refresh_token:sess.refresh},false);
+  if(r.ok&&r.data&&r.data.access_token){const p=sess.pseudo;keep(r.data);sess.pseudo=p;store("am_sb",JSON.stringify(sess));return true}
+  if(r.status===400||r.status===401){sess=null;store("am_sb","");showLogin()}return false}
+
+// ----- écran de connexion -----
+function showLogin(){
+  let o=$("login");if(!o){o=document.createElement("div");o.id="login";o.className="dm";o.innerHTML=
+   '<div class="dm-in" style="justify-content:center"><div class="card"><h2>Ton compte Aether</h2>'+
+   '<p class="sub">Le même pseudo et mot de passe dans l\'appli et dans le jeu : tes amis et tes messages te suivent partout.</p>'+
+   '<form id="loginForm" style="display:flex;flex-direction:column;gap:10px"><label class="field"><span>Pseudo</span><input id="lgPseudo" type="text" maxlength="18" autocomplete="username"></label>'+
+   '<label class="field"><span>Mot de passe (6 caractères minimum)</span><input id="lgPass" type="password" maxlength="60" autocomplete="current-password" style="font:500 15px var(--body);color:var(--text);background:#0b1228;border:1px solid var(--line);border-radius:10px;padding:10px 12px"></label>'+
+   '<div class="row"><button class="btn primary" id="lgIn">Se connecter</button><button class="btn" type="button" id="lgUp">Créer mon compte</button></div>'+
+   '<p class="status" id="lgMsg"></p></form></div></div>';document.body.append(o);
+   $("lgPseudo").value=pseudo||"";
+   $("loginForm").onsubmit=e=>{e.preventDefault();auth(false)};$("lgUp").onclick=()=>auth(true)}
+  o.hidden=false;
+}
+async function auth(create){
+  const p=$("lgPseudo").value.trim(),pw=$("lgPass").value,m=$("lgMsg");
+  if(p.length<2){m.textContent="Pseudo : 2 caractères minimum.";return}if(pw.length<6){m.textContent="Mot de passe : 6 caractères minimum.";return}
+  m.textContent=create?"Création du compte…":"Connexion…";
+  const r=await sb("POST",create?"/auth/v1/signup":"/auth/v1/token?grant_type=password",{email:mailOf(p),password:pw},false);
+  if(!r.ok||!r.data||!r.data.access_token){m.textContent=create?(JSON.stringify(r.data||"").includes("already")?"Ce pseudo est déjà pris.":"Création impossible, réessaie."):"Pseudo ou mot de passe incorrect.";return}
+  keep(r.data);sess.pseudo=p;store("am_sb",JSON.stringify(sess));
+  if(create){const c=await sb("POST","/rest/v1/profils",{id:sess.id,pseudo:p,look:A.pack(look),face:(look.face==null?A.FACE_NEUTRAL:look.face)>>>0,styles:A.encode(look)});
+    if(!c.ok){m.textContent=c.status===409?"Ce pseudo est déjà pris.":"Création du profil impossible.";sess=null;store("am_sb","");return}}
+  pseudo=p;$("pseudo").value=p;store("am_pseudo",p);$("login").hidden=true;$("lgPass").value="";toast(create?"Bienvenue, "+p+" !":"Connecté");poll(true);
+}
+
+// ----- données -----
+const me=()=>profils[sess&&sess.id]||{};
+function isOnline(p){return p&&p.vu_le&&(Date.now()-Date.parse(p.vu_le))<120000}
+function info(id){const p=profils[id]||{};return{id,pseudo:p.pseudo||"Aventurier",look:p.look,face:p.face,code:/^AE/.test(p.styles||"")?p.styles:null,niveau:p.niveau|0,online:isOnline(p),enJeu:isOnline(p)&&p.en_jeu}}
+function relation(id){const l=links.find(a=>(a.demandeur===id&&a.destinataire===sess.id)||(a.demandeur===sess.id&&a.destinataire===id));
+  if(!l)return"aucun";if(l.statut==="ami")return"ami";return l.demandeur===sess.id?"envoye":"demande"}
+let polling=false;
+async function poll(full){
+  if(!sess||polling)return;polling=true;
+  try{
+    if(Date.now()>sess.exp)await refreshSess();if(!sess)return;
+    const [a,m,p]=await Promise.all([
+      sb("GET","/rest/v1/amities?select=demandeur,destinataire,statut&or=(demandeur.eq."+sess.id+",destinataire.eq."+sess.id+")"),
+      sb("GET",lastId?"/rest/v1/messages?select=*&id=gt."+lastId+"&order=id.asc&limit=200":"/rest/v1/messages?select=*&order=id.desc&limit=150"),
+      sb("GET","/rest/v1/profils?select=id,pseudo,look,face,styles,niveau,vu_le,en_jeu&order=vu_le.desc&limit=300")]);
+    if(a.ok&&Array.isArray(a.data))links=a.data;
+    if(p.ok&&Array.isArray(p.data)){profils={};for(const x of p.data)profils[x.id]=x;everyone=p.data.map(x=>x.id)}
+    if(m.ok&&Array.isArray(m.data)&&m.data.length){const arr=lastId?m.data:m.data.slice().reverse();for(const x of arr)if(x.id>lastId){msgs.push(x);lastId=x.id}if(msgs.length>600)msgs=msgs.slice(-600)}
+    online.clear();for(const id in profils)if(isOnline(profils[id]))online.add(id);
+    const mp=me();if(mp.niveau&&mp.niveau!==myLevel){myLevel=mp.niveau|0;store("am_lv",String(myLevel))}
+    renderFriends();renderChat();if(dmWith)renderDM();
+  }finally{polling=false}
+}
+let beatT=0;
+setInterval(()=>{if(!sess)return;poll();if(Date.now()-beatT>45000){beatT=Date.now();sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{vu_le:new Date().toISOString()})}},4000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)poll()});
+
+// ----- profil -----
+let myLevel=parseInt(load("am_lv")||"0",10)||0;
+function lvTxt(n){return n>0?"Nv "+n:"Nv ?"}
+function pic(i){let src=null;if(i.code||i.look!=null)try{src=portrait(i.code||(String(i.look>>>0)+":"+((i.face==null?A.FACE_NEUTRAL:i.face)>>>0)))}catch(e){}
+  if(src){const im=document.createElement("img");im.src=src;im.alt="";return im}const ph=document.createElement("div");ph.className="ph";return ph}
+function renderMe(){const nm=pseudo||(sess&&sess.pseudo)||"Aventurier";$("meName").textContent=nm;
+  $("meLv").textContent=myLevel?"Niveau "+myLevel:"Ton niveau s'affiche dès que tu joues à Aether";
+  const mp=$("mePic");mp.innerHTML="";mp.append(pic({code:A.encode(look)}));
+  $("who").hidden=false;$("whoName").textContent=nm;const wl=$("whoLv");wl.textContent=myLevel?"Nv "+myLevel:"";wl.hidden=!myLevel}
+$("lvForm").hidden=true;$("lvForm").nextElementSibling.textContent="Ton niveau se met à jour tout seul quand tu joues à Aether, avec le même compte.";
+$("pseudo").addEventListener("input",renderMe);
+
+// ----- listes -----
+function btn(label,primary,fn){const b=document.createElement("button");b.type="button";b.className="btn"+(primary?" primary":"");b.textContent=label;b.onclick=fn;return b}
+function row(i,actions,extra){
+  const r=document.createElement("div");r.className="friend";r.append(pic(i));
+  const mid=document.createElement("div");mid.style.minWidth="0";const n=document.createElement("div");n.className="n";n.textContent=i.pseudo;
+  const m=document.createElement("div");m.className="meta";const b=document.createElement("span");b.className="lvb";b.style.marginLeft="0";b.textContent=lvTxt(i.niveau);m.append(b);
+  const d=document.createElement("span");d.className="dot"+(i.online?" on":"");d.textContent=i.enJeu?"en jeu":i.online?"en ligne":"absent";m.append(d);
+  if(extra){const t=document.createElement("span");t.className="tag";t.textContent=extra;m.append(t)}
+  mid.append(n,m);const act=document.createElement("div");act.className="act";for(const a of actions)act.append(a);r.append(mid,act);return r}
+const unread=id=>msgs.filter(m=>m.auteur===id&&m.destinataire===sess.id&&!m.lu_le).length;
+function renderFriends(){
+  renderMe();if(!sess)return;
+  const ids=everyone.filter(id=>id!==sess.id);const sortFn=(a,b)=>(online.has(b)-online.has(a))||(info(b).niveau-info(a).niveau);
+  const req=ids.filter(id=>relation(id)==="demande");const rq=$("requests");rq.innerHTML="";$("reqCard").hidden=!req.length;
+  for(const id of req.sort(sortFn))rq.append(row(info(id),[btn("Accepter",true,()=>accept(id)),btn("✕",false,()=>unlink(id))],"veut être ton ami"));
+  const rb=$("reqBadge");rb.hidden=!req.length;rb.textContent=req.length;
+  const fr=ids.filter(id=>["ami","envoye"].includes(relation(id)));const fb=$("friends");fb.innerHTML="";
+  if(!fr.length)fb.innerHTML='<div class="empty">Pas encore d\'amis. Ajoute des aventuriers ci-dessous.</div>';
+  for(const id of fr.sort(sortFn)){const rel=relation(id),acts=[];if(rel==="ami"){const u=unread(id);acts.push(btn(u?"Message ("+u+")":"Message",!!u,()=>openDM(id)))}
+    acts.push(btn(rel==="ami"?"Retirer":"Annuler",false,()=>unlink(id)));fb.append(row(info(id),acts,rel==="envoye"?"demande envoyée":null))}
+  const ev=$("everyone");ev.innerHTML="";const others=ids.filter(id=>relation(id)==="aucun");
+  if(!others.length)ev.innerHTML='<div class="empty">'+(ids.length?"Tu es ami avec tout le monde !":"Personne pour l'instant.")+'</div>';
+  for(const id of others.sort(sortFn).slice(0,60))ev.append(row(info(id),[btn("Ajouter",true,()=>ask(id))]));
+  const ob=$("onlineBar");ob.innerHTML="";const on=[...online].filter(id=>id!==sess.id);if(!on.length)ob.textContent="Personne d'autre en ligne pour l'instant.";
+  for(const id of on){const s=document.createElement("span");s.className="o";s.textContent=info(id).pseudo+" · "+lvTxt(info(id).niveau)+(info(id).enJeu?" · en jeu":"");ob.append(s)}
+}
+async function ask(id){const r=await sb("POST","/rest/v1/amities",{demandeur:sess.id,destinataire:id});toast(r.ok?"Demande d'ami envoyée":"Demande impossible");poll()}
+async function accept(id){const r=await sb("PATCH","/rest/v1/amities?demandeur=eq."+id+"&destinataire=eq."+sess.id,{statut:"ami"});toast(r.ok?"Vous êtes amis !":"Impossible pour le moment");poll()}
+async function unlink(id){await sb("DELETE","/rest/v1/amities?or=(and(demandeur.eq."+id+",destinataire.eq."+sess.id+"),and(demandeur.eq."+sess.id+",destinataire.eq."+id+"))");poll()}
+
+// ----- taverne -----
+function bubble(m,mine,name,lv,full){const el=document.createElement("div");el.className="msg"+(mine?" me":"");const a=document.createElement("div");a.className="a";a.textContent=name;
+  if(lv!=null){const b=document.createElement("span");b.className="lvb";b.textContent=lvTxt(lv);a.append(b)}
+  const tm=document.createElement("time");const d=new Date(m.cree_le);tm.textContent=full?d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});a.append(tm);
+  const t=document.createElement("div");t.textContent=m.texte;el.append(a,t);return el}
+function renderChat(){if(!sess)return;const all=msgs.filter(m=>!m.destinataire);const box=$("chat");const atEnd=box.scrollHeight-box.scrollTop-box.clientHeight<40;box.innerHTML="";
+  if(!all.length){box.innerHTML='<div class="empty">Aucun message. Lance la conversation !</div>';return}
+  for(const m of all.slice(-150))box.append(bubble(m,m.auteur===sess.id,m.auteur===sess.id?(pseudo||"Toi"):info(m.auteur).pseudo,info(m.auteur).niveau,false));if(atEnd)box.scrollTop=box.scrollHeight}
+$("sendForm").onsubmit=async e=>{e.preventDefault();const t=$("msg").value.trim();if(!t||!sess)return;
+  const r=await sb("POST","/rest/v1/messages",{texte:t.slice(0,280)});if(r.ok){$("msg").value="";poll()}else toast("Message non envoyé, réessaie")};
+
+// ----- messages privés -----
+function openDM(id){dmWith=id;const i=info(id);$("dmName").textContent=i.pseudo;$("dmLv").textContent=lvTxt(i.niveau)+(i.enJeu?" · en jeu":i.online?" · en ligne":"");
+  const dp=$("dmPic");dp.innerHTML="";dp.append(pic(i));$("dm").hidden=false;$("dmNote").hidden=true;document.querySelector("#dm .lock").textContent="🔒 privé";renderDM();
+  sb("PATCH","/rest/v1/messages?auteur=eq."+id+"&destinataire=eq."+sess.id+"&lu_le=is.null",{lu_le:new Date().toISOString()}).then(()=>{msgs.forEach(m=>{if(m.auteur===id&&m.destinataire===sess.id)m.lu_le=m.lu_le||"x"});renderFriends()})}
+$("dmBack").onclick=()=>{$("dm").hidden=true;dmWith=null;renderFriends()};
+function renderDM(){const id=dmWith,box=$("dmChat");const conv=msgs.filter(m=>(m.auteur===sess.id&&m.destinataire===id)||(m.auteur===id&&m.destinataire===sess.id));box.innerHTML="";
+  if(!conv.length)box.innerHTML='<div class="empty">Écris le premier message. Seuls vous deux pouvez le lire.</div>';
+  for(const m of conv)box.append(bubble(m,m.auteur===sess.id,m.auteur===sess.id?"Toi":info(id).pseudo,null,true));box.scrollTop=box.scrollHeight}
+$("dmForm").onsubmit=async e=>{e.preventDefault();const t=$("dmMsg").value.trim();if(!t||!dmWith)return;
+  const r=await sb("POST","/rest/v1/messages",{texte:t.slice(0,280),destinataire:dmWith});if(r.ok){$("dmMsg").value="";poll()}else toast("Message non envoyé (êtes-vous bien amis ?)")};
+
+// ----- partager son avatar -----
+$("publish").onclick=async()=>{if(!sess){showLogin();return}
+  const r=await sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{look:A.pack(look),face:(look.face==null?A.FACE_NEUTRAL:look.face)>>>0,styles:A.encode(look)});toast(r.ok?"Avatar partagé avec tes amis":"Partage impossible pour le moment");poll()};
+
+function connect(){renderMe();if(!sess)showLogin();else poll(true)}
+document.querySelectorAll('[data-go="taverne"]').forEach(b=>b.addEventListener("click",()=>setTimeout(()=>{const c=$("chat");c.scrollTop=c.scrollHeight},30)));
+
+
+// ---------- démarrage ----------
+try{const s=JSON.parse(load("am_look")||"null");if(s)look={...look,...s}}catch(e){}
+look.skin=Math.min(7,look.skin|0);look.hair=Math.min(A.HAIR_NAMES.length-1,look.hair|0);
+for(const [k,n] of [["eyeShape",A.EYE_SHAPE_NAMES],["brows",A.BROW_NAMES],["nose",A.NOSE_NAMES],["mouth",A.MOUTH_NAMES],["faceShape",A.FACE_SHAPE_NAMES],["glassesStyle",A.GLASSES_NAMES]])look[k]=Math.max(0,Math.min(n.length-1,look[k]|0));
+if(look.body==null)look.body=A.BODY_NEUTRAL;look.body&=0xfff;look.height=hOf(hIndex(look.height));
+pseudo=load("am_pseudo")||"";$("pseudo").value=pseudo;
+initThree();refresh();show(load("am_tab")||"avatar");connect();
+loadParts().then(()=>{buildAvatar();renderFriends()});
+</script>
+</body></html>
