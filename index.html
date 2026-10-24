@@ -87,6 +87,7 @@ section[data-tab]{display:flex;flex-direction:column;gap:16px}
 .aitog[aria-pressed=true] .sw2{background:#2a5f9e}.aitog[aria-pressed=true] .sw2::after{transform:translateX(12px);background:#d6efff}
 .ai-run{display:inline-flex;align-items:center;gap:8px}.ai-run::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid #7cc4ff55;border-top-color:#d6efff;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+.aibridge{display:flex;flex-direction:column;gap:8px;background:linear-gradient(90deg,#1a1640,#0b1228);border:1px solid #4a3a7a;border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--muted)}.aibridge b{color:#e6dcff}.aibridge .btn{align-self:flex-start;text-decoration:none}
 .chip.ai{border-color:#4a3a7a;background:linear-gradient(90deg,#1a1640,#0b1228)}.chip.ai b{color:#e6dcff}
 /* ---------- scan du corps ---------- */
 .shots{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -241,6 +242,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
         <div class="col">
           <p>Visage de face, bien éclairé, cheveux visibles. L'IA du visage repère 478 points sur ton téléphone pour sculpter tes traits.</p>
           <button type="button" class="aitog" id="tAi" aria-pressed="true"><span class="sw2" aria-hidden="true"></span><span><b>IA Claude</b> : recrée aussi ton style. Envoie un recadrage du visage à Claude, avec ton accord.</span></button>
+          <div class="aibridge" id="aiBridge" hidden></div>
           <div class="row">
             <label class="btn primary" for="fileCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Prendre une photo</label>
             <label class="btn" for="fileLib">Choisir une image</label>
@@ -1202,7 +1204,10 @@ function frontMeasure(R){
   const Hp=bot-top,o={Hp,kp:!!kp,mk:!!mk};
   if(kp&&kp.leftShoulder&&kp.rightShoulder)o.sh=Math.hypot(kp.leftShoulder[0]-kp.rightShoulder[0],kp.leftShoulder[1]-kp.rightShoulder[1])/Hp;
   const hipY=hip?hip[1]:top+.52*Hp,shY=sh?sh[1]:top+.19*Hp;
-  if(mk){o.hipW=spanAt(mk,W,Math.round(hipY),cx)/Hp;o.waistW=spanAt(mk,W,Math.round(shY+(hipY-shY)*.62),cx)/Hp}
+  if(mk){o.hipW=spanAt(mk,W,Math.round(hipY),cx)/Hp;
+    // taille naturelle = l'endroit le plus étroit entre le bas des côtes et les hanches : bras en T, le t-shirt s'évase sous les bras, on l'évite
+    let wf=.8,ww=1e9;for(const f of [.66,.72,.78,.84,.9]){const w=spanAt(mk,W,Math.round(shY+(hipY-shY)*f),cx);if(w>0&&w<ww){ww=w;wf=f}}
+    o.waistW=ww<1e9?ww/Hp:null;o.waistF=wf}
   if(hip&&ank)o.leg=(ank[1]-hip[1])/Hp;
   const wr=kp&&kp.leftWrist&&kp.rightWrist;if(wr)o.span=Math.abs(kp.leftWrist[0]-kp.rightWrist[0])/Hp;
   // garde-fous : il faut voir les jambes, et des proportions humaines plausibles (sinon ce n'est pas une photo en pied)
@@ -1210,7 +1215,7 @@ function frontMeasure(R){
   const okR=(v,a,b)=>v==null||(v>a&&v<b);
   if(!okR(o.hipW,.08,.4)||!okR(o.waistW,.06,.4)||!okR(o.sh,.1,.35)||!okR(o.leg,.3,.62))return null;
   o.armsDown=!!(kp&&hip&&kp.leftWrist&&kp.rightWrist&&(kp.leftWrist[1]+kp.rightWrist[1])/2>(sh?sh[1]+(hipY-sh[1])*.6:hipY-.1*Hp));
-  o.draw={W,H,mk,kp,lines:[[hipY,o.hipW],[shY+(hipY-shY)*.62,o.waistW]],cx,top,bot};
+  o.draw={W,H,mk,kp,lines:[[hipY,o.hipW],[shY+(hipY-shY)*(o.waistF||.8),o.waistW]],cx,top,bot};
   return o;
 }
 function sideMeasure(R){
@@ -1226,7 +1231,8 @@ const clamp1=v=>Math.max(-1,Math.min(1,v)),third=v=>Math.round(clamp1(v)*3)/3;
 // estimation : tour de taille ≈ ellipse (largeur de face × profondeur de profil), rapporté à la taille → corpulence
 function bodyEstimate(F,Sd,cm){
   const e={b:A.unpackBody(look.body)};
-  if(F&&F.waistW){const a=F.waistW/2,b=(Sd&&Sd.waistD?Math.max(Sd.waistD,Sd.bellyD*.92):F.waistW*.72)/2;
+  if(F&&F.waistW){   // les vêtements ajoutent de l'épaisseur : on retire une marge (t-shirt ample, plis)
+    const a=F.waistW*.93/2,b=(Sd&&Sd.waistD?(Sd.waistD*.6+Sd.bellyD*.4)*.92:F.waistW*.68)/2;
     const whtr=Math.PI*(3*(a+b)-Math.sqrt((3*a+b)*(a+3*b)))*1.03;e.whtr=whtr;e.bmi=Math.max(16,Math.min(42,52*whtr-1.5));e.b.bd=third((e.bmi-23)/5.5)}
   const bd=e.b.bd||0;
   // repères moyens (adulte) : épaules (points des articulations) ≈ 0,197 × taille, hanches (silhouette habillée) ≈ 0,205, hanche → cheville ≈ 0,475
@@ -1317,7 +1323,7 @@ async function refreshSess(){if(!sess||!sess.refresh)return false;const r=await 
 // ----- écran de connexion -----
 function showLogin(){
   let o=$("login");if(!o){o=document.createElement("div");o.id="login";o.className="dm";o.innerHTML=
-   '<div class="dm-in" style="justify-content:center"><div class="card"><h2>Ton compte Aether</h2>'+
+   '<style>#login input{box-sizing:border-box;width:100%}</style><div class="dm-in" style="justify-content:center"><div class="card"><h2>Ton compte Aether</h2>'+
    '<p class="sub">Le même pseudo et mot de passe dans l\'appli et dans le jeu : tes amis et tes messages te suivent partout.</p>'+
    '<form id="loginForm" style="display:flex;flex-direction:column;gap:10px"><label class="field"><span>Pseudo</span><input id="lgPseudo" type="text" maxlength="18" autocomplete="username"></label>'+
    '<label class="field"><span>Mot de passe (6 caractères minimum)</span><input id="lgPass" type="password" maxlength="60" autocomplete="current-password" style="font:500 15px var(--body);color:var(--text);background:#0b1228;border:1px solid var(--line);border-radius:10px;padding:10px 12px"></label>'+
@@ -1359,12 +1365,25 @@ async function poll(full){
     if(m.ok&&Array.isArray(m.data)&&m.data.length){const arr=lastId?m.data:m.data.slice().reverse();for(const x of arr)if(x.id>lastId){msgs.push(x);lastId=x.id}if(msgs.length>600)msgs=msgs.slice(-600)}
     online.clear();for(const id in profils)if(isOnline(profils[id]))online.add(id);
     const mp=me();if(mp.niveau&&mp.niveau!==myLevel){myLevel=mp.niveau|0;store("am_lv",String(myLevel))}
+    syncLook();
     renderFriends();renderChat();if(dmWith)renderDM();
   }finally{polling=false}
 }
 let beatT=0;
 setInterval(()=>{if(!sess)return;poll();if(Date.now()-beatT>45000){beatT=Date.now();sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{vu_le:new Date().toISOString()})}},4000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)poll()});
+
+// ----- apparence partagée avec le jeu (même compte) -----
+// le dernier code synchronisé est gardé : si le compte a changé ailleurs (dans le jeu), on le reprend ; sinon on envoie celui de l'appli
+let pushing=false,forcePush=false;
+function syncLook(){
+  if(!sess)return;const mp=me();if(!mp.id)return;
+  const server=/^AE/.test(mp.styles||"")?mp.styles:null,local=A.encode(look),last=load("am_sync");
+  if(server&&server!==last&&server!==local&&!forcePush){const l=A.decode(server);if(l){look={...look,...l};store("am_sync",server);refresh();toast("Apparence reprise depuis le jeu");return}}
+  if(local!==(server||"")&&!pushing){pushing=true;
+    sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{styles:local,look:A.pack(look),face:(look.face==null?A.FACE_NEUTRAL:look.face)>>>0})
+      .then(r=>{if(r.ok){store("am_sync",local);mp.styles=local;forcePush=false}}).finally(()=>pushing=false)}
+}
 
 // ----- profil -----
 let myLevel=parseInt(load("am_lv")||"0",10)||0;
@@ -1436,6 +1455,15 @@ $("publish").onclick=async()=>{if(!sess){showLogin();return}
 
 function connect(){renderMe();if(!sess)showLogin();else poll(true)}
 document.querySelectorAll('[data-go="taverne"]').forEach(b=>b.addEventListener("click",()=>setTimeout(()=>{const c=$("chat");c.scrollTop=c.scrollHeight},30)));
+
+// ----- IA Claude : la création de la tête se fait sur la page Claude, puis le code revient ici (#code=AE-…) -----
+(function(){const box=$("aiBridge");if(box&&!(window.claude&&window.claude.use)){box.hidden=false;
+  box.innerHTML='<span><b>IA Claude (option)</b> : l\'appli analyse déjà ta photo sur ton téléphone. Avec un compte Claude, l\'IA peut aussi recréer ton style : ouvre la page Claude, fais ta photo, puis touche « Envoyer dans Aether Mobile ».</span>';
+  const a=document.createElement("a");a.className="btn";a.target="_blank";a.rel="noopener";a.href="https://claude.ai/artifact/MiYEYB2CK8w19FQ3WJi84r";a.textContent="Créer ma tête avec l\'IA Claude";box.append(a)}
+  const m=/[#&]code=([^&]+)/.exec(location.hash);if(!m)return;
+  const l=A.decode(decodeURIComponent(m[1]));history.replaceState(null,"",location.pathname);
+  if(!l){toast("Code d'avatar illisible");return}
+  look={...look,...l};forcePush=true;refresh();toast("Avatar importé depuis l'IA Claude");if(sess)setTimeout(syncLook,500)})();
 
 
 // ---------- démarrage ----------
