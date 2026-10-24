@@ -442,6 +442,117 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
   </div>
 </nav>
 <style>.badge-n{position:absolute;top:2px;right:18%;min-width:16px;height:16px;border-radius:8px;background:var(--warn);color:#1b0806;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}</style>
+  <!-- ===================== (version hébergée) réactions, notifications, appels ===================== -->
+  <div class="card push-card" id="pushCard" hidden>
+    <div class="push-row">
+      <span class="push-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.6 2H4.4z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg></span>
+      <div class="push-txt"><div class="push-st" id="pushSt">Notifications du téléphone</div><div class="sub" id="pushHelp">Sois prévenu des messages privés, des demandes d'ami et des appels, même appli fermée.</div></div>
+    </div>
+    <div class="row"><button type="button" class="btn primary" id="pushBtn">Activer les notifications</button></div>
+  </div>
+
+  <div class="rxpick" id="rxPick" role="menu" aria-label="Réagir" hidden>
+    <button type="button" role="menuitem" data-e="coeur" aria-label="Cœur">❤️</button>
+    <button type="button" role="menuitem" data-e="pouce" aria-label="Pouce levé">👍</button>
+    <button type="button" role="menuitem" data-e="pleure" aria-label="Pleure">😭</button>
+    <button type="button" role="menuitem" data-e="epee" aria-label="Épées">⚔️</button>
+  </div>
+
+  <div class="call" id="call" role="dialog" aria-modal="true" aria-labelledby="callName" hidden>
+    <div class="call-in">
+      <div class="call-kind" id="callKind">Appel vocal</div>
+      <div class="call-av"><span class="call-ring"></span><span class="call-ring b"></span><div class="call-pic" id="callPic"></div></div>
+      <div class="call-name" id="callName">Aventurier</div>
+      <div class="call-lv" id="callLv"></div>
+      <div class="call-st" id="callSt" aria-live="polite"></div>
+      <div class="call-time" id="callTime" hidden>00:00</div>
+      <div class="call-tools" id="callTools" hidden>
+        <button type="button" class="call-tool" id="callMute" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/><path class="x" d="M4 4l16 16"/></svg><span id="callMuteL">Micro</span></button>
+        <label class="call-vol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><input type="range" id="callVol" min="0" max="1" step="0.05" value="1" aria-label="Volume"></label>
+      </div>
+      <div class="call-btns">
+        <button type="button" class="rb ok" id="callOk"><span class="g" aria-hidden="true"></span><span class="l">Répondre</span></button>
+        <button type="button" class="rb no" id="callNo"><span class="g" aria-hidden="true"></span><span class="l" id="callNoL">Refuser</span></button>
+      </div>
+    </div>
+    <audio id="callAudio" autoplay playsinline></audio>
+  </div>
+
+<style>
+/* ----- réactions ----- */
+.msg,.rx,.rxpick{font-family:var(--body),"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.rx{display:flex;flex-wrap:wrap;gap:4px;align-items:center;align-self:flex-start;max-width:84%;margin:-4px 0 2px 6px}
+.rx.me{align-self:flex-end;justify-content:flex-end;margin:-4px 6px 2px 0}
+.rxc{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:1;padding:3px 7px;border-radius:999px;background:#0b1228;border:1px solid var(--line);color:var(--muted);cursor:pointer}
+.rxc.mine{border-color:var(--gold);background:#2a2412;color:var(--gold);box-shadow:0 0 8px #f1cf7a33}
+.rxadd{font-size:11px;line-height:1;padding:3px 6px;border-radius:999px;background:transparent;border:1px solid transparent;color:var(--muted);opacity:.55;cursor:pointer;letter-spacing:.02em}
+.rxadd span{font-size:13px;margin-left:1px}
+.rxadd:hover,.rxadd:focus-visible,.rxadd[aria-expanded=true]{opacity:1;border-color:var(--line)}
+.rxpick{position:fixed;z-index:70;display:flex;gap:2px;padding:5px;border-radius:999px;background:#141f3df2;border:1px solid var(--line-2);box-shadow:0 8px 24px #000a,0 0 0 1px #f1cf7a22;backdrop-filter:blur(8px)}
+.rxpick::before{content:"";position:absolute;top:-1px;left:28%;right:28%;height:1px;background:linear-gradient(90deg,transparent,#f1cf7acc,transparent)}
+.rxpick button{width:42px;height:42px;border-radius:50%;border:1px solid transparent;background:transparent;font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:transform .1s}
+.rxpick button:active{transform:scale(1.18)}
+.rxpick button[aria-pressed=true]{background:#2a2412;border-color:var(--gold)}
+
+/* ----- notifications ----- */
+.push-row{display:flex;gap:12px;align-items:flex-start}
+.push-ic{width:38px;height:38px;flex:none;border-radius:50%;display:grid;place-items:center;background:#0b1228;border:1px solid var(--line-2);color:var(--gold)}
+.push-ic svg{width:20px;height:20px}
+.push-st{font-weight:600}
+.push-card[data-st=active] .push-ic{color:var(--ok);border-color:#6fe0a088;box-shadow:0 0 10px #6fe0a033}
+.push-card[data-st=active] .push-st{color:var(--ok)}
+.push-card[data-st=bloque] .push-st,.push-card[data-st=erreur] .push-st{color:var(--warn)}
+.push-card .sub{margin-top:2px}
+.me-act{display:flex;justify-content:flex-end}
+.me-act .btn{padding:6px 12px;font-size:12.5px}
+
+/* ----- amis / messages : bouton d'appel ----- */
+.friend .act .btn.ic{padding:7px 9px;min-width:36px}
+.friend .meta{flex-wrap:wrap;gap:3px 8px}.friend .meta>*{white-space:nowrap}
+.friend .act{gap:5px}.friend .act .btn{padding:7px 9px}
+.dot.jeu{color:var(--crystal)}.dot.jeu::before{background:var(--crystal);box-shadow:0 0 8px var(--crystal)}
+.dm-top .dm-call{font-size:17px;padding:7px 10px}
+
+/* ----- appel vocal ----- */
+.toast{z-index:80}
+.call{position:fixed;inset:0;z-index:60;display:flex;justify-content:center;align-items:stretch;
+  background:radial-gradient(ellipse 110% 60% at 50% 18%,#22336a 0%,transparent 62%),radial-gradient(ellipse at 50% 100%,#14214a 0%,#060a17 70%);
+  padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(26px + env(safe-area-inset-bottom,0px))}
+.call-in{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
+.call-kind{margin-top:min(6vh,40px);font-size:11.5px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--crystal)}
+.call-av{position:relative;width:150px;height:150px;margin:22px 0 10px;display:grid;place-items:center}
+.call-pic{width:128px;height:128px;border-radius:50%;overflow:hidden;background:#16224a;border:2px solid #f1cf7a99;box-shadow:0 0 30px #4a8fe055}
+.call-pic img,.call-pic .ph{width:100%;height:100%;object-fit:cover;border:0;border-radius:0}
+.call-ring{position:absolute;inset:-4px;border-radius:50%;border:2px solid transparent;border-top-color:var(--gold);border-right-color:#f1cf7a55;animation:spin 1.6s linear infinite}
+.call-ring.b{inset:-14px;border-top-color:transparent;border-bottom-color:var(--crystal);animation-duration:2.4s;animation-direction:reverse;opacity:.6}
+.call[data-ph=live] .call-ring,.call[data-ph=end] .call-ring{animation-play-state:paused;opacity:.25}
+.call-name{font-family:var(--display);font-weight:700;font-size:28px;letter-spacing:.06em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.call-lv:empty{display:none}
+.call-st{color:var(--muted);font-size:14.5px;min-height:1.45em;max-width:320px;text-wrap:balance}
+.call[data-ph=end] .call-st{color:var(--warn)}
+.call-time{font-family:var(--mono);font-size:22px;color:var(--gold);letter-spacing:.08em}
+.call-tools{display:flex;align-items:center;gap:14px;margin-top:14px;padding:10px 14px;border-radius:16px;background:#0b1228cc;border:1px solid var(--line)}
+.call-tool{display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:0;color:var(--text);font-size:11.5px;cursor:pointer;padding:0}
+.call-tool svg{width:46px;height:46px;padding:11px;box-sizing:border-box;border-radius:50%;background:#1b2850;border:1px solid var(--line-2)}
+.call-tool .x{display:none}
+.call-tool[aria-pressed=true] svg{background:#f4f7fc;color:#14204a;border-color:#fff}
+.call-tool[aria-pressed=true] .x{display:inline;stroke:#e2463c}
+.call-vol{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.call-vol svg{width:22px;height:22px;flex:none}
+.call-vol input{width:120px}
+.call-btns{margin-top:auto;display:flex;justify-content:center;gap:56px;padding-bottom:6px}
+.rb{display:flex;flex-direction:column;align-items:center;gap:9px;background:transparent;border:0;color:var(--text);font-size:13.5px;font-weight:600;cursor:pointer;padding:0}
+.rb .g{position:relative;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#ffffff 0%,#e6ebf4 70%,#cfd7e6 100%);box-shadow:0 6px 22px #0009,inset 0 -3px 6px #0002}
+.rb.ok .g{box-shadow:0 6px 22px #0009,0 0 0 3px #3b8cff,0 0 24px #3b8cff88}
+.rb.no .g{box-shadow:0 6px 22px #0009,0 0 0 3px #e2463c,0 0 24px #e2463c77}
+.rb.ok .g::after{content:"";position:absolute;inset:21px;border-radius:50%;border:5px solid #2f7df0}
+.rb.no .g::before,.rb.no .g::after{content:"";position:absolute;left:50%;top:50%;width:36px;height:6px;margin:-3px 0 0 -18px;border-radius:3px;background:#e2463c;transform:rotate(45deg)}
+.rb.no .g::after{transform:rotate(-45deg)}
+.rb:active .g{transform:scale(.94)}
+.call[data-ph=incoming] .rb.ok .g{animation:pulse 1.3s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{box-shadow:0 6px 22px #0009,0 0 0 3px #3b8cff,0 0 0 12px #3b8cff22,0 0 34px #3b8cffaa}}
+</style>
 
 <div class="toast" id="toast" hidden></div>
 
@@ -1315,12 +1426,12 @@ try{sess=JSON.parse(load("am_sb")||"null")}catch(e){sess=null}
 
 function mailOf(p){p=p.trim().toLowerCase().normalize("NFD");let o="";for(let i=0;i<p.length;i++){const ch=p[i],c=p.charCodeAt(i);
   if(/\p{Mn}/u.test(ch))continue;if((c>=97&&c<=122)||(c>=48&&c<=57))o+=ch;else o+="-"+c.toString(16)}return o+MAIL_DOMAIN}
-async function sb(method,path,body,auth=true){
+async function sb(method,path,body,auth=true,prefer){
   const h={"apikey":SB_KEY,"Content-Type":"application/json"};if(auth&&sess)h.Authorization="Bearer "+sess.access;
-  if(method==="POST"&&path.startsWith("/rest/"))h.Prefer="return=minimal";
+  if(prefer)h.Prefer=prefer;else if(method==="POST"&&path.startsWith("/rest/"))h.Prefer="return=minimal";
   const r=await fetch(SB_URL+path,{method,headers:h,body:body?JSON.stringify(body):undefined});
   let j=null;const t=await r.text();try{j=t?JSON.parse(t):null}catch(e){}
-  if(r.status===401&&auth&&sess&&!path.startsWith("/auth/")){if(await refreshSess())return sb(method,path,body,auth)}
+  if(r.status===401&&auth&&sess&&!path.startsWith("/auth/")){if(await refreshSess())return sb(method,path,body,auth,prefer)}
   return{ok:r.ok,status:r.status,data:j};
 }
 function keep(a){sess={access:a.access_token,refresh:a.refresh_token,exp:Date.now()+(a.expires_in-120)*1000,id:(a.user&&a.user.id)||(sess&&sess.id),pseudo:sess&&sess.pseudo};store("am_sb",JSON.stringify(sess))}
@@ -1350,7 +1461,7 @@ async function auth(create){
   keep(r.data);sess.pseudo=p;store("am_sb",JSON.stringify(sess));
   if(create){const c=await sb("POST","/rest/v1/profils",{id:sess.id,pseudo:p,look:A.pack(look),face:(look.face==null?A.FACE_NEUTRAL:look.face)>>>0,styles:A.encode(look)});
     if(!c.ok){m.textContent=c.status===409?"Ce pseudo est déjà pris.":"Création du profil impossible.";sess=null;store("am_sb","");return}}
-  pseudo=p;$("pseudo").value=p;store("am_pseudo",p);$("login").hidden=true;$("lgPass").value="";toast(create?"Bienvenue, "+p+" !":"Connecté");poll(true);
+  pseudo=p;$("pseudo").value=p;store("am_pseudo",p);$("login").hidden=true;$("lgPass").value="";toast(create?"Bienvenue, "+p+" !":"Connecté");poll(true);pushResync();
 }
 
 // ----- données -----
@@ -1374,7 +1485,9 @@ async function poll(full){
     online.clear();for(const id in profils)if(isOnline(profils[id]))online.add(id);
     const mp=me();if(mp.niveau&&mp.niveau!==myLevel){myLevel=mp.niveau|0;store("am_lv",String(myLevel))}
     syncLook();
+    await fetchReacts();
     renderFriends();renderChat();if(dmWith)renderDM();
+    afterPoll();
   }finally{polling=false}
 }
 let beatT=0;
@@ -1411,7 +1524,7 @@ function row(i,actions,extra){
   const r=document.createElement("div");r.className="friend";r.append(pic(i));
   const mid=document.createElement("div");mid.style.minWidth="0";const n=document.createElement("div");n.className="n";n.textContent=i.pseudo;
   const m=document.createElement("div");m.className="meta";const b=document.createElement("span");b.className="lvb";b.style.marginLeft="0";b.textContent=lvTxt(i.niveau);m.append(b);
-  const d=document.createElement("span");d.className="dot"+(i.online?" on":"");d.textContent=i.enJeu?"en jeu":i.online?"en ligne":"absent";m.append(d);
+  const d=document.createElement("span");d.className="dot"+(i.enJeu?" on jeu":i.online?" on":"");d.textContent=i.enJeu?"en jeu":i.online?"en ligne":"absent";m.append(d);
   if(extra){const t=document.createElement("span");t.className="tag";t.textContent=extra;m.append(t)}
   mid.append(n,m);const act=document.createElement("div");act.className="act";for(const a of actions)act.append(a);r.append(mid,act);return r}
 const unread=id=>msgs.filter(m=>m.auteur===id&&m.destinataire===sess.id&&!m.lu_le).length;
@@ -1423,15 +1536,16 @@ function renderFriends(){
   const rb=$("reqBadge");rb.hidden=!req.length;rb.textContent=req.length;
   const fr=ids.filter(id=>["ami","envoye"].includes(relation(id)));const fb=$("friends");fb.innerHTML="";
   if(!fr.length)fb.innerHTML='<div class="empty">Pas encore d\'amis. Ajoute des aventuriers ci-dessous.</div>';
-  for(const id of fr.sort(sortFn)){const rel=relation(id),acts=[];if(rel==="ami"){const u=unread(id);acts.push(btn(u?"Message ("+u+")":"Message",!!u,()=>openDM(id)))}
-    acts.push(btn(rel==="ami"?"Retirer":"Annuler",false,()=>unlink(id)));fb.append(row(info(id),acts,rel==="envoye"?"demande envoyée":null))}
+  for(const id of fr.sort(sortFn)){const rel=relation(id),acts=[];if(rel==="ami"){const u=unread(id);acts.push(btn(u?"Message ("+u+")":"Message",!!u,()=>openDM(id)),callBtn(id))}
+    if(rel==="ami"){const x=btn("✕",false,()=>{if(confirm("Retirer "+info(id).pseudo+" de tes amis ?"))unlink(id)});x.classList.add("ic");x.setAttribute("aria-label","Retirer "+info(id).pseudo+" de tes amis");x.title="Retirer";acts.push(x)}
+    else acts.push(btn("Annuler",false,()=>unlink(id)));fb.append(row(info(id),acts,rel==="envoye"?"demande envoyée":null))}
   const ev=$("everyone");ev.innerHTML="";const others=ids.filter(id=>relation(id)==="aucun");
   if(!others.length)ev.innerHTML='<div class="empty">'+(ids.length?"Tu es ami avec tout le monde !":"Personne pour l'instant.")+'</div>';
   for(const id of others.sort(sortFn).slice(0,60))ev.append(row(info(id),[btn("Ajouter",true,()=>ask(id))]));
   const ob=$("onlineBar");ob.innerHTML="";const on=[...online].filter(id=>id!==sess.id);if(!on.length)ob.textContent="Personne d'autre en ligne pour l'instant.";
   for(const id of on){const s=document.createElement("span");s.className="o";s.textContent=info(id).pseudo+" · "+lvTxt(info(id).niveau)+(info(id).enJeu?" · en jeu":"");ob.append(s)}
 }
-async function ask(id){const r=await sb("POST","/rest/v1/amities",{demandeur:sess.id,destinataire:id});toast(r.ok?"Demande d'ami envoyée":"Demande impossible");poll()}
+async function ask(id){const r=await sb("POST","/rest/v1/amities",{demandeur:sess.id,destinataire:id});if(r.ok)notify({table:"amities",demandeur:sess.id,destinataire:id});toast(r.ok?"Demande d'ami envoyée":"Demande impossible");poll()}
 async function accept(id){const r=await sb("PATCH","/rest/v1/amities?demandeur=eq."+id+"&destinataire=eq."+sess.id,{statut:"ami"});toast(r.ok?"Vous êtes amis !":"Impossible pour le moment");poll()}
 async function unlink(id){await sb("DELETE","/rest/v1/amities?or=(and(demandeur.eq."+id+",destinataire.eq."+sess.id+"),and(demandeur.eq."+sess.id+",destinataire.eq."+id+"))");poll()}
 
@@ -1439,29 +1553,34 @@ async function unlink(id){await sb("DELETE","/rest/v1/amities?or=(and(demandeur.
 function bubble(m,mine,name,lv,full){const el=document.createElement("div");el.className="msg"+(mine?" me":"");const a=document.createElement("div");a.className="a";a.textContent=name;
   if(lv!=null){const b=document.createElement("span");b.className="lvb";b.textContent=lvTxt(lv);a.append(b)}
   const tm=document.createElement("time");const d=new Date(m.cree_le);tm.textContent=full?d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});a.append(tm);
-  const t=document.createElement("div");t.textContent=m.texte;el.append(a,t);return el}
-function renderChat(){if(!sess)return;const all=msgs.filter(m=>!m.destinataire);const box=$("chat");const atEnd=box.scrollHeight-box.scrollTop-box.clientHeight<40;box.innerHTML="";
-  if(!all.length){box.innerHTML='<div class="empty">Aucun message. Lance la conversation !</div>';return}
-  for(const m of all.slice(-150))box.append(bubble(m,m.auteur===sess.id,m.auteur===sess.id?(pseudo||"Toi"):info(m.auteur).pseudo,info(m.auteur).niveau,false));if(atEnd)box.scrollTop=box.scrollHeight}
+  const t=document.createElement("div");t.textContent=m.texte;el.append(a,t);
+  const f=document.createDocumentFragment();f.append(el);if(m.id!=null)f.append(rxRow(m,mine));return f}
+// re-dessin sans perdre l'endroit où on lit (les réactions et la liste se mettent à jour toutes les 4 s)
+let scrollKeep=false,scrollKeepT=0;
+function keepScroll(box,stick,fill){const atEnd=stick||box.scrollHeight-box.scrollTop-box.clientHeight<40,top=box.scrollTop;scrollKeep=true;fill();
+  box.scrollTop=atEnd?box.scrollHeight:top;clearTimeout(scrollKeepT);scrollKeepT=setTimeout(()=>scrollKeep=false,120)}
+function renderChat(){if(!sess)return;const all=msgs.filter(m=>!m.destinataire);const box=$("chat");
+  keepScroll(box,false,()=>{box.innerHTML="";if(!all.length){box.innerHTML='<div class="empty">Aucun message. Lance la conversation !</div>';return}
+    for(const m of all.slice(-150))box.append(bubble(m,m.auteur===sess.id,m.auteur===sess.id?(pseudo||"Toi"):info(m.auteur).pseudo,info(m.auteur).niveau,false))})}
 $("sendForm").onsubmit=async e=>{e.preventDefault();const t=$("msg").value.trim();if(!t||!sess)return;
-  const r=await sb("POST","/rest/v1/messages",{texte:t.slice(0,280)});if(r.ok){$("msg").value="";poll()}else toast("Message non envoyé, réessaie")};
+  const r=await sb("POST","/rest/v1/messages",{texte:clip280(t)});if(r.ok){$("msg").value="";poll()}else toast("Message non envoyé, réessaie")};
 
 // ----- messages privés -----
 function openDM(id){dmWith=id;const i=info(id);$("dmName").textContent=i.pseudo;$("dmLv").textContent=lvTxt(i.niveau)+(i.enJeu?" · en jeu":i.online?" · en ligne":"");
-  const dp=$("dmPic");dp.innerHTML="";dp.append(pic(i));$("dm").hidden=false;$("dmNote").hidden=true;document.querySelector("#dm .lock").textContent="🔒 privé";renderDM();
+  const dp=$("dmPic");dp.innerHTML="";dp.append(pic(i));$("dm").hidden=false;$("dmNote").hidden=true;document.querySelector("#dm .lock").textContent="🔒 privé";renderDM(true);fetchReacts().then(()=>{if(dmWith===id)renderDM()});
   sb("PATCH","/rest/v1/messages?auteur=eq."+id+"&destinataire=eq."+sess.id+"&lu_le=is.null",{lu_le:new Date().toISOString()}).then(()=>{msgs.forEach(m=>{if(m.auteur===id&&m.destinataire===sess.id)m.lu_le=m.lu_le||"x"});renderFriends()})}
 $("dmBack").onclick=()=>{$("dm").hidden=true;dmWith=null;renderFriends()};
-function renderDM(){const id=dmWith,box=$("dmChat");const conv=msgs.filter(m=>(m.auteur===sess.id&&m.destinataire===id)||(m.auteur===id&&m.destinataire===sess.id));box.innerHTML="";
-  if(!conv.length)box.innerHTML='<div class="empty">Écris le premier message. Seuls vous deux pouvez le lire.</div>';
-  for(const m of conv)box.append(bubble(m,m.auteur===sess.id,m.auteur===sess.id?"Toi":info(id).pseudo,null,true));box.scrollTop=box.scrollHeight}
+function renderDM(stick){const id=dmWith,box=$("dmChat");const conv=msgs.filter(m=>(m.auteur===sess.id&&m.destinataire===id)||(m.auteur===id&&m.destinataire===sess.id));
+  keepScroll(box,stick===true,()=>{box.innerHTML="";if(!conv.length)box.innerHTML='<div class="empty">Écris le premier message. Seuls vous deux pouvez le lire.</div>';
+    for(const m of conv)box.append(bubble(m,m.auteur===sess.id,m.auteur===sess.id?"Toi":info(id).pseudo,null,true))})}
 $("dmForm").onsubmit=async e=>{e.preventDefault();const t=$("dmMsg").value.trim();if(!t||!dmWith)return;
-  const r=await sb("POST","/rest/v1/messages",{texte:t.slice(0,280),destinataire:dmWith});if(r.ok){$("dmMsg").value="";poll()}else toast("Message non envoyé (êtes-vous bien amis ?)")};
+  const r=await sb("POST","/rest/v1/messages",{texte:clip280(t),destinataire:dmWith},true,"return=representation");if(r.ok){const row=Array.isArray(r.data)?r.data[0]:r.data;if(row&&row.id!=null)notify({table:"messages",id:row.id});$("dmMsg").value="";await poll();renderDM(true)}else toast("Message non envoyé (êtes-vous bien amis ?)")};
 
 // ----- partager son avatar -----
 $("publish").onclick=async()=>{if(!sess){showLogin();return}
   const r=await sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{look:A.pack(look),face:(look.face==null?A.FACE_NEUTRAL:look.face)>>>0,styles:A.encode(look)});toast(r.ok?"Avatar partagé avec tes amis":"Partage impossible pour le moment");poll()};
 
-function connect(){renderMe();if(!sess)showLogin();else poll(true)}
+function connect(){renderMe();if(!sess)showLogin();else{poll(true);pushResync()}}
 document.querySelectorAll('[data-go="taverne"]').forEach(b=>b.addEventListener("click",()=>setTimeout(()=>{const c=$("chat");c.scrollTop=c.scrollHeight},30)));
 
 // ----- IA Claude : la création de la tête se fait sur la page Claude, puis le code revient ici (#code=AE-…) -----
@@ -1472,6 +1591,290 @@ document.querySelectorAll('[data-go="taverne"]').forEach(b=>b.addEventListener("
   const l=A.decode(decodeURIComponent(m[1]));history.replaceState(null,"",location.pathname);
   if(!l){toast("Code d'avatar illisible");return}
   look={...look,...l};forcePush=true;refresh();toast("Avatar importé depuis l'IA Claude");if(sess)setTimeout(syncLook,500)})();
+
+// ---------- (version hébergée) réactions, notifications du téléphone, appels vocaux ----------
+
+// ===== texte : 280 caractères maximum, sans couper un emoji en deux =====
+function clip280(t){t=String(t||"");if(Array.from(t).length<=280)return t;
+  if(typeof Intl!=="undefined"&&Intl.Segmenter){let n=0,o="";for(const s of new Intl.Segmenter("fr",{granularity:"grapheme"}).segment(t)){const k=Array.from(s.segment).length;if(n+k>280)break;n+=k;o+=s.segment}return o}
+  return Array.from(t).slice(0,280).join("")}
+for(const id of ["msg","dmMsg"]){const i=$(id);if(!i)continue;i.removeAttribute("maxlength");
+  i.addEventListener("input",()=>{if(Array.from(i.value).length>280){i.value=clip280(i.value);toast("280 caractères maximum")}})}
+
+// ===== réactions ❤️ 👍 😭 ⚔️ =====
+const RX=[["coeur","❤️","Cœur"],["pouce","👍","Pouce levé"],["pleure","😭","Pleure"],["epee","⚔️","Épées"]];
+let reacts={},rxSeq=0;const rxPend=new Map(),rxHave=new Map(),rxBusy=new Set();
+const rxMine=(m,e)=>(reacts[m]||[]).some(x=>x.auteur===sess.id&&x.emoji===e);
+function rxSet(m,e,on){const l=(reacts[m]||[]).filter(x=>!(x.auteur===sess.id&&x.emoji===e));if(on)l.push({auteur:sess.id,emoji:e});reacts[m]=l}
+function rxIds(){const ids=msgs.filter(m=>!m.destinataire).slice(-150).map(m=>m.id);
+  if(dmWith)for(const m of msgs)if((m.auteur===sess.id&&m.destinataire===dmWith)||(m.auteur===dmWith&&m.destinataire===sess.id))ids.push(m.id);
+  return [...new Set(ids)].slice(-300)}
+async function fetchReacts(){if(!sess)return;const ids=rxIds();if(!ids.length)return;const seq=rxSeq;
+  const r=await sb("GET","/rest/v1/reactions?select=message,auteur,emoji&message=in.("+ids.join(",")+")&limit=5000");
+  if(!r.ok||!Array.isArray(r.data)||seq!==rxSeq)return;   // une réaction a changé pendant la lecture : on attend la prochaine
+  const o={};for(const x of r.data)(o[x.message]=o[x.message]||[]).push({auteur:x.auteur,emoji:x.emoji});reacts=o;
+  for(const [k,on] of rxPend){const [m,e]=k.split("|");rxSet(+m,e,on)}}
+function rxRerender(){renderChat();if(dmWith)renderDM()}
+async function toggleReact(mid,e){if(!sess){showLogin();return}const k=mid+"|"+e;
+  const cur=rxPend.has(k)?rxPend.get(k):rxMine(mid,e);if(!rxPend.has(k))rxHave.set(k,cur);
+  rxPend.set(k,!cur);rxSeq++;rxSet(mid,e,!cur);rxRerender();    // affichage immédiat
+  if(rxBusy.has(k))return;rxBusy.add(k);
+  try{while(rxPend.has(k)&&rxPend.get(k)!==rxHave.get(k)){const want=rxPend.get(k);
+      const r=want?await sb("POST","/rest/v1/reactions",{message:mid,emoji:e})
+                  :await sb("DELETE","/rest/v1/reactions?message=eq."+mid+"&auteur=eq."+sess.id+"&emoji=eq."+e);
+      if(r.ok||(want&&r.status===409))rxHave.set(k,want);else{rxPend.set(k,rxHave.get(k));toast("Réaction impossible pour le moment");break}}
+  }finally{const fin=rxPend.has(k)?rxPend.get(k):rxHave.get(k);rxBusy.delete(k);rxPend.delete(k);rxHave.delete(k);rxSeq++;
+    if(sess){rxSet(mid,e,!!fin);rxRerender()}}}
+function rxRow(m,mine){const row=document.createElement("div");row.className="rx"+(mine?" me":"");const l=reacts[m.id]||[];
+  for(const [e,ch,nom] of RX){const n=l.filter(x=>x.emoji===e).length;if(!n)continue;const my=l.some(x=>x.emoji===e&&x.auteur===sess.id);
+    const b=document.createElement("button");b.type="button";b.className="rxc"+(my?" mine":"");b.textContent=ch+" "+n;b.setAttribute("aria-pressed",String(my));
+    b.setAttribute("aria-label",nom+" : "+n+(my?" (dont toi, touche pour retirer)":" (touche pour réagir aussi)"));b.onclick=()=>toggleReact(m.id,e);row.append(b)}
+  const add=document.createElement("button");add.type="button";add.className="rxadd";add.dataset.m=m.id;add.setAttribute("aria-label","Réagir au message");add.setAttribute("aria-haspopup","menu");
+  add.innerHTML='+<span>☺</span>';if(rxPickFor===m.id)add.setAttribute("aria-expanded","true");add.onclick=()=>openPicker(m.id,add);row.append(add);return row}
+let rxPickFor=null;
+function openPicker(mid,anchor){const p=$("rxPick");if(rxPickFor===mid&&!p.hidden){closePicker();return}rxPickFor=mid;p.hidden=false;
+  document.querySelectorAll(".rxadd[aria-expanded]").forEach(b=>b.removeAttribute("aria-expanded"));anchor.setAttribute("aria-expanded","true");
+  p.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(rxMine(mid,b.dataset.e))));
+  const r=anchor.getBoundingClientRect(),w=p.offsetWidth,h=p.offsetHeight;
+  let x=Math.min(innerWidth-w-8,Math.max(8,r.left+r.width/2-w/2)),y=r.top-h-8;if(y<8)y=r.bottom+8;
+  p.style.left=x+"px";p.style.top=y+"px";p.querySelector("button").focus({preventScroll:true})}
+function closePicker(){$("rxPick").hidden=true;rxPickFor=null;document.querySelectorAll(".rxadd[aria-expanded]").forEach(b=>b.removeAttribute("aria-expanded"))}
+$("rxPick").querySelectorAll("button").forEach(b=>b.onclick=()=>{const m=rxPickFor;closePicker();if(m!=null)toggleReact(m,b.dataset.e)});
+document.addEventListener("pointerdown",e=>{if(!$("rxPick").hidden&&!e.target.closest("#rxPick,.rxadd"))closePicker()},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("rxPick").hidden)closePicker()});
+for(const id of ["chat","dmChat"])$(id).addEventListener("scroll",()=>{if(!$("rxPick").hidden&&!scrollKeep)closePicker()},{passive:true});
+window.addEventListener("resize",()=>{if(!$("rxPick").hidden)closePicker()});
+
+// ===== notifications du téléphone (Web Push) =====
+// après un message privé, une demande d'ami ou un appel, l'appli prévient elle-même la fonction « notifier » (sans attendre, erreurs ignorées)
+function notify(body){try{fetch(SB_URL+"/functions/v1/notifier",{method:"POST",headers:{"apikey":SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(body)}).catch(()=>{})}catch(e){}}
+const pushOK=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const standalone=()=>(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+let swReg=Promise.resolve(null);
+if("serviceWorker" in navigator&&location.protocol!=="file:"){
+  swReg=navigator.serviceWorker.register("sw.js",{scope:"./",updateViaCache:"none"}).catch(e=>{console.warn("sw",e);return null});
+  navigator.serviceWorker.addEventListener("message",e=>{const d=e.data||{};if(d.type==="aller")route(d.hash||"");else if(d.type==="push"){poll();callPoll()}});
+  try{navigator.serviceWorker.startMessages()}catch(e){}}
+async function swReady(){const r=await swReg;if(!r)throw new Error("sw");if(r.active)return r;
+  return await Promise.race([navigator.serviceWorker.ready,new Promise((_,no)=>setTimeout(()=>no(new Error("sw lent")),8000))])}
+function b64u(s){s=String(s).replace(/-/g,"+").replace(/_/g,"/");s+="=".repeat((4-s.length%4)%4);const b=atob(s);return Uint8Array.from(b,c=>c.charCodeAt(0))}
+function sameKey(a,b){if(!a)return true;a=new Uint8Array(a);if(a.length!==b.length)return false;for(let i=0;i<a.length;i++)if(a[i]!==b[i])return false;return true}
+function askPerm(){return new Promise(res=>{try{const p=Notification.requestPermission(res);if(p&&p.then)p.then(res,()=>res(Notification.permission))}catch(e){res(Notification.permission)}})}
+async function vapidKey(){const r=await fetch(SB_URL+"/functions/v1/notifier",{headers:{"apikey":SB_KEY}});if(!r.ok)throw new Error("clé "+r.status);const j=await r.json();if(!j||!j.cle)throw new Error("clé vide");return b64u(j.cle)}
+async function pushSave(sub){const j=sub.toJSON?sub.toJSON():sub;if(!j||!j.endpoint||!j.keys)return false;
+  const r=await sb("POST","/rest/v1/abonnements_push?on_conflict=endpoint",{endpoint:j.endpoint,profil:sess.id,p256dh:j.keys.p256dh,auth:j.keys.auth},true,"resolution=merge-duplicates,return=minimal");
+  if(r.ok)store("am_push",j.endpoint);return r.ok}
+// ask = true : on demande l'autorisation (bouton) ; false : resynchronisation silencieuse (après connexion)
+async function pushSubscribe(ask){
+  if(!pushOK())return"nonpris";if(!sess)return"horsligne";
+  let perm=Notification.permission;if(perm==="default"&&ask)perm=await askPerm();
+  if(perm==="denied")return"bloque";if(perm!=="granted")return"defaut";
+  const reg=await swReady(),key=await vapidKey();
+  let sub=await reg.pushManager.getSubscription();
+  if(sub&&!sameKey(sub.options&&sub.options.applicationServerKey,key)){await sub.unsubscribe().catch(()=>{});sub=null}
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
+  return(await pushSave(sub))?"active":"erreur"}
+async function pushForget(unsub){let sub=null;try{const reg=await swReg;sub=reg&&await reg.pushManager.getSubscription()}catch(e){}
+  const ep=(sub&&sub.endpoint)||load("am_push");if(ep&&sess)await sb("DELETE","/rest/v1/abonnements_push?endpoint=eq."+encodeURIComponent(ep));
+  if(unsub&&sub)await sub.unsubscribe().catch(()=>{});store("am_push","")}
+async function pushState(){if(!pushOK())return"nonpris";if(Notification.permission==="denied")return"bloque";if(!sess)return"horsligne";
+  if(Notification.permission!=="granted")return"defaut";
+  try{const reg=await swReg;const sub=reg&&await reg.pushManager.getSubscription();if(sub&&sub.endpoint===load("am_push"))return"active"}catch(e){}return"defaut"}
+const PUSH_TXT={
+  active:["Notifications activées","Ce téléphone sonne pour les messages privés, les demandes d'ami et les appels, même appli fermée.","Désactiver",false],
+  defaut:["Notifications désactivées","Sois prévenu des messages privés, des demandes d'ami et des appels, même appli fermée.","Activer les notifications",true],
+  horsligne:["Notifications du téléphone","Connecte-toi pour activer les notifications sur ce téléphone.","Se connecter",true],
+  bloque:["Notifications bloquées","Tu les as refusées pour ce site. Autorise-les dans les réglages du navigateur (cadenas à côté de l'adresse → Notifications), puis touche Réessayer.","Réessayer",false],
+  erreur:["Activation impossible","Le serveur de notifications ne répond pas. Vérifie ta connexion et réessaie.","Réessayer",true],
+  encours:["Activation…","Accepte la demande du téléphone.","Patiente…",true],
+  nonpris:["Notifications non prises en charge","Ce navigateur ne permet pas les notifications. Sur Android, ouvre l'appli dans Chrome.",null,false],
+  ios:["Notifications : ajoute d'abord l'appli","Sur iPhone, les notifications n'arrivent que dans l'appli installée : touche Partager → Sur l'écran d'accueil, puis ouvre Aether depuis l'icône.",null,false]};
+function pushUI(st){if(st==="nonpris"&&isIOS&&!standalone())st="ios";const c=$("pushCard"),t=PUSH_TXT[st]||PUSH_TXT.defaut,b=$("pushBtn");
+  c.dataset.st=st;$("pushSt").textContent=t[0];$("pushHelp").textContent=t[1];b.hidden=!t[2];if(t[2])b.textContent=t[2];
+  b.className="btn"+(t[3]?" primary":"");b.disabled=st==="encours"}
+async function pushRefresh(){try{pushUI(await pushState())}catch(e){pushUI("defaut")}}
+$("pushBtn").onclick=async()=>{const st=$("pushCard").dataset.st;
+  if(st==="horsligne"){showLogin();return}
+  if(st==="active"){pushUI("encours");$("pushHelp").textContent="Désactivation…";await pushForget(true);pushUI("defaut");toast("Notifications désactivées");return}
+  pushUI("encours");let r;try{r=await pushSubscribe(true)}catch(e){console.warn("push",e);r="erreur"}
+  pushUI(r);if(r==="active")toast("Notifications activées")};
+async function pushResync(){if(!pushOK()||!sess||Notification.permission!=="granted"){pushRefresh();return}
+  try{pushUI(await pushSubscribe(false))}catch(e){console.warn("push",e);pushRefresh()}}
+{const amis=document.querySelector('section[data-tab="amis"]');amis.firstElementChild.after($("pushCard"));$("pushCard").hidden=false;pushUI("horsligne")}
+
+// ===== compte : déconnexion (supprime l'abonnement de ce téléphone) =====
+{const card=$("meName").closest(".card"),d=document.createElement("div");d.className="me-act";d.id="meAct";
+  const b=btn("Se déconnecter",false,async()=>{if(!sess)return;if(call)hangup();b.disabled=true;try{await pushForget(false)}catch(e){}
+    sess=null;store("am_sb","");links=[];msgs=[];lastId=0;reacts={};profils={};everyone=[];online.clear();
+    b.disabled=false;$("dm").hidden=true;dmWith=null;renderFriends();renderChat();$("chat").innerHTML='<div class="empty">Connecte-toi pour lire la taverne.</div>';pushUI("horsligne");showLogin()});
+  b.id="logout";d.append(b);card.append(d)}
+
+// ===== liens d'une notification : #dm=<id>, #amis, #appel=<id> =====
+let pendingRoute=null,polledOnce=false;
+function route(h){h=String(h==null?location.hash:h).replace(/^#/,"");let m;
+  if(h==="amis")pendingRoute={amis:1};else if((m=/^dm=([0-9a-f-]{8,})$/i.exec(h)))pendingRoute={dm:m[1]};else if((m=/^appel=(\d+)$/.exec(h)))pendingRoute={appel:+m[1]};else return;
+  if(/^#(amis|dm=|appel=)/.test(location.hash))history.replaceState(null,"",location.pathname+location.search);
+  show("amis");runRoute()}
+async function runRoute(){const p=pendingRoute;if(!p||!sess)return;
+  if(p.amis){pendingRoute=null;show("amis");return}
+  if(p.dm){if(!polledOnce)return;pendingRoute=null;if(relation(p.dm)==="ami"){if(dmWith!==p.dm)openDM(p.dm)}else toast("Conversation introuvable");return}
+  if(p.appel){pendingRoute=null;if(call&&call.id===p.appel)return;
+    const r=await sb("GET","/rest/v1/appels?select=id,appelant,appele,offre,depuis,etat,repondu_depuis,cree_le&id=eq."+p.appel);const row=r.ok&&Array.isArray(r.data)&&r.data[0];
+    if(!row){toast("Appel introuvable");return}
+    if(row.etat==="sonne"&&row.appele===sess.id&&Date.now()-Date.parse(row.cree_le)<60000){if(!inCall())incoming(row)}
+    else if(row.appele===sess.id)toast(row.etat==="accepte"?"Appel déjà pris"+(row.repondu_depuis==="jeu"?" dans le jeu":""):"Appel manqué de "+info(row.appelant).pseudo)}}
+window.addEventListener("hashchange",()=>route());
+function afterPoll(){polledOnce=true;runRoute()}
+
+// ===== appels vocaux (WebRTC, offre / réponse SDP complètes, même protocole que le jeu) =====
+const ICE=[{urls:["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"]},
+  {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}];
+const iceList=()=>Array.isArray(window.__aetherIce)?window.__aetherIce:ICE;
+let call=null,callPolling=false;const seenCalls=new Set();
+const inCall=()=>!!call&&call.phase!=="end";
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const nowIso=()=>new Date().toISOString();
+const peerName=c=>info(c.peer).pseudo;
+function patchCall(id,body,cond,rep){return sb("PATCH","/rest/v1/appels?id=eq."+id+(cond||""),{...body,maj_le:nowIso()},true,rep?"return=representation":"return=minimal")}
+function gathered(pc){return new Promise(res=>{if(pc.iceGatheringState==="complete")return res();let t=0;
+  const done=()=>{clearTimeout(t);pc.removeEventListener("icegatheringstatechange",chk);pc.removeEventListener("icecandidate",cand);res()};
+  const chk=()=>{if(pc.iceGatheringState==="complete")done()},cand=e=>{if(!e.candidate)done()};
+  t=setTimeout(done,5000);pc.addEventListener("icegatheringstatechange",chk);pc.addEventListener("icecandidate",cand)})}
+function getMic(){if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return Promise.reject(Object.assign(new Error("micro"),{name:"NotSupportedError"}));
+  return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false})}
+function micErr(e){const n=e&&e.name;return n==="NotAllowedError"||n==="SecurityError"?"Micro refusé : autorise le micro pour ce site dans ton navigateur, puis réessaie."
+  :n==="NotFoundError"||n==="OverconstrainedError"?"Aucun micro trouvé sur cet appareil.":n==="NotReadableError"?"Le micro est déjà utilisé par une autre appli.":"Micro indisponible sur ce navigateur."}
+function newPC(c){const pc=new RTCPeerConnection({iceServers:iceList()});
+  pc.ontrack=e=>{const a=$("callAudio");a.srcObject=(e.streams&&e.streams[0])||new MediaStream([e.track]);a.volume=+$("callVol").value;a.play().catch(()=>{})};
+  pc.onconnectionstatechange=()=>onConn(c,pc.connectionState);
+  pc.oniceconnectionstatechange=()=>{if(pc.iceConnectionState==="failed")onConn(c,"failed")};return pc}
+function onConn(c,s){if(call!==c||c.phase==="end")return;
+  if(s==="connected"){clearTimeout(c.lost);if(c.phase!=="live"){c.phase="live";c.t0=Date.now();stopTones();callUI()}else{$("callSt").textContent="En communication"}}
+  else if(s==="failed")endCall("Connexion impossible (réseau)","fini");
+  else if(s==="closed")endCall("Appel terminé");
+  else if(s==="disconnected"&&c.phase==="live"){$("callSt").textContent="Connexion instable…";clearTimeout(c.lost);
+    c.lost=setTimeout(()=>{if(call===c&&c.pc&&c.pc.connectionState!=="connected")endCall("Connexion perdue (réseau)","fini")},12000)}}
+function connectGuard(c){c.guard=setTimeout(()=>{if(call===c&&c.phase==="connecting")endCall("Connexion impossible (réseau)","fini")},25000)}
+
+// --- sons (WebAudio, aucun fichier) ---
+let actx=null,toneT=0,vibT=0;const toneNodes=new Set();
+function ac(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!actx)try{actx=new C()}catch(e){return null}if(actx.state==="suspended")actx.resume().catch(()=>{});return actx}
+document.addEventListener("pointerdown",()=>ac(),{passive:true,capture:true});
+function beep(f,t,d,v,type){const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.type=type||"sine";o.frequency.value=f;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.02);g.gain.setValueAtTime(v,t+Math.max(.03,d-.05));g.gain.linearRampToValueAtTime(0,t+d);
+  o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.03);toneNodes.add(o);o.onended=()=>toneNodes.delete(o)}
+function tone(kind){stopTones();const play=()=>{const a=ac();if(!a)return;const t=a.currentTime+.05;
+    if(kind==="ringback")beep(440,t,1.5,.09);                                           // tonalité de retour : 1,5 s / 3,5 s
+    else{const n=[659.3,880,1046.5,1318.5];for(let k=0;k<2;k++)n.forEach((f,i)=>beep(f,t+k*.72+i*.12,.2,.13,"triangle"))}};   // sonnerie : carillon
+  play();toneT=setInterval(play,kind==="ringback"?5000:2600);
+  if(kind==="ring"&&navigator.vibrate){const v=()=>navigator.vibrate([450,250,450]);v();vibT=setInterval(v,2600)}}
+function stopTones(){clearInterval(toneT);clearInterval(vibT);toneT=vibT=0;for(const o of toneNodes)try{o.stop()}catch(e){}toneNodes.clear();if(navigator.vibrate)try{navigator.vibrate(0)}catch(e){}}
+function beepEnd(){const a=ac();if(!a)return;const t=a.currentTime+.05;[0,.3,.6].forEach(d=>beep(480,t+d,.18,.08))}
+
+// --- écran d'appel ---
+const PH_TXT={prep:"Préparation du micro…",ring:"Appel en cours…",incoming:"",answering:"Connexion…",connecting:"Connexion…",live:"En communication"};
+function callUI(endTxt){const c=call;if(!c)return;const o=$("call"),i=info(c.peer);o.hidden=false;o.dataset.ph=c.phase;closePicker();
+  $("callName").textContent=i.pseudo;$("callLv").innerHTML="";if(i.niveau){const b=document.createElement("span");b.className="lvb";b.style.marginLeft="0";b.textContent=lvTxt(i.niveau);$("callLv").append(b)}
+  const pp=$("callPic");if(pp.dataset.p!==c.peer){pp.innerHTML="";pp.append(pic(i));pp.dataset.p=c.peer}
+  $("callKind").textContent=c.dir==="in"?(c.phase==="incoming"?"Appel entrant"+(c.row&&c.row.depuis==="jeu"?" · depuis le jeu":""):"Appel vocal"):"Appel vocal";
+  let st=PH_TXT[c.phase]||"";if(c.phase==="incoming")st=i.pseudo+" t'appelle…";if(c.phase==="ring"&&i.enJeu)st="Appel en cours… ça sonne aussi dans le jeu.";if(c.phase==="end")st=endTxt||"Appel terminé";
+  $("callSt").textContent=st;
+  const live=c.phase==="live";$("callTime").hidden=!live;if(live)callTick();
+  $("callTools").hidden=!["connecting","live","answering"].includes(c.phase);
+  $("callOk").hidden=c.phase!=="incoming";$("callNo").hidden=c.phase==="end";$("callNoL").textContent=c.phase==="incoming"?"Refuser":"Raccrocher";
+  if(c.phase==="incoming")$("callOk").focus({preventScroll:true})}
+function callTick(){const c=call;if(!c||c.phase!=="live")return;const s=Math.floor((Date.now()-c.t0)/1000);$("callTime").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+setInterval(callTick,1000);
+function endCall(txt,etat){const c=call;if(!c||c.phase==="end")return;const was=c.phase;c.phase="end";
+  clearTimeout(c.guard);clearTimeout(c.lost);stopTones();
+  if(etat&&c.id)patchCall(c.id,{etat},etat==="fini"?"":"&etat=eq.sonne");
+  try{c.pc&&c.pc.close()}catch(e){}if(c.stream)c.stream.getTracks().forEach(t=>t.stop());const a=$("callAudio");a.pause();a.srcObject=null;
+  $("callMute").setAttribute("aria-pressed","false");$("callMuteL").textContent="Micro";
+  callUI(txt);if(was!=="incoming"||etat)beepEnd();
+  setTimeout(()=>{if(call===c){call=null;$("call").hidden=true}},2400)}
+function hangup(){const c=call;if(!c||c.phase==="end")return;
+  if(c.phase==="incoming"||c.phase==="answering")endCall("Appel refusé","refuse");else if(!c.id)endCall("Appel annulé");else endCall("Appel terminé","fini")}
+$("callNo").onclick=hangup;$("callOk").onclick=()=>acceptCall();
+$("callMute").onclick=()=>{const c=call;if(!c||!c.stream)return;const t=c.stream.getAudioTracks()[0];if(!t)return;t.enabled=!t.enabled;
+  $("callMute").setAttribute("aria-pressed",String(!t.enabled));$("callMuteL").textContent=t.enabled?"Micro":"Muet"};
+$("callVol").oninput=()=>{$("callAudio").volume=+$("callVol").value};
+// fermeture de l'appli pendant un appel : on raccroche proprement
+window.addEventListener("pagehide",()=>{const c=call;if(!c||!c.id||c.phase==="end"||!sess)return;
+  const etat=c.phase==="incoming"||c.phase==="answering"?"refuse":c.phase==="ring"?"manque":"fini";
+  try{fetch(SB_URL+"/rest/v1/appels?id=eq."+c.id+(etat==="fini"?"":"&etat=eq.sonne"),{method:"PATCH",keepalive:true,headers:{"apikey":SB_KEY,"Authorization":"Bearer "+sess.access,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({etat,maj_le:nowIso()})})}catch(e){}});
+
+// --- suivi de la ligne « appels » (1 s pendant que ça sonne chez l'autre, 2 s sinon) ---
+async function watch(c){while(call===c&&c.phase!=="end"){await wait(c.dir==="out"&&c.phase==="ring"?1000:2000);if(call!==c||c.phase==="end")return;
+  if(c.dir==="out"&&c.phase==="ring"&&Date.now()-c.t1>40000){endCall("Pas de réponse","manque");return}
+  if(c.dir==="in"&&c.phase==="incoming"&&Date.now()-c.t1>45000){endCall("Appel manqué");return}
+  const r=await sb("GET","/rest/v1/appels?select=etat,reponse,repondu_depuis&id=eq."+c.id);if(call!==c||c.phase==="end")return;
+  const row=r.ok&&Array.isArray(r.data)&&r.data[0];if(!row)continue;
+  if(c.dir==="out"){
+    if(row.etat==="accepte"&&row.reponse&&!c.remote){c.remote=true;c.phase="connecting";stopTones();callUI();
+      try{await c.pc.setRemoteDescription(JSON.parse(row.reponse))}catch(e){console.warn(e);endCall("Connexion impossible (réponse illisible)","fini");return}
+      connectGuard(c);if(c.pc.connectionState==="connected")onConn(c,"connected")}
+    else if(row.etat==="refuse"){endCall(peerName(c)+" a refusé l'appel");return}
+    else if(row.etat==="manque"){endCall("Pas de réponse");return}
+    else if(row.etat==="fini"){endCall(c.remote?peerName(c)+" a raccroché":"Appel terminé");return}}
+  else{
+    if(c.phase==="incoming"&&row.etat!=="sonne"){endCall(row.etat==="accepte"?(row.repondu_depuis==="jeu"?"Répondu dans le jeu":"Appel déjà pris ailleurs"):"Appel manqué");return}
+    if(c.phase==="answering"&&(row.etat==="fini"||row.etat==="manque")){endCall("Appel manqué");return}
+    if((c.phase==="connecting"||c.phase==="live")&&row.etat==="fini"){endCall(peerName(c)+" a raccroché");return}}}}
+
+// --- appeler un ami ---
+async function startCall(id){if(!sess){showLogin();return}if(inCall()){toast("Un appel est déjà en cours");return}
+  if(relation(id)!=="ami"){toast("Tu ne peux appeler que tes amis");return}
+  if(!window.RTCPeerConnection){toast("Les appels ne sont pas pris en charge par ce navigateur");return}
+  const c=call={dir:"out",peer:id,phase:"prep",id:null};callUI();ac();
+  try{c.stream=await getMic()}catch(e){endCall(micErr(e));return}
+  if(call!==c||c.phase==="end"){c.stream.getTracks().forEach(t=>t.stop());return}
+  const pc=c.pc=newPC(c);c.stream.getTracks().forEach(t=>pc.addTrack(t,c.stream));
+  try{await pc.setLocalDescription(await pc.createOffer());await gathered(pc)}catch(e){console.warn(e);endCall("Appel impossible sur ce navigateur");return}
+  if(c.phase==="end")return;
+  const d=pc.localDescription;
+  const r=await sb("POST","/rest/v1/appels",{appele:id,offre:JSON.stringify({type:d.type,sdp:d.sdp}),depuis:"appli"},true,"return=representation");
+  const row=r.ok?(Array.isArray(r.data)?r.data[0]:r.data):null;
+  if(!row||!row.id){endCall(r.status===401||r.status===403?"Appel impossible : vous n'êtes pas (encore) amis.":"Appel impossible pour le moment, réessaie.");return}
+  c.id=row.id;seenCalls.add(row.id);notify({table:"appels",id:row.id});
+  if(c.phase==="end"){patchCall(c.id,{etat:"fini"});return}   // raccroché pendant la préparation
+  c.phase="ring";c.t1=Date.now();callUI();tone("ringback");watch(c)}
+
+// --- recevoir un appel ---
+function incoming(row){if(inCall()||seenCalls.has(row.id))return;seenCalls.add(row.id);
+  const c=call={dir:"in",id:row.id,peer:row.appelant,row,phase:"incoming",t1:Date.now()};
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  callUI();tone("ring");watch(c);
+  if(!profils[c.peer])sb("GET","/rest/v1/profils?select=id,pseudo,look,face,styles,niveau,vu_le,en_jeu&id=eq."+c.peer).then(r=>{
+    if(r.ok&&Array.isArray(r.data)&&r.data[0]){profils[c.peer]=r.data[0];if(call===c){$("callPic").dataset.p="";callUI()}}})}
+async function acceptCall(){const c=call;if(!c||c.dir!=="in"||c.phase!=="incoming")return;c.phase="answering";stopTones();callUI();ac();
+  let offer;try{offer=JSON.parse(c.row.offre)}catch(e){endCall("Appel illisible","refuse");return}
+  const pc=c.pc=newPC(c);
+  try{await pc.setRemoteDescription(offer)}catch(e){console.warn(e);endCall("Appel incompatible avec ce téléphone","refuse");return}
+  try{c.stream=await getMic()}catch(e){endCall(micErr(e),"refuse");return}
+  if(call!==c||c.phase==="end"){c.stream.getTracks().forEach(t=>t.stop());return}
+  c.stream.getTracks().forEach(t=>pc.addTrack(t,c.stream));
+  try{await pc.setLocalDescription(await pc.createAnswer());await gathered(pc)}catch(e){console.warn(e);endCall("Connexion impossible","refuse");return}
+  if(c.phase==="end")return;
+  const d=pc.localDescription;
+  const r=await patchCall(c.id,{etat:"accepte",reponse:JSON.stringify({type:d.type,sdp:d.sdp}),repondu_depuis:"appli"},"&etat=eq.sonne",true);
+  if(c.phase==="end")return;
+  if(!r.ok){endCall("Réponse impossible, réessaie");return}
+  if(!Array.isArray(r.data)||!r.data.length){endCall("Appel déjà pris ailleurs");return}
+  c.phase="connecting";callUI();connectGuard(c);if(pc.connectionState==="connected")onConn(c,"connected")}
+async function callPoll(){if(!sess||inCall()||callPolling||document.hidden)return;callPolling=true;
+  try{const r=await sb("GET","/rest/v1/appels?select=id,appelant,offre,depuis,etat,cree_le&appele=eq."+sess.id+"&etat=eq.sonne&cree_le=gt."+new Date(Date.now()-45000).toISOString()+"&order=id.desc&limit=1");
+    const row=r.ok&&Array.isArray(r.data)&&r.data[0];if(row&&!inCall()&&!seenCalls.has(row.id))incoming(row)}catch(e){}finally{callPolling=false}}
+setInterval(callPoll,2000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)callPoll()});
+
+// --- boutons 📞 ---
+{const top=document.querySelector("#dm .dm-top"),b=document.createElement("button");b.type="button";b.className="btn dm-call";b.id="dmCall";b.textContent="📞";
+  b.setAttribute("aria-label","Appeler");b.onclick=()=>{if(dmWith)startCall(dmWith)};top.append(b)}
+function callBtn(id){const i=info(id),b=btn("📞",false,()=>startCall(id));b.classList.add("ic");
+  const t="Appeler "+i.pseudo+(i.enJeu?" (ça sonne aussi dans le jeu)":"");b.setAttribute("aria-label",t);b.title=t;return b}
+
+route();
 
 
 // ---------- démarrage ----------
