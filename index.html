@@ -297,6 +297,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
       </div>
       <div class="group">
         <h3>Silhouette</h3>
+        <div class="field"><span>Corps <em>de ton personnage dans le jeu</em></span><div class="chips" id="cSex"></div></div>
         <label class="field" for="height"><span>Taille <em id="nHeight"></em></span><input id="height" type="range" min="0" max="28" step="1"></label>
         <label class="field" for="bBd"><span>Corpulence <em id="nBd"></em></span><input id="bBd" type="range" min="-3" max="3" step="1"></label>
         <label class="field" for="bSh"><span>Épaules <em id="nSh"></em></span><input id="bSh" type="range" min="-3" max="3" step="1"></label>
@@ -642,7 +643,8 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
   A.unpackStyle = v => ({ eyeShape: v & 7, brows: (v >> 3) & 7, nose: (v >> 6) & 7, mouth: (v >> 9) & 7, faceShape: (v >> 12) & 7, glassesStyle: (v >> 15) & 7, hairHi: (v >> 18) & 3 });
   A.packBody = m => A.BODY_KEYS.reduce((v, k, i) => v | (Math.max(0, Math.min(6, Math.round((m[k] || 0) * 3) + 3)) << (i * 3)), 0) >>> 0;
   A.unpackBody = v => { const m = {}; if (v == null) v = A.BODY_NEUTRAL; A.BODY_KEYS.forEach((k, i) => { m[k] = (Math.min(6, (v >> (i * 3)) & 7) - 3) / 3; }); return m; };
-  const bodyCode = l => ((l.body == null ? A.BODY_NEUTRAL : l.body) & 0xfff) | ((hsteps(l.height) & 3) << 12);
+  // silhouette (15 bits) : 4 réglages + 2 bits de taille fine + 1 bit « corps de femme » (personnage VRoid du jeu)
+  const bodyCode = l => ((l.body == null ? A.BODY_NEUTRAL : l.body) & 0xfff) | ((hsteps(l.height) & 3) << 12) | (l.female ? 1 << 14 : 0);
   // code : "AE-XXXXXXX" (apparence) [+ "-YYYYY" (traits du visage)] [+ "-SSSSBBB" (styles + silhouette)] — les anciens codes restent valides
   A.encode = l => {
     const face = l.face == null ? A.FACE_NEUTRAL : l.face >>> 0, st = A.packStyle(l), bo = bodyCode(l), ext = st !== 0 || bo !== A.BODY_NEUTRAL;
@@ -656,13 +658,13 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
     if (c.length !== 7 && c.length !== 12 && c.length !== 19) return null;
     const num = t => { let v = 0; for (const ch of t) { const k = A.ALPH.indexOf(ch); if (k < 0) return NaN; v = v * 32 + k; } return v; };
     const v = num(c.slice(0, 7)); if (!(v >= 0 && v <= 0xffffffff)) return null;
-    const l = A.unpack(v >>> 0); l.face = A.FACE_NEUTRAL; l.body = A.BODY_NEUTRAL;
+    const l = A.unpack(v >>> 0); l.face = A.FACE_NEUTRAL; l.body = A.BODY_NEUTRAL; l.female = false;
     Object.assign(l, { eyeShape: 0, brows: 0, nose: 0, mouth: 0, faceShape: 0, glassesStyle: 0 });
     if (c.length >= 12) { const f = num(c.slice(7, 12)); if (!(f >= 0 && f < 1 << 24)) return null; l.face = f; }
     if (c.length === 19) {
       const st = num(c.slice(12, 16)), bo = num(c.slice(16, 19)); if (!(st >= 0 && st < 1 << 20) || !(bo >= 0 && bo < 1 << 15)) return null;
       const s = A.unpackStyle(st); l.hair = l.hair | (s.hairHi << 4); delete s.hairHi; Object.assign(l, s);
-      l.body = bo & 0xfff; l.height = Math.round((l.height + ((bo >> 12) & 3) * .0125) * 10000) / 10000;
+      l.body = bo & 0xfff; l.height = Math.round((l.height + ((bo >> 12) & 3) * .0125) * 10000) / 10000; l.female = !!((bo >> 14) & 1);
     }
     return l;
   };
@@ -953,7 +955,7 @@ function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
 // taille : crans de 1,25 % de 85 % à 120 % (1,00 ≈ 173 cm)
 const H0=.85,HSTEP=.0125,HMAX=28,REF_CM=173;
 const hIndex=h=>Math.max(0,Math.min(HMAX,Math.round(((h||1)-H0)/HSTEP))),hOf=i=>Math.round((H0+i*HSTEP)*10000)/10000;
-let look={skin:1,hair:1,hairColor:0,eyes:0,top:0,bottom:0,cape:0,height:1,beard:false,glasses:false,
+let look={skin:1,hair:1,hairColor:0,eyes:0,top:0,bottom:0,cape:0,height:1,beard:false,glasses:false,female:false,
   eyeShape:0,brows:0,nose:0,mouth:0,faceShape:0,glassesStyle:0,body:A.BODY_NEUTRAL};
 let pseudo="",PARTS=null;
 function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2800)}
@@ -984,6 +986,7 @@ swatches($("swTop"),A.OUTFITS,"top");swatches($("swBot"),A.OUTFITS,"bottom");
 pills($("cHair"),A.HAIR_NAMES,"hair");pills($("cCape"),A.CAPE_NAMES,"cape");
 pills($("cFaceShape"),A.FACE_SHAPE_NAMES,"faceShape");pills($("cEyeShape"),A.EYE_SHAPE_NAMES,"eyeShape");pills($("cBrows"),A.BROW_NAMES,"brows");
 pills($("cNose"),A.NOSE_NAMES,"nose");pills($("cMouth"),A.MOUTH_NAMES,"mouth");pills($("cGlasses"),A.GLASSES_NAMES,"glassesStyle");
+["Homme","Femme"].forEach((n,i)=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.i=i;b.onclick=()=>{look.female=i===1;refresh()};$("cSex").appendChild(b)});
 $("tBeard").onclick=()=>{look.beard=!look.beard;refresh()};$("tGlasses").onclick=()=>{look.glasses=!look.glasses;refresh()};
 $("height").oninput=e=>{look.height=hOf(+e.target.value);refresh()};
 // silhouette : 4 réglages de −3 à +3 (packés dans look.body, même format que le jeu)
@@ -997,7 +1000,7 @@ function refresh(){
   const hi=hIndex(look.height);$("height").value=hi;$("nHeight").textContent=(Math.round(hOf(hi)*1000)/10).toString().replace(".",",")+" % · ≈ "+Math.round(hOf(hi)*REF_CM)+" cm";
   mark($("cFaceShape"),look.faceShape|0);mark($("cEyeShape"),look.eyeShape|0);mark($("cBrows"),look.brows|0);mark($("cNose"),look.nose|0);mark($("cMouth"),look.mouth|0);mark($("cGlasses"),look.glassesStyle|0);
   $("nFaceShape").textContent=A.FACE_SHAPE_NAMES[look.faceShape|0];$("nEyeShape").textContent=A.EYE_SHAPE_NAMES[look.eyeShape|0];
-  $("fGlasses").hidden=!look.glasses;
+  $("fGlasses").hidden=!look.glasses;mark($("cSex"),look.female?1:0);
   const bm=A.unpackBody(look.body);for(const k in BODY_IN){const v=Math.round(bm[k]*3);$(BODY_IN[k]).value=v;$("n"+k[0].toUpperCase()+k[1]).textContent=A.BODY_NAMES[k][v+3]}
   $("tBeard").setAttribute("aria-pressed",!!look.beard);$("tGlasses").setAttribute("aria-pressed",!!look.glasses);
   const code=A.encode(look);$("code").textContent=code;$("code").classList.toggle("long",code.length>10);$("lookBadge").textContent=code;$("lookBadge").classList.toggle("long",code.length>10);
@@ -2107,7 +2110,7 @@ route();
 try{const s=JSON.parse(load("am_look")||"null");if(s)look={...look,...s}}catch(e){}
 look.skin=Math.min(7,look.skin|0);look.hair=Math.min(A.HAIR_NAMES.length-1,look.hair|0);
 for(const [k,n] of [["eyeShape",A.EYE_SHAPE_NAMES],["brows",A.BROW_NAMES],["nose",A.NOSE_NAMES],["mouth",A.MOUTH_NAMES],["faceShape",A.FACE_SHAPE_NAMES],["glassesStyle",A.GLASSES_NAMES]])look[k]=Math.max(0,Math.min(n.length-1,look[k]|0));
-if(look.body==null)look.body=A.BODY_NEUTRAL;look.body&=0xfff;look.height=hOf(hIndex(look.height));
+if(look.body==null)look.body=A.BODY_NEUTRAL;look.body&=0xfff;look.height=hOf(hIndex(look.height));look.female=!!look.female;
 pseudo=load("am_pseudo")||"";   // pseudo du compte (fixé à la création, non modifiable dans l'appli)
 initThree();refresh();show(load("am_tab")||"avatar");connect();
 loadParts().then(()=>{buildAvatar();renderFriends()});
