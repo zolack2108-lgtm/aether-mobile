@@ -226,21 +226,21 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
   <section data-tab="avatar">
     <div>
       <h2>Ton avatar</h2>
-      <p class="sub">Prends une photo de face : l'appli repère ton visage, sa forme, tes yeux, ton nez, ta bouche, tes cheveux, ta barbe et tes lunettes, puis sculpte ton personnage. Ajoute un scan du corps pour ta silhouette.</p>
+      <p class="sub">Prends une photo de face : l'appli repère ta peau, tes yeux, ta coupe et ta couleur de cheveux, ta barbe et tes lunettes, et les donne à ton personnage du jeu (modèle VRoid). Ajoute ta taille pour sa hauteur.</p>
     </div>
     <div class="stage" id="stage">
-      <canvas id="three" aria-label="Aperçu 3D de ton avatar"></canvas>
-      <div class="loading" id="stageLoading">Sculpture de l'avatar…</div>
+      <canvas id="three" aria-label="Aperçu de ton personnage du jeu"></canvas>
+      <div class="loading" id="stageLoading">Préparation de ton personnage…</div>
       <div class="top"><span class="badge" id="lookBadge">AE-·······</span>
         <div class="views" role="group" aria-label="Cadrage"><button type="button" id="vBody" aria-pressed="true">Corps</button><button type="button" id="vFace" aria-pressed="false">Visage</button></div></div>
-      <span class="hint">Glisse pour tourner</span>
+      <span class="hint" id="stageHint">Glisse pour tourner</span>
     </div>
 
     <div class="card">
       <div class="photo">
         <div class="frame" id="frame"><span id="frameTxt">Ta photo</span><canvas id="photoCv" hidden></canvas><span class="scan"></span></div>
         <div class="col">
-          <p>Visage de face, bien éclairé, cheveux visibles. L'IA du visage repère 478 points sur ton téléphone pour sculpter tes traits.</p>
+          <p>Visage de face, bien éclairé, cheveux visibles. L'IA du visage repère 478 points sur ton téléphone pour lire ta peau, tes yeux, tes cheveux, ta barbe et tes lunettes.</p>
           <button type="button" class="aitog" id="tAi" aria-pressed="true"><span class="sw2" aria-hidden="true"></span><span><b>IA Claude</b> : recrée aussi ton style. Envoie un recadrage du visage à Claude, avec ton accord.</span></button>
           <div class="aibridge" id="aiBridge" hidden></div>
           <div class="row">
@@ -257,7 +257,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
 
     <div class="card" id="scanCard">
       <div><h3>Scan du corps · option</h3>
-        <p class="sub">Deux photos en pied (demande à quelqu'un ou mets un minuteur) : <b>de face, bras écartés à l'horizontale</b>, puis <b>de profil</b>. L'appli estime ta carrure et tes proportions sur ton téléphone. Les photos ne sont ni gardées ni envoyées.</p></div>
+        <p class="sub">Deux photos en pied (demande à quelqu'un ou mets un minuteur) : <b>de face, bras écartés à l'horizontale</b>, puis <b>de profil</b>. L'appli estime ta carrure et tes proportions sur ton téléphone et les garde dans ton code ; le personnage VRoid du jeu garde la silhouette de son modèle, seule ta taille le change. Les photos ne sont ni gardées ni envoyées.</p></div>
       <label class="field" for="cm"><span>Ta taille réelle <em>en cm, conseillé</em></span><input id="cm" type="number" inputmode="numeric" min="120" max="230" step="1" placeholder="ex. 175" autocomplete="off"></label>
       <label class="field" for="kg"><span>Ton poids <em>en kg, facultatif</em></span><input id="kg" type="number" inputmode="numeric" min="35" max="250" step="1" placeholder="ex. 70 : sinon il est estimé" autocomplete="off"></label>
       <p class="note">Une photo seule ne donne pas l'échelle : sans ta taille, l'avatar garde sa taille actuelle et seules les proportions sont estimées.</p>
@@ -276,11 +276,11 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
         <h3>Visage</h3>
         <div class="field"><span>Peau <em id="nSkin"></em></span><div class="swatches" id="swSkin"></div></div>
         <div class="field"><span>Yeux <em id="nEyes"></em></span><div class="swatches" id="swEyes"></div></div>
-        <div class="field"><span>Forme du visage <em id="nFaceShape"></em></span><div class="chips" id="cFaceShape"></div></div>
-        <div class="field"><span>Forme des yeux <em id="nEyeShape"></em></span><div class="chips" id="cEyeShape"></div></div>
-        <div class="field"><span>Sourcils</span><div class="chips" id="cBrows"></div></div>
-        <div class="field"><span>Nez</span><div class="chips" id="cNose"></div></div>
-        <div class="field"><span>Bouche</span><div class="chips" id="cMouth"></div></div>
+        <div class="field" hidden><span>Forme du visage <em id="nFaceShape"></em></span><div class="chips" id="cFaceShape"></div></div>
+        <div class="field" hidden><span>Forme des yeux <em id="nEyeShape"></em></span><div class="chips" id="cEyeShape"></div></div>
+        <div class="field" hidden><span>Sourcils</span><div class="chips" id="cBrows"></div></div>
+        <div class="field" hidden><span>Nez</span><div class="chips" id="cNose"></div></div>
+        <div class="field" hidden><span>Bouche</span><div class="chips" id="cMouth"></div></div>
         <div class="toggles"><button type="button" class="tog" id="tBeard" aria-pressed="false">Barbe<i></i></button><button type="button" class="tog" id="tGlasses" aria-pressed="false">Lunettes<i></i></button></div>
         <div class="field" id="fGlasses" hidden><span>Monture</span><div class="chips" id="cGlasses"></div></div>
       </div>
@@ -293,16 +293,17 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
         <h3>Tenue</h3>
         <div class="field"><span>Haut <em id="nTop"></em></span><div class="swatches" id="swTop"></div></div>
         <div class="field"><span>Bas <em id="nBot"></em></span><div class="swatches" id="swBot"></div></div>
-        <div class="field"><span>Cape</span><div class="chips" id="cCape"></div></div>
+        <div class="field" hidden><span>Cape</span><div class="chips" id="cCape"></div></div>
       </div>
       <div class="group">
         <h3>Silhouette</h3>
         <div class="field"><span>Corps <em>de ton personnage dans le jeu</em></span><div class="chips" id="cSex"></div></div>
         <label class="field" for="height"><span>Taille <em id="nHeight"></em></span><input id="height" type="range" min="0" max="28" step="1"></label>
-        <label class="field" for="bBd"><span>Corpulence <em id="nBd"></em></span><input id="bBd" type="range" min="-3" max="3" step="1"></label>
-        <label class="field" for="bSh"><span>Épaules <em id="nSh"></em></span><input id="bSh" type="range" min="-3" max="3" step="1"></label>
-        <label class="field" for="bHp"><span>Hanches <em id="nHp"></em></span><input id="bHp" type="range" min="-3" max="3" step="1"></label>
-        <label class="field" for="bLg"><span>Jambes <em id="nLg"></em></span><input id="bLg" type="range" min="-3" max="3" step="1"></label>
+        <p class="note">Ton personnage du jeu est un modèle VRoid : son visage et sa silhouette sont ceux du modèle. L'appli règle sa peau, ses yeux, sa coiffure, sa barbe, ses lunettes, sa tenue, son corps et sa taille.</p>
+        <label class="field" for="bBd" hidden><span>Corpulence <em id="nBd"></em></span><input id="bBd" type="range" min="-3" max="3" step="1"></label>
+        <label class="field" for="bSh" hidden><span>Épaules <em id="nSh"></em></span><input id="bSh" type="range" min="-3" max="3" step="1"></label>
+        <label class="field" for="bHp" hidden><span>Hanches <em id="nHp"></em></span><input id="bHp" type="range" min="-3" max="3" step="1"></label>
+        <label class="field" for="bLg" hidden><span>Jambes <em id="nLg"></em></span><input id="bLg" type="range" min="-3" max="3" step="1"></label>
       </div>
     </div>
 
@@ -589,14 +590,14 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// Avatar Aether en 3D (three.js r128) — mêmes pièces sculptées et mêmes palettes que le jeu.
+// Avatar Aether : palettes, noms et code (identiques au jeu). L'aperçu montre le personnage VRoid du jeu (voir « aperçu VRoid »).
 (function () {
   const A = {};
   A.SKINS = [[.98,.86,.76],[.94,.78,.64],[.82,.62,.45],[.62,.43,.30],[.42,.28,.20],[.90,.72,.58],[.72,.52,.36],[.32,.21,.15]];
   A.SKIN_NAMES = ["Porcelaine","Claire","Mate","Ambrée","Brune","Rosée","Caramel","Ébène"];
   A.HAIR_NAMES = ["Rasé","Court","Mi-long","Long","Queue de cheval","Pointes","Bouclé","Afro","Chignon","Long ondulé","Mèche","Tresses","Dégradé",
                   "Long lisse","Épis en couches","Carré","Mi-long en couches","Très long","Couettes","Queue basse","Raie au milieu","Courte (pixie)","Plaqué en arrière"];
-  // styles du visage (pièces sculptées : variante 0 = pièce d'origine, sinon suffixe « _N »)
+  // styles du visage lus sur la photo (gardés dans le code avatar ; sans effet sur le personnage VRoid du jeu)
   A.EYE_SHAPE_NAMES = ["Classiques","Ronds","En amande","Étirés","Tombants","Relevés","Paupière lisse","Grands"];
   A.BROW_NAMES = ["Classiques","Droits","Arqués","Épais","Fins","Froncés","Doux"];
   A.NOSE_NAMES = ["Classique","Petit","Fin","Large","Retroussé","Arête marquée"];
@@ -605,7 +606,7 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
   A.GLASSES_NAMES = ["Ovales","Rondes","Rectangulaires","Fines","Demi-cerclées","Épaisses"];
   // forme du visage → déformation (r : menton arrondi, q : mâchoire carrée, c : pommettes / menton fin, l : visage allongé)
   A.FACE_SHAPES = [[0,0,0,0],[.45,0,0,.15],[.85,0,0,-.4],[0,.75,0,0],[0,0,1,.2],[.25,0,0,1]];
-  // nez → déformation (largeur, saillie, bout relevé) + petit trait sculpté « nez_N »
+  // nez (largeur, saillie, bout relevé) : gardé dans le code avatar
   A.NOSES = [[0,0,0],[-.25,-.4,0],[-.2,.35,0],[.45,-.1,0],[0,-.15,.7],[-.05,.7,-.2]];
   // silhouette : corpulence, épaules, hanches, jambes (7 crans chacun, 3 = neutre) + 2 bits de taille fine
   A.BODY_KEYS = ["bd","sh","hp","lg"];
@@ -668,280 +669,6 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
     }
     return l;
   };
-  const sfx = i => i > 0 ? "_" + i : "";
-  // extras de déformation du visage dus aux styles (forme du visage + nez)
-  A.styleMorph = l => {
-    const f = A.FACE_SHAPES[l.faceShape | 0] || A.FACE_SHAPES[0], n = A.NOSES[l.nose | 0] || A.NOSES[0];
-    return { r: f[0], q: f[1], c: f[2], l: f[3], nx: n[0], nz: n[1], ny: n[2] };
-  };
-  // déformation du visage (espace de la tête, en mètres) — identique à AetherAvatar.Morph côté jeu
-  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-  // largeur visée / largeur réelle de la mâchoire, de y = -0.03 à -0.09 (pas de 0.005) : U arrondi (R) et mâchoire carrée (Q)
-  const JAW_R = [1, 1.038, 1.089, 1.145, 1.221, 1.284, 1.355, 1.432, 1.502, 1.585, 1.71, 1.992, 2.404];
-  const JAW_Q = [1, 1, 1.041, 1.111, 1.208, 1.306, 1.429, 1.58, 1.742, 1.928, 2.181, 2.652, 2.75];
-  const jawTab = (T, y) => { const f = Math.min(12, Math.max(0, (-0.03 - y) / 0.005)), i = Math.min(11, Math.floor(f)); return T[i] + (T[i + 1] - T[i]) * (f - i); };
-  // repères (espace tête) : centre de l'œil (±0.032, 0.0), nez y≈-0.025, bouche y≈-0.055, menton y≈-0.065…-0.098
-  A.morph = (x, y, z, m) => {
-    const s = x < 0 ? -1 : 1, dx = Math.abs(x) - 0.032, dy = y - 0.0, d = Math.hypot(dx, dy);
-    const we = ss(0.038, 0.014, d) * ss(0.035, 0.06, z);
-    if (we > 0) { const k = 1 + 0.16 * m.es * we; x = s * (0.032 + dx * k + 0.005 * m.ed * we); y = 0.0 + dy * k; }
-    const wn = ss(0.03, 0.008, Math.hypot(x, (y + 0.025) * 0.8)) * ss(0.06, 0.09, z); x *= 1 + 0.25 * m.nose * wn;
-    if (m.nx || m.nz || m.ny) {   // style de nez : largeur, saillie de l'arête, bout relevé
-      const wN = ss(0.022, 0.006, Math.hypot(x * 1.2, (y + 0.024) * 0.7)) * ss(0.072, 0.086, z); x *= 1 + 0.35 * (m.nx || 0) * wN;
-      const wZ = ss(1.0, 0.35, Math.hypot(x / 0.0058, (y + 0.022) / 0.0135)) * ss(0.07, 0.08, z); z += 0.0028 * (m.nz || 0) * wZ;
-      const wT = ss(0.009, 0.002, Math.hypot(x * 1.1, y + 0.0295)) * ss(0.075, 0.086, z); y += 0.0022 * (m.ny || 0) * wT;
-    }
-    const wm = ss(0.028, 0.01, Math.hypot(x * 0.8, (y + 0.055) * 1.6)) * ss(0.05, 0.08, z); x *= 1 + 0.25 * m.mouth * wm;
-    x *= 1 + 0.12 * m.jaw * ss(-0.01, -0.08, y);
-    const wc = ss(-0.065, -0.098, y) * ss(0.0, 0.04, z); y -= 0.009 * m.chin * wc; x *= 1 - 0.12 * m.chin * wc;
-    if (m.r || m.q || m.c || m.l) {   // forme du visage : la ligne de la mâchoire (V) devient U (r) ou carrée (q)
-      const fz = ss(0.0, 0.04, z);
-      x *= 1 + ((m.r || 0) * (jawTab(JAW_R, y) - 1) + (m.q || 0) * (jawTab(JAW_Q, y) - 1)) * ss(0.0, 0.03, z);
-      x *= 1 + 0.1 * (m.c || 0) * ss(0.04, 0.06, Math.abs(x)) * ss(-0.055, -0.025, y) * ss(0.015, -0.015, y) - 0.2 * (m.c || 0) * ss(-0.06, -0.1, y) * fz;
-      if (y < 0.0) { y *= 1 + 0.09 * (m.l || 0); x *= 1 - 0.04 * (m.l || 0) * ss(-0.02, -0.08, y); }
-    }
-    if (y < 0.0) y = 0.0 + (y - 0.0) * (1 + 0.07 * m.fl);
-    x *= 1 + 0.06 * m.fw;
-    return [x, y, z];
-  };
-  const morphCache = {};
-  function morphed(THREE, parts, name, face, sx) {
-    const g = geo(THREE, parts, name); if (face == null) face = A.FACE_NEUTRAL;
-    const plain = !sx || !Object.values(sx).some(v => v);
-    if (!g || ((face >>> 0) === A.FACE_NEUTRAL && plain)) return g;
-    const key = name + ":" + face + ":" + (plain ? "" : Object.values(sx).join(",")); if (morphCache[key]) return morphCache[key];
-    const m = Object.assign(A.unpackFace(face), plain ? {} : sx), c = g.clone(), p = c.attributes.position.array;
-    c.attributes.position = c.attributes.position.clone();
-    const q = c.attributes.position.array;
-    for (let i = 0; i < q.length; i += 3) { const r = A.morph(p[i], p[i + 1], p[i + 2], m); q[i] = r[0]; q[i + 1] = r[1]; q[i + 2] = r[2]; }
-    c.computeVertexNormals(); if (name === "tete" || name === "barbe" || name.startsWith("cheveux")) smoothNormals(c, name === "tete" ? 4 : 3); if (name === "tete" || name === "barbe") faceNormals(c);
-    return morphCache[key] = c;
-  }
-
-  const geoCache = {};
-  function geo(THREE, parts, name) {
-    if (geoCache[name]) return geoCache[name];
-    const p = parts[name]; if (!p) return null;
-    const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0)).buffer;
-    const q = new Int16Array(b(p.p)), pos = new Float32Array(q.length);
-    for (let i = 0; i < q.length; i++) pos[i] = q[i] / 32767 * p.s;
-    const idx = p.n < 65535 ? new Uint16Array(b(p.i)) : new Uint32Array(b(p.i));
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    g.setIndex(new THREE.BufferAttribute(idx, 1));
-    g.computeVertexNormals();
-    if (name === "tete" || name === "torse" || name === "barbe" || name.startsWith("cheveux")) smoothNormals(g, name === "tete" ? 4 : 3);
-    if (name === "tete" || name === "barbe") faceNormals(g);
-    if (name.startsWith("yeux_blanc") || name.startsWith("yeux_iris")) { THREE_ = THREE; eyeShade(g, name); }
-    if (name.startsWith("cheveux") || name === "barbe") hairCreases(THREE, g);
-    return geoCache[name] = g;
-  }
-  // normales lissées (moyenne des voisins) : ombrage anime net, sans taches
-  function smoothNormals(g, it) {
-    const n = g.attributes.normal.array, idx = g.index.array, cnt = n.length / 3;
-    for (let k = 0; k < it; k++) {
-      const acc = new Float32Array(n.length);
-      for (let t = 0; t < idx.length; t += 3) {
-        const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
-        for (let j = 0; j < 3; j++) { const s = n[a + j] + n[b + j] + n[c + j]; acc[a + j] += s; acc[b + j] += s; acc[c + j] += s; }
-      }
-      for (let i = 0; i < cnt; i++) { const x = acc[i * 3], y = acc[i * 3 + 1], z = acc[i * 3 + 2], l = Math.hypot(x, y, z) || 1; n[i * 3] = x / l; n[i * 3 + 1] = y / l; n[i * 3 + 2] = z / l; }
-    }
-    g.attributes.normal.needsUpdate = true;
-  }
-  // visage anime : normales tirées vers celles d'un ellipsoïde lisse → ombre propre, sans taches (nez/bouche/joues)
-  function faceNormals(g) {
-    const p = g.attributes.position.array, n = g.attributes.normal.array;
-    for (let i = 0; i < p.length; i += 3) {
-      const x = p[i], y = p[i + 1], z = p[i + 2];
-      const w = Math.min(1, Math.max(0, (z + 0.01) / 0.05)) * Math.min(1, Math.max(0, (y + 0.105) / 0.02)) * Math.min(1, Math.max(0, (0.07 - y) / 0.03)) * 0.8
-        * (1 - 0.9 * Math.exp(-((x / 0.0075) ** 2 + ((y + 0.029) / 0.0075) ** 2)));   // le bout du nez garde son ombre (petite touche)
-      if (w <= 0) continue;
-      let ex = x / 0.0049, ey = (y + 0.01) / 0.0121, ez = (z + 0.005) / 0.0081; const el = Math.hypot(ex, ey, ez) || 1;
-      let nx = n[i] * (1 - w) + ex / el * w, ny = n[i + 1] * (1 - w) + ey / el * w, nz = n[i + 2] * (1 - w) + ez / el * w; const l = Math.hypot(nx, ny, nz) || 1;
-      n[i] = nx / l; n[i + 1] = ny / l; n[i + 2] = nz / l;
-    }
-    g.attributes.normal.needsUpdate = true;
-  }
-  const C = (THREE, c) => new THREE.Color(c[0], c[1], c[2]).convertSRGBToLinear();
-  // ombrage anime en 2 tons : zone éclairée = couleur de base exacte (jamais surexposée), ombre froide (bleutée/rosée)
-  let ramp = null;
-  function toonRamp(THREE) {
-    if (ramp) return ramp;
-    const s = [84, 74, 112], l = [255, 255, 255], d = new Uint8Array([].concat(s, s, s, l, l));
-    ramp = new THREE.DataTexture(d, 5, 1, THREE.RGBFormat); ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.generateMipmaps = false; ramp.needsUpdate = true;
-    return ramp;
-  }
-  // 2 tons nets pilotés par la lumière principale (1re lumière directionnelle) ; ombre teintée (froide/rosée)
-  function celPatch(m, hairBand, tint) {
-    const T = tint || [.62, .62, .78];
-    m.onBeforeCompile = sh => {
-      if (hairBand) {
-        sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vHP; varying vec3 vHN;")
-          .replace("#include <begin_vertex>", "#include <begin_vertex>\nvHP = position; vHN = normal;");
-        sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vHP; varying vec3 vHN;");
-      }
-      sh.fragmentShader = sh.fragmentShader.replace("gl_FragColor = vec4( outgoingLight, diffuseColor.a );",
-        "{ float lum = dot(outgoingLight, vec3(.3, .59, .11)) / max(1e-4, dot(diffuseColor.rgb, vec3(.3, .59, .11)));\n" +
-        "  float ndl = 1.0;\n#if NUM_DIR_LIGHTS > 0\n  ndl = dot(normal, directionalLights[0].direction);\n#endif\n" +
-        "  float lit = smoothstep(0.06, 0.1, ndl);\n" +
-        "  outgoingLight = diffuseColor.rgb * mix(vec3(" + T.map(v => v.toFixed(3)).join(",") + "), vec3(1.0), lit) * min(1.0, lum * 1.6);\n" +
-        (hairBand ? "  float a = atan(vHP.x, vHP.z + 0.02); float yb = 0.084 - 0.035 * (1.0 - cos(a));\n" +
-          "  float fa = fract(a * 4.2 + 0.5); float w = 0.0062 * max(0.0, 1.0 - abs(fa - 0.5) * 2.6) * (0.6 + 0.4 * fract(sin(floor(a * 4.2 + 0.5) * 91.7) * 437.5));\n" +
-          "  float bd = step(abs(vHP.y - yb - w * 0.4), w); bd *= smoothstep(0.25, 0.45, normalize(vHN).z * 0.55 + normalize(vHN).y * 0.6) * lit;\n" +
-          "  bd *= step(0.0, cos(a) + 0.2); outgoingLight = mix(outgoingLight, diffuseColor.rgb * 1.2 + 0.05, bd * 0.26);\n" : "") +
-        "}\ngl_FragColor = vec4( outgoingLight, diffuseColor.a );");
-    };
-    m.customProgramCacheKey = () => "cel" + (hairBand ? "h" : "") + T.join(",");
-    return m;
-  }
-  // dégradés des yeux (couleur par sommet) : ombre de la paupière sur le blanc, iris sombre en haut → clair en bas
-  function eyeShade(g, name) {
-    if (g.attributes.color) return g;
-    const p = g.attributes.position.array, c = new Float32Array(p.length);
-    for (let i = 0; i < p.length; i += 3) {
-      const y = p[i + 1];
-      let r, gg, b;
-      if (name.startsWith("yeux_blanc")) { const t = Math.min(1, Math.max(0, (y - 0.0035) / 0.0065)); r = 1 - .2 * t; gg = 1 - .18 * t; b = 1 - .08 * t; }
-      else { const t = Math.min(1, Math.max(0, (y + 0.0135) / 0.022)); r = gg = b = 1.0 - 0.62 * Math.pow(t, 1.3); }
-      c[i] = r; c[i + 1] = gg; c[i + 2] = b;
-    }
-    g.setAttribute("color", new THREE_.BufferAttribute(c, 3));
-    return g;
-  }
-  let THREE_ = null;
-  // creux entre les mèches (concavité locale) → traits/ombres fines dans la masse des cheveux
-  function hairCreases(THREE, g) {
-    const p = g.attributes.position.array, n = g.attributes.normal.array, idx = g.index.array, N = p.length / 3;
-    const acc = new Float32Array(N * 3), cnt = new Float32Array(N), el = new Float32Array(N);
-    for (let t = 0; t < idx.length; t += 3) for (let k = 0; k < 3; k++) {
-      const a = idx[t + k], b = idx[t + (k + 1) % 3];
-      const dx = p[b * 3] - p[a * 3], dy = p[b * 3 + 1] - p[a * 3 + 1], dz = p[b * 3 + 2] - p[a * 3 + 2], d = Math.hypot(dx, dy, dz);
-      acc[a * 3] += dx; acc[a * 3 + 1] += dy; acc[a * 3 + 2] += dz; cnt[a]++; el[a] += d;
-      acc[b * 3] -= dx; acc[b * 3 + 1] -= dy; acc[b * 3 + 2] -= dz; cnt[b]++; el[b] += d;
-    }
-    let c = new Float32Array(N);
-    for (let i = 0; i < N; i++) { if (!cnt[i]) continue; const e = el[i] / cnt[i] || 1; c[i] = (acc[i * 3] * n[i * 3] + acc[i * 3 + 1] * n[i * 3 + 1] + acc[i * 3 + 2] * n[i * 3 + 2]) / cnt[i] / e; }
-    for (let it = 0; it < 1; it++) {   // léger lissage pour des traits continus
-      const s2 = new Float32Array(N), k2 = new Float32Array(N);
-      for (let t = 0; t < idx.length; t += 3) for (let k = 0; k < 3; k++) { const a = idx[t + k]; for (let j = 0; j < 3; j++) { s2[a] += c[idx[t + j]]; k2[a]++; } }
-      for (let i = 0; i < N; i++) c[i] = k2[i] ? s2[i] / k2[i] : c[i];
-    }
-    const col = new Float32Array(N * 3);
-    for (let i = 0; i < N; i++) { const t = Math.min(1, Math.max(0, (c[i] - 0.05) / 0.2)), v = 1 - 0.5 * t * t * (3 - 2 * t); col[i * 3] = v; col[i * 3 + 1] = v; col[i * 3 + 2] = Math.min(1, v * 1.08); }
-    g.setAttribute("color", new THREE.BufferAttribute(col, 3));
-  }
-  function outline(THREE, mesh, color, w) {
-    const m = new THREE.ShaderMaterial({ uniforms: { c: { value: color }, w: { value: w } }, side: THREE.BackSide,
-      vertexShader: "uniform float w; void main(){ vec3 p = position + normal * w; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }",
-      fragmentShader: "uniform vec3 c; void main(){ gl_FragColor = vec4(c, 1.0); }" });
-    const o = new THREE.Mesh(mesh.geometry, m); o.renderOrder = -1; mesh.add(o); return o;
-  }
-  // silhouette (espace du torse, origine à la taille) — identique à AetherAvatar.BodyMorph côté jeu
-  A.bodyMorph = (x, y, z, b) => {
-    const g = 1 + 0.14 * b.bd, u = ss(0.1, 0.42, y);
-    const f = g * (1 + 0.14 * b.hp * (1 - u) + 0.14 * b.sh * u * ss(0.05, 0.13, Math.abs(x)));
-    return [x * f, y, z * (1 + 0.17 * b.bd)];
-  };
-  // proportions dérivées : longueur des jambes, carrure, position des épaules, épaisseur des bras et des jambes
-  A.bodyDims = b => ({ leg: 1 + 0.06 * b.lg, shoulder: (1 + 0.14 * b.bd) * (1 + 0.14 * b.sh), legW: (1 + 0.14 * b.bd) * (1 + 0.11 * b.hp), legD: 1 + 0.15 * b.bd, arm: 1 + 0.2 * b.bd });
-  A.headY = l => 1.6 + 0.92 * (A.bodyDims(A.unpackBody(l.body)).leg - 1);
-  // échelle globale : la taille demandée reste la vraie hauteur (sommet du crâne ≈ 1,73 m à l'échelle 1)
-  A.rootScale = l => (l.height || 1) * 1.73 / (1.73 + 0.92 * (A.bodyDims(A.unpackBody(l.body)).leg - 1));
-  const bodyCache = {};
-  function bodied(THREE, parts, name, body) {
-    const g = geo(THREE, parts, name); if (!g || body == null || (body & 0xfff) === A.BODY_NEUTRAL) return g;
-    const key = name + ":" + (body & 0xfff); if (bodyCache[key]) return bodyCache[key];
-    const b = A.unpackBody(body), c = g.clone(), p = c.attributes.position.array;
-    c.attributes.position = c.attributes.position.clone(); const q = c.attributes.position.array;
-    for (let i = 0; i < q.length; i += 3) { const r = A.bodyMorph(p[i], p[i + 1], p[i + 2], b); q[i] = r[0]; q[i + 1] = r[1]; q[i + 2] = r[2]; }
-    c.computeVertexNormals(); if (name === "torse") smoothNormals(c, 3);
-    return bodyCache[key] = c;
-  }
-  // ----- bras : maillage unitaire (y = +1 épaule, 0 coude, -1 poignet, dôme au-dessus de 1, poignet de manche sous -1) coupé au coude -----
-  const ARM_L1 = 0.29, ARM_L2 = 0.27;   // longueurs bras / avant-bras (espace du corps, avant l'échelle globale)
-  A.ARM_L1 = ARM_L1; A.ARM_L2 = ARM_L2;
-  const armCache = {};
-  function armPieces(THREE, parts, name, R) {
-    const g = geo(THREE, parts, name); if (!g) return null;
-    const key = name + ":" + R.toFixed(5); if (armCache[key]) return armCache[key];
-    const p = g.attributes.position.array, idx = g.index.array;
-    let rTop = 0, maxY = -1e9;
-    for (let i = 0; i < p.length; i += 3) { const y = p[i + 1]; if (y > maxY) maxY = y; if (Math.abs(y - 1) < 0.05) rTop = Math.max(rTop, Math.hypot(p[i], p[i + 2])); }
-    const domeH = maxY - 1, kc = domeH > 1e-6 ? 0.9 * rTop * R / (domeH * ARM_L1) : 1;   // dôme ramené à 0,9 × le rayon : épaule ronde, pas pointue
-    const piece = (keepTri, mapY) => {
-      const tri = []; for (let t = 0; t < idx.length; t += 3) { const cy = (p[idx[t] * 3 + 1] + p[idx[t + 1] * 3 + 1] + p[idx[t + 2] * 3 + 1]) / 3; if (keepTri(cy)) tri.push(idx[t], idx[t + 1], idx[t + 2]); }
-      const remap = new Map(), pos = [], out = [];
-      for (const v of tri) { let k = remap.get(v); if (k == null) { k = pos.length / 3; remap.set(v, k); pos.push(p[v * 3], mapY(p[v * 3 + 1]), p[v * 3 + 2]); } out.push(k); }
-      const c = new THREE.BufferGeometry(); c.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-      c.setIndex(pos.length / 3 < 65535 ? new THREE.Uint16BufferAttribute(out, 1) : new THREE.Uint32BufferAttribute(out, 1)); c.computeVertexNormals(); return c;
-    };
-    return armCache[key] = {
-      up: piece(cy => cy >= -0.06, y => y <= 1 ? y - 1 : (y - 1) * kc),   // épaule à 0, coude à -1
-      lo: piece(cy => cy <= 0.06, y => y) };                               // coude à 0, poignet à -1
-  }
-  // IK à 2 os : le coude part un peu vers l'extérieur et vers l'arrière
-  function armIK(THREE, sh, wristT, side) {
-    const v = wristT.clone().sub(sh), d = Math.min(ARM_L1 + ARM_L2 - 0.001, Math.max(0.3, v.length())), dir = v.lengthSq() > 1e-12 ? v.normalize() : new THREE.Vector3(0, -1, 0);
-    const pole = new THREE.Vector3(side * 0.3, -0.2, -1).normalize(), pp = pole.clone().sub(dir.clone().multiplyScalar(pole.dot(dir)));
-    if (pp.lengthSq() < 1e-10) pp.set(0, 0, -1); pp.normalize();
-    const a = Math.acos(Math.max(-1, Math.min(1, (ARM_L1 * ARM_L1 + d * d - ARM_L2 * ARM_L2) / (2 * ARM_L1 * d))));
-    const elbow = sh.clone().add(dir.clone().multiplyScalar(Math.cos(a) * ARM_L1)).add(pp.multiplyScalar(Math.sin(a) * ARM_L1));
-    return { elbow, wrist: sh.clone().add(dir.clone().multiplyScalar(d)) };
-  }
-  A.build = function (THREE, parts, l, opts) {
-    opts = opts || {};
-    const anime = opts.anime !== false;
-    const root = new THREE.Group();
-    const M = (c, rough = .6, metal = 0, extra, band, tint) => anime && !(extra && extra.emissive) && metal < .5
-      ? celPatch(new THREE.MeshToonMaterial(Object.assign({ color: C(THREE, c), gradientMap: toonRamp(THREE), toneMapped: false }, extra || {})), band, tint)
-      : new THREE.MeshStandardMaterial(Object.assign({ color: C(THREE, c), roughness: rough, metalness: metal }, extra || {}));
-    const skinC = A.SKINS[l.skin] || A.SKINS[1], hairC = A.HAIR_COLORS[l.hairColor] || A.HAIR_COLORS[0], eyeC = A.EYES[l.eyes] || A.EYES[0];
-    const skin = M(skinC, .55, 0, null, false, [.86, .72, .78]), hair = M(hairC, .42, 0, { vertexColors: true }, true), top = M(A.OUTFITS[l.top] || A.OUTFITS[0], .75), bot = M((A.OUTFITS[l.bottom] || A.OUTFITS[0]).map(v => v * .85), .8);
-    const leather = M([.2, .13, .09], .55), white = new THREE.MeshBasicMaterial({ color: C(THREE, [.9, .9, .93]), vertexColors: true, toneMapped: false }), dark = new THREE.MeshBasicMaterial({ color: C(THREE, eyeC.map(v => v * .16 + .015)), toneMapped: false });
-    const iris = new THREE.MeshBasicMaterial({ color: C(THREE, eyeC.map(v => Math.min(1, v * 1.15 + .08))), vertexColors: true, toneMapped: false });
-    const lips = M([skinC[0] * .62 + .1, skinC[1] * .42 + .02, skinC[2] * .42 + .03], .4), brows = M(hairC.map(v => v * .7), .7), metal = M([.12, .12, .13], .3, .8);
-    const beardM = M(hairC.map((v, i) => v * .55 + skinC[i] * .45), .7, 0, null, false, [.8, .74, .84]);
-    const OUT = { tete: .0008, jambes: .004, bottes: .004, torse: .004, ceinture: .003, cape: .004, bras: .045, main: .05 };
-    const OUTC = { tete: .42, barbe: .35 };
-    const HEADP = /^(tete|levres|yeux_|cils|sourcils|barbe|lunettes|cheveux|nez)/, BODYP = /^(torse|ceinture|cape)$/;
-    const sx = A.styleMorph(l), bd = A.unpackBody(l.body), dims = A.bodyDims(bd), dl = 0.92 * (dims.leg - 1);
-    const pick = (base, i) => i > 0 && parts[base + sfx(i)] ? base + sfx(i) : base;
-    const add = (parent, name, m, x = 0, y = 0, z = 0) => { const g = HEADP.test(name) ? morphed(THREE, parts, name, l.face, sx) : BODYP.test(name) ? bodied(THREE, parts, name, l.body) : geo(THREE, parts, name); return g ? addGeo(parent, g, name, m, x, y, z) : null; };
-    const addGeo = (parent, g, name, m, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); parent.add(o);
-      const w = name.startsWith("cheveux") ? .0011 : OUT[name.replace(/_\d+$/, "")];
-      if (anime && w && m.color) outline(THREE, o, m.color.clone().multiplyScalar(name.startsWith("cheveux") ? .28 : (OUTC[name] || .18)), w);
-      return o; };
-    const legs = new THREE.Group(); legs.scale.set(dims.legW, dims.leg, dims.legD); root.add(legs);
-    add(legs, "jambes", bot); add(legs, "bottes", leather);
-    const torso = new THREE.Group(); torso.position.y = .92 + dl; root.add(torso);
-    add(torso, "torse", top); add(torso, "ceinture", leather);
-    if (l.cape > 0 && A.CAPES[l.cape]) add(torso, "cape", M(A.CAPES[l.cape], .85, 0, { side: THREE.DoubleSide }));
-    const head = new THREE.Group(); head.position.y = 1.6 + dl; root.add(head);
-    const es = l.eyeShape | 0;
-    add(head, "tete", skin); add(head, pick("levres", l.mouth | 0), lips); add(head, pick("yeux_blanc", es), white); add(head, pick("yeux_iris", es), iris); add(head, pick("yeux_pupille", es), dark);
-    add(head, pick("sourcils", l.brows | 0), brows); add(head, "cheveux_" + Math.max(0, Math.min(A.HAIR_NAMES.length - 1, l.hair | 0)), hair);
-    add(head, pick("cils", es), new THREE.MeshBasicMaterial({ color: C(THREE, [.07, .05, .055]), toneMapped: false })); add(head, pick("yeux_reflet", es), new THREE.MeshBasicMaterial({ color: C(THREE, [.97, .97, .98]), toneMapped: false }));
-    if ((l.nose | 0) > 0) add(head, "nez_" + (l.nose | 0), M(skinC.map(v => v * .7), .6));
-    if (l.beard) add(head, "barbe", beardM);
-    if (l.glasses) add(head, pick("lunettes", l.glassesStyle | 0), metal);
-    // bras en deux pièces (épaule → coude → poignet), comme l'avatar du jeu : épaule ronde dans le prolongement du torse, coude plié par IK à 2 os
-    // manches en double face : là où la coupe du coude laisse voir l'intérieur d'une pièce, on voit le tissu et pas le fond
-    const R = .09 * dims.arm, down = new THREE.Vector3(0, -1, 0), sleeve = M(A.OUTFITS[l.top] || A.OUTFITS[0], .75, 0, { side: THREE.DoubleSide });
-    for (const s of [-1, 1]) {
-      const sh = new THREE.Vector3(s * .205 * dims.shoulder, 1.375 + dl, -.005), tgt = new THREE.Vector3(s * (.235 + .22 * (dims.shoulder - 1)), .86 + dl, .03);
-      const P = armIK(THREE, sh, tgt, s), sp = armPieces(THREE, parts, "bras", R);
-      if (sp) {
-        const up = addGeo(root, sp.up, "bras", sleeve), lo = addGeo(root, sp.lo, "bras", sleeve);
-        up.position.copy(sh); up.scale.set(R, ARM_L1, R); up.quaternion.setFromUnitVectors(down, P.elbow.clone().sub(sh).normalize());
-        lo.position.copy(P.elbow); lo.scale.set(R, ARM_L2, R); lo.quaternion.setFromUnitVectors(down, P.wrist.clone().sub(P.elbow).normalize());
-      }
-      const hand = add(root, "main", skin); if (hand) { hand.position.copy(P.wrist); hand.scale.set(.085 * s, .085, .085); if (s < 0) { const hm = skin.clone(); if (anime) celPatch(hm, false, [.86, .72, .78]); hm.side = THREE.BackSide; hand.material = hm; } }
-    }
-    root.userData.head = head;
-    root.scale.setScalar(A.rootScale(l)); root.userData.headY = (1.6 + dl) * A.rootScale(l);
-    return root;
-  };
   window.AetherAvatar3D = A;
 })();
 
@@ -957,26 +684,50 @@ const H0=.85,HSTEP=.0125,HMAX=28,REF_CM=173;
 const hIndex=h=>Math.max(0,Math.min(HMAX,Math.round(((h||1)-H0)/HSTEP))),hOf=i=>Math.round((H0+i*HSTEP)*10000)/10000;
 let look={skin:1,hair:1,hairColor:0,eyes:0,top:0,bottom:0,cape:0,height:1,beard:false,glasses:false,female:false,
   eyeShape:0,brows:0,nose:0,mouth:0,faceShape:0,glassesStyle:0,body:A.BODY_NEUTRAL};
-let pseudo="",PARTS=null;
+let pseudo="";
 function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2800)}
 
 // ---------- chargement (écran d'accueil animé) ----------
-async function loadParts(){
+// L'aperçu montre le vrai personnage du jeu (modèles VRoid Base_F / Base_M et coiffures VRoid du jeu). Les modèles ne sont pas
+// envoyés : le dossier « vroid/ » ne contient que des planches de calques déjà éclairés (un dessin par angle de vue : éclairage,
+// zones à teinter, sourcils, barbe, crâne rasé, lunettes, mèches) que l'appli teint avec les couleurs du jeu (même calcul que
+// AetherVrmLook). Une planche par corps et par cadrage, une par coiffure (chargée quand on la choisit), une pour les portraits.
+const VR={dir:"vroid/",ver:"1",man:null,img:{},wait:{},fail:{},ok:false,err:""};
+function vrImg(name,onp){
+  if(VR.img[name])return Promise.resolve(VR.img[name]);
+  if(VR.wait[name])return VR.wait[name];
+  if(VR.fail[name]&&Date.now()-VR.fail[name]<8000)return Promise.reject(new Error(name+" : réessai plus tard"));
+  return VR.wait[name]=(async()=>{
+    const r=await fetch(VR.dir+name+"?v="+VR.ver);if(!r.ok)throw new Error(name+" : "+r.status);
+    let blob;
+    if(onp&&r.body&&r.body.getReader){const rd=r.body.getReader(),parts=[];let got=0;
+      for(;;){const {done,value}=await rd.read();if(done)break;parts.push(value);got+=value.length;onp(got)}
+      blob=new Blob(parts,{type:"image/webp"})}
+    else blob=await r.blob();
+    const im=new Image();await new Promise((ok,no)=>{im.onload=ok;im.onerror=()=>no(new Error(name+" : image illisible"));im.src=URL.createObjectURL(blob)});
+    if(im.decode)await im.decode().catch(()=>{});
+    VR.img[name]=im;return im})().catch(e=>{delete VR.wait[name];VR.fail[name]=Date.now();throw e});
+}
+const vrSex=l=>(l||look).female?"F":"M";
+// fichiers nécessaires pour un corps, un cadrage et une coiffure
+function vrFiles(S,v,hair){const f=[...VR.man.views[S][v].files];if(hair>0&&VR.man.hair[S][hair])f.push(VR.man.hair[S][hair].file);return f}
+async function loadParts(){   // écran d'accueil : manifeste + planches du personnage actuel (corps entier)
   const bar=$("spBar"),txt=$("spTxt");
   try{
-    const r=await fetch("avatar-parts.json");
-    if(!r.ok)throw new Error(r.status);
-    const total=+r.headers.get("content-length")||1700000;
-    let got=0;const chunks=[];
-    if(r.body&&r.body.getReader){const rd=r.body.getReader();txt.textContent="Chargement des pièces de l'avatar…";
-      for(;;){const {done,value}=await rd.read();if(done)break;chunks.push(value);got+=value.length;bar.style.width=Math.min(96,got/total*100)+"%"}
-      const all=new Uint8Array(got);let o=0;for(const c of chunks){all.set(c,o);o+=c.length}
-      PARTS=JSON.parse(new TextDecoder().decode(all));
-    }else PARTS=await r.json();
-  }catch(e){PARTS=null;txt.textContent="Aperçu 3D indisponible, le reste de l'appli fonctionne."}
-  bar.style.width="100%";txt.textContent=PARTS?"Le royaume est prêt":txt.textContent;
-  setTimeout(()=>$("splash").classList.add("done"),PARTS?350:1200);
+    txt.textContent="Chargement de ton personnage…";
+    const r=await fetch(VR.dir+"manifest.json?v="+VR.ver);if(!r.ok)throw new Error("manifeste : "+r.status);VR.man=await r.json();
+    const need=vrFiles(vrSex(),"body",vrHair(look.hair)),sz=VR.man.sizes||{},got={};
+    const total=need.reduce((s,f)=>s+(sz[f]||400000),0);
+    const upd=()=>{let g=0;for(const k in got)g+=got[k];bar.style.width=Math.min(96,6+90*g/total)+"%"};
+    await Promise.all(need.map(f=>vrImg(f,n=>{got[f]=n;upd()})));
+    VR.ok=true;
+  }catch(e){console.warn("aperçu",e);VR.ok=false;VR.err=String(e&&e.message||e);txt.textContent="Aperçu indisponible, le reste de l'appli fonctionne.";$("stageLoading").textContent="Aperçu indisponible (réseau ?)"}
+  bar.style.width="100%";if(VR.ok)txt.textContent="Le royaume est prêt";
+  setTimeout(()=>$("splash").classList.add("done"),VR.ok?350:1200);
+  // ensuite, sans bloquer : cadrage « Visage » du même corps, puis les portraits des amis
+  if(VR.ok)setTimeout(()=>{vrImgs(vrFiles(vrSex(),"face",vrHair(look.hair))).catch(()=>{});vrImg(VR.man.portrait.file).then(()=>{try{renderFriends()}catch(e){}}).catch(()=>{})},1200);
 }
+const vrImgs=names=>Promise.all(names.map(n=>vrImg(n)));
 
 // ---------- contrôles ----------
 function swatches(el,list,key){el.innerHTML="";list.forEach((c,i)=>{if(!c)return;const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=css(c);b.dataset.i=i;b.setAttribute("aria-label",key+" "+(i+1));b.onclick=()=>{look[key]=i;refresh()};el.appendChild(b)})}
@@ -1004,18 +755,170 @@ function refresh(){
   const bm=A.unpackBody(look.body);for(const k in BODY_IN){const v=Math.round(bm[k]*3);$(BODY_IN[k]).value=v;$("n"+k[0].toUpperCase()+k[1]).textContent=A.BODY_NAMES[k][v+3]}
   $("tBeard").setAttribute("aria-pressed",!!look.beard);$("tGlasses").setAttribute("aria-pressed",!!look.glasses);
   const code=A.encode(look);$("code").textContent=code;$("code").classList.toggle("long",code.length>10);$("lookBadge").textContent=code;$("lookBadge").classList.toggle("long",code.length>10);
-  store("am_look",JSON.stringify(look));buildAvatar();
+  store("am_look",JSON.stringify(look));
 }
 $("copy").onclick=async()=>{const t=$("code").textContent;try{await navigator.clipboard.writeText(t);toast("Code copié : "+t)}catch(e){const r=document.createRange();r.selectNodeContents($("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Code sélectionné : copie-le")}};
 
-// ---------- scène 3D ----------
-let renderer,scene,camera,avatar,yaw=0.45,vel=0,dragging=false,lastX=0,view="body",camT={p:new THREE.Vector3(0,1.05,3.9),l:new THREE.Vector3(0,.95,0)},camL=new THREE.Vector3(0,.95,0),motes;
+// ---------- personnage VRoid : teinte des calques (même calcul que le jeu) ----------
+// Calques d'une image (valeurs 0..255) : a = éclairage des zones teintées, b = part sans teinte (yeux, cils, reflets), tous deux ÷ 1,6 ;
+// (couverture, zone × 36, sourcil a | assombrissement des mèches de barbe) ; (sourcil alpha, barbe, crâne rasé) ;
+// lunettes (gris × couverture, couverture, profondeur) ; mèches (a, b, couverture) + profondeur des mèches près des lunettes.
+const vrCv=document.createElement("canvas"),vrCx=vrCv.getContext("2d",{willReadFrequently:true});
+function vrRead(im,x,y,w,h){
+  if(vrCv.width<w||vrCv.height<h){vrCv.width=Math.max(vrCv.width,w);vrCv.height=Math.max(vrCv.height,h)}
+  vrCx.imageSmoothingEnabled=false;vrCx.clearRect(0,0,w,h);vrCx.drawImage(im,x,y,w,h,0,0,w,h);return vrCx.getImageData(0,0,w,h).data;
+}
+const lum3=c=>.2126*c[0]+.7152*c[1]+.0722*c[2];
+// réglages d'un look (couleurs : AetherVrmLook.ApplyPlayer)
+function vrParams(l){
+  const pick=(L,i)=>L[Math.max(0,Math.min(L.length-1,i|0))];   // comme le jeu : indice ramené dans la palette
+  const skin=pick(A.SKINS,l.skin),hc=pick(A.HAIR_COLORS,l.hairColor),eye=pick(A.EYES,l.eyes),top=pick(A.OUTFITS,l.top),bot=pick(A.OUTFITS,l.bottom).map(v=>v*.85);
+  const T=new Float32Array([1,1,1,...skin,...eye,...top,...bot,.3,.2,.13]);   // zones : rien, peau, iris, haut, bas, chaussures (cuir)
+  const sh=Math.max(0,Math.min(1,lum3(skin.map(v=>Math.pow(v,2.2)))/.8)),sk=.6+.4*sh;
+  const bc=hc.map((v,i)=>v*.8+(skin[i]*.5-v*.8)*.15),lb=lum3(bc),s=Math.max(0,Math.min(1,(lb-.3)/.45)),kB=.88*(1-.35*s*s*(3-2*s));
+  const hair=vrHair(l.hair),gs=l.glasses?((l.glassesStyle|0)>=0&&(l.glassesStyle|0)<=5?l.glassesStyle|0:0):-1;
+  return {T,sk,bc,kB,bz:hc.map((v,i)=>(v+(skin[i]-v)*.35)*.85),br:hc.map(v=>v*.75),hc,hair,gs,beard:!!l.beard,shaved:hair===0};
+}
+// coiffure : comme AetherVrmLook.HairResource (hors liste → « Court »)
+const vrHair=h=>(h|0)>=0&&(h|0)<=22?h|0:1;
+const vrKey=l=>[l.female?1:0,l.skin|0,l.hairColor|0,l.eyes|0,l.top|0,l.bottom|0,vrHair(l.hair),l.beard?1:0,l.glasses?(l.glassesStyle|0):-1].join(",");
+// une image : b = [planche, x, y, fx, fy, w, h] (4 calques côte à côte), g = idem (6 montures côte à côte),
+// h = [x, y, fx, fy, w, h, (dx, dy)] (mèches + profondeur sur le cadre des lunettes) → RGBA prémultiplié sur le cadre réuni
+function vrCompose(b,bim,g,gim,h,him,P){
+  const bx=b[3],by=b[4],bw=b[5],bh=b[6],B=vrRead(bim,b[1],b[2],bw*4,bh),bs=bw*16,bq=bw*4;
+  let G=null,gx=0,gy=0,gw=0,gh=0,Hh=null,hx=0,hy=0,hw=0,hh=0,D=null;
+  if(g&&gim&&P.gs>=0){gx=g[3];gy=g[4];gw=g[5];gh=g[6];G=vrRead(gim,g[1]+P.gs*gw,g[2],gw,gh)}
+  if(h&&him){hx=h[2];hy=h[3];hw=h[4];hh=h[5];Hh=vrRead(him,h[0],h[1],hw,hh);if(G&&h.length>6)D=vrRead(him,h[6],h[7],gw,gh)}
+  let x0=bx,y0=by,x1=bx+bw,y1=by+bh;
+  if(G){x0=Math.min(x0,gx);y0=Math.min(y0,gy);x1=Math.max(x1,gx+gw);y1=Math.max(y1,gy+gh)}
+  if(Hh){x0=Math.min(x0,hx);y0=Math.min(y0,hy);x1=Math.max(x1,hx+hw);y1=Math.max(y1,hy+hh)}
+  const W=x1-x0,H=y1-y0,out=new Uint8ClampedArray(W*H*4),k=1.6/255,T=P.T;
+  const [bc0,bc1,bc2]=P.bc,[bz0,bz1,bz2]=P.bz,[br0,br1,br2]=P.br,[hc0,hc1,hc2]=P.hc,kB=P.kB,sk=P.sk,beard=P.beard,shaved=P.shaved;
+  for(let y=y0;y<y1;y++){
+    const iy=y-by,giy=y-gy,hiy=y-hy,inB=iy>=0&&iy<bh,inG=G&&giy>=0&&giy<gh,inH=Hh&&hiy>=0&&hiy<hh;
+    let o=((y-y0)*W)*4;
+    for(let x=x0;x<x1;x++,o+=4){
+      let r=0,gg=0,bl=0,al=0;
+      const ix=x-bx;
+      if(inB&&ix>=0&&ix<bw){
+        const p1=iy*bs+ix*4,p2=p1+bq,p3=p2+bq,p4=p3+bq,cov=B[p3];
+        if(cov){
+          const a0=B[p1]*k,a1=B[p1+1]*k,a2=B[p1+2]*k,t=((B[p3+1]+18)/36|0)*3;
+          r=T[t]*a0+B[p2]*k;gg=T[t+1]*a1+B[p2+1]*k;bl=T[t+2]*a2+B[p2+2]*k;al=cov/255;
+          const ba=B[p4],bd=B[p4+1],bz=B[p4+2];
+          if(bz&&shaved){const az=Math.min(1,bz/255*.8),f=az*sk,u=1-az;r=r*u+bz0*f*a0;gg=gg*u+bz1*f*a1;bl=bl*u+bz2*f*a2}
+          if(bd&&beard){const ab=Math.min(1,bd/255*kB),f=ab*(ba?1:B[p3+2]/255*.8+.6)*sk,u=1-ab;r=r*u+bc0*f*a0;gg=gg*u+bc1*f*a1;bl=bl*u+bc2*f*a2}
+          if(ba){const w=ba/255,bA=B[p3+2]*k,u=1-w;r=r*u+br0*bA;gg=gg*u+br1*bA;bl=bl*u+br2*bA}
+        }
+      }
+      let gc=0,gl=0,gd=255,hal=0,ha=0,hb=0,hd=255;
+      if(inG){const gix=x-gx;if(gix>=0&&gix<gw){const q=(giy*gw+gix)*4;gc=G[q+1]/255;gl=G[q]/255;gd=G[q+2]}}
+      if(inH){const hix=x-hx;if(hix>=0&&hix<hw){const q=(hiy*hw+hix)*4;hal=Hh[q+2]/255;if(hal>0){ha=Hh[q]*k;hb=Hh[q+1]*k;if(D&&gc>0)hd=D[(giy*gw+x-gx)*4]}}}
+      if(gc>0&&hal>0&&gd<=hd){   // monture devant les mèches
+        let u=1-hal;r=r*u+hc0*ha+hb;gg=gg*u+hc1*ha+hb;bl=bl*u+hc2*ha+hb;al=al*u+hal;
+        u=1-gc;r=r*u+gl;gg=gg*u+gl;bl=bl*u+gl;al=al*u+gc;
+      }else{
+        if(gc>0){const u=1-gc;r=r*u+gl;gg=gg*u+gl;bl=bl*u+gl;al=al*u+gc}
+        if(hal>0){const u=1-hal;r=r*u+hc0*ha+hb;gg=gg*u+hc1*ha+hb;bl=bl*u+hc2*ha+hb;al=al*u+hal}
+      }
+      if(al>1)al=1;
+      out[o]=(r<al?r:al)*255;out[o+1]=(gg<al?gg:al)*255;out[o+2]=(bl<al?bl:al)*255;out[o+3]=al*255;
+    }
+  }
+  return {data:out,x:x0,y:y0,w:W,h:H};
+}
+// image i d'un cadrage (null tant qu'une planche manque : elle est alors demandée)
+function vrFrame(S,v,i,P){
+  const M=VR.man,vw=M.views[S][v],fr=vw.fr[i],bim=VR.img[vw.files[fr.b[0]]];
+  const he=P.hair>0?M.hair[S][P.hair]:null,him=he?VR.img[he.file]:null,g=P.gs>=0&&fr.g?fr.g:null,gim=g?VR.img[vw.files[g[0]]]:null;
+  if(!bim||(g&&!gim)||(he&&!him)){vrImgs(vrFiles(S,v,P.hair)).catch(e=>{VR.err=String(e&&e.message||e)});return null}
+  return vrCompose(fr.b,bim,g,gim,he?he[v][i]||null:null,him,P);
+}
+
+// ---------- scène 3D : socle, poussière de cristal, et le personnage (dessins pré-éclairés posés face à la caméra) ----------
+let renderer,scene,camera,yaw=0.45,vel=0,dragging=false,lastX=0,view="body",camL=window.THREE?new THREE.Vector3(0,.95,0):null,motes;
+const VS={body:{n:24,fr:[],pl:null,S:null},face:{n:9,fr:[],pl:null,S:null}};
+let vrNullTex=null;
+function vrPlane(){
+  const m=new THREE.ShaderMaterial({uniforms:{tA:{value:vrNullTex},tB:{value:vrNullTex},rA:{value:new THREE.Vector4(0,0,0,0)},rB:{value:new THREE.Vector4(0,0,0,0)},f:{value:0},op:{value:1}},
+    vertexShader:"varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
+    fragmentShader:"uniform sampler2D tA,tB;uniform vec4 rA,rB;uniform float f,op;varying vec2 vUv;"+
+      "vec4 smp(sampler2D t,vec4 r){vec2 q=(vUv-r.xy)/max(r.zw,vec2(1e-6));vec4 c=texture2D(t,vec2(q.x,1.0-q.y));return (r.z<=0.0||q.x<0.0||q.y<0.0||q.x>1.0||q.y>1.0)?vec4(0.0):c;}"+
+      "void main(){vec4 c=mix(smp(tA,rA),smp(tB,rB),f)*op;if(c.a<0.002)discard;gl_FragColor=c;}",
+    transparent:true,depthTest:false,depthWrite:false,blending:THREE.CustomBlending,blendEquation:THREE.AddEquation,blendSrc:THREE.OneFactor,blendDst:THREE.OneMinusSrcAlphaFactor});
+  const p=new THREE.Mesh(new THREE.PlaneGeometry(1,1),m);p.matrixAutoUpdate=false;p.renderOrder=10;p.frustumCulled=false;p.visible=false;return p;
+}
+const vrRig=window.THREE?new THREE.PerspectiveCamera():null,vrM1=window.THREE?new THREE.Matrix4():null,vrM2=window.THREE?new THREE.Matrix4():null,vrV=window.THREE?new THREE.Vector3():null;
+// plan passant par l'origine (les pieds), perpendiculaire à l'axe de la caméra du rendu, qui remplit son champ : vu de cette caméra,
+// le dessin retombe exactement à sa place ; la taille du personnage le met à l'échelle autour des pieds
+function vrPlace(pl,c,k,bob){
+  vrRig.fov=c.fov;vrRig.aspect=c.W/c.H;vrRig.position.set(c.pos[0],c.pos[1],c.pos[2]);vrRig.up.set(0,1,0);vrRig.lookAt(vrV.set(c.at[0],c.at[1],c.at[2]));vrRig.updateMatrixWorld(true);
+  const f=vrV.set(0,0,-1).applyQuaternion(vrRig.quaternion),D=-vrRig.position.dot(f),hh=2*D*Math.tan(c.fov*Math.PI/360),ww=hh*c.W/c.H;
+  pl.matrix.makeTranslation(0,bob,0).multiply(vrM1.makeScale(k,k,k)).multiply(vrRig.matrixWorld).multiply(vrM2.makeTranslation(0,0,-D)).multiply(vrM1.makeScale(ww,hh,1));
+  pl.matrixWorldNeedsUpdate=true;
+}
+const hK=()=>Math.max(.85,Math.min(1.2375,look.height||1));   // AetherAvatar.RootScale : taille ↔ échelle (1 = jeu à la taille 1)
+function vrCam(v,S){return v==="face"?VR.man.sex[S].face:VR.man.cams.body}
+// caméra « Corps » : celle des dessins ; un grand personnage la fait reculer sur le même axe (image identique, juste plus petite)
+// pour que sa tête reste sous les boutons du haut
+function bodyCam(){const z=1+Math.max(0,hK()-.98)*1.5;return [0,.95+.1*z,3.9*z,0,.95,0]}
+function camTarget(){
+  if(view==="face"&&VR.man){const c=VR.man.sex[vrSex()].face,k=hK();return [c.pos[0]*k,c.pos[1]*k,c.pos[2]*k,c.at[0]*k,c.at[1]*k,c.at[2]*k]}
+  return bodyCam();
+}
+function vrIdx(v){
+  if(v==="body"){let a=yaw/(2*Math.PI)*24;a=((a%24)+24)%24;const i=Math.floor(a)%24;return [i,(i+1)%24,a-Math.floor(a)]}
+  const a=Math.max(0,Math.min(8,(yaw+Math.PI/3)/(Math.PI/12))),i=Math.min(7,Math.floor(a));return [i,i+1,a-i];
+}
+// met à jour l'image i du cadrage v pour le look actuel (texture comprise) ; false si les planches ne sont pas encore là
+function vrUpdate(v,i,S,P,key){
+  const st=VS[v];if(st.S!==S){for(const e of st.fr)if(e&&e.tex)e.tex.dispose();st.fr=[];st.S=S}
+  const e=st.fr[i];if(e&&e.key===key)return true;
+  const c=vrFrame(S,v,i,P);if(!c)return false;
+  const cam=vrCam(v,S),r=[c.x/cam.W,1-(c.y+c.h)/cam.H,c.w/cam.W,c.h/cam.H],data=new Uint8Array(c.data.buffer);
+  if(e&&e.tex&&e.w===c.w&&e.h===c.h){e.tex.image.data=data;e.tex.needsUpdate=true;e.key=key;e.r=r;return true}
+  if(e&&e.tex)e.tex.dispose();
+  const tex=new THREE.DataTexture(data,c.w,c.h,THREE.RGBAFormat,THREE.UnsignedByteType);
+  tex.minFilter=tex.magFilter=THREE.LinearFilter;tex.generateMipmaps=false;tex.flipY=false;tex.premultiplyAlpha=false;tex.needsUpdate=true;
+  st.fr[i]={key,tex,w:c.w,h:c.h,r};return true;
+}
+let vrK="",vrP=null;
+function vrTick(t,still){
+  if(!VR.ok||!VR.man)return;
+  const S=vrSex(),key=vrKey(look);if(key!==vrK){vrK=key;vrP=vrParams(look)}
+  const k=hK(),bob=still?0:Math.sin(t/900)*.004,fc=VR.man.sex[S].face;
+  // fondu corps ↔ visage selon la position de la caméra (qui glisse de l'un à l'autre)
+  const bc=bodyCam(),d=Math.hypot(bc[0]-fc.pos[0]*k,bc[1]-fc.pos[1]*k,bc[2]-fc.pos[2]*k),e=Math.hypot(camera.position.x-fc.pos[0]*k,camera.position.y-fc.pos[1]*k,camera.position.z-fc.pos[2]*k);
+  let tr=1-Math.min(1,e/Math.max(1e-3,d));tr=tr*tr*(3-2*tr);
+  let shown=false,miss=false;
+  for(const v of ["body","face"]){
+    const pl=VS[v].pl,op=v==="face"?tr:1-tr;
+    if(op<.01){pl.visible=false;continue}
+    const [i0,i1,f]=vrIdx(v),okA=vrUpdate(v,i0,S,vrP,key),okB=okA&&f>.004&&vrUpdate(v,i1,S,vrP,key);
+    if(!okA)miss=true;
+    const A0=VS[v].fr[i0],B0=okB?VS[v].fr[i1]:null,u=pl.material.uniforms;
+    // une image pas encore refaite (planche en route) : on garde l'ancienne si elle existe
+    const a=A0;if(!a){pl.visible=false;continue}
+    u.tA.value=a.tex;u.rA.value.set(a.r[0],a.r[1],a.r[2],a.r[3]);
+    const b=B0||a;u.tB.value=b.tex;u.rB.value.set(b.r[0],b.r[1],b.r[2],b.r[3]);u.f.value=B0?f:0;u.op.value=op;
+    vrPlace(pl,vrCam(v,S),k,bob);pl.visible=true;shown=true;
+  }
+  // une image de plus par trame, en tâche de fond : d'abord le cadrage affiché (dans l'ordre de rotation), puis l'autre
+  for(const v of view==="body"?["body","face"]:["face","body"]){
+    const st=VS[v],[c]=vrIdx(v);let done=false;
+    for(let s=0;s<st.n*2&&!done;s++){const i=v==="body"?(c+s)%st.n:Math.max(0,Math.min(8,c+(s&1?(s+1)>>1:-(s>>1))));const x=st.S===S?st.fr[i]:null;
+      if(!x||x.key!==key){vrUpdate(v,i,S,vrP,key);done=true}}
+    if(done)break;
+  }
+  const ld=$("stageLoading");ld.hidden=shown;if(!shown)ld.textContent=VR.err?"Aperçu indisponible ("+VR.err+")":"Préparation de ton personnage…";
+  const hint=$("stageHint");if(hint)hint.textContent=shown&&miss?(vrP&&vrP.hair>0&&!VR.img[VR.man.hair[S][vrP.hair].file]?"Chargement de la coiffure…":"Chargement…"):"Glisse pour tourner";
+}
 function initThree(){
-  if(!window.THREE){$("stageLoading").textContent="Aperçu 3D indisponible";return}
+  if(!window.THREE){$("stageLoading").textContent="Aperçu indisponible";return}
   const cv=$("three");
-  try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){$("stageLoading").textContent="Aperçu 3D indisponible sur cet appareil";return}
+  try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){$("stageLoading").textContent="Aperçu indisponible sur cet appareil";return}
   renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
-  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(30,1,.05,60);camera.position.copy(camT.p);
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(30,1,.05,60);camera.position.set(0,1.05,3.9);
   scene.add(new THREE.HemisphereLight(0xc4d2ff,0x261d33,.75));
   const key=new THREE.DirectionalLight(0xfff0dc,1.15);key.position.set(1.4,2.6,2.6);scene.add(key);
   const rim=new THREE.DirectionalLight(0x7cc4ff,.9);rim.position.set(-2.2,2.2,-2.4);scene.add(rim);
@@ -1026,6 +929,8 @@ function initThree(){
   // poussière de cristal
   const g=new THREE.BufferGeometry(),n=70,pos=new Float32Array(n*3);for(let i=0;i<n;i++){const a=Math.random()*6.28,r=.5+Math.random()*1.1;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=Math.random()*2.2;pos[i*3+2]=Math.sin(a)*r}
   g.setAttribute("position",new THREE.BufferAttribute(pos,3));motes=new THREE.Points(g,new THREE.PointsMaterial({color:0x9fd6ff,size:.018,transparent:true,opacity:.7,depthWrite:false}));scene.add(motes);
+  vrNullTex=new THREE.DataTexture(new Uint8Array(4),1,1,THREE.RGBAFormat);vrNullTex.needsUpdate=true;
+  for(const v of ["body","face"]){VS[v].pl=vrPlane();scene.add(VS[v].pl)}
   cv.addEventListener("pointerdown",e=>{dragging=true;lastX=e.clientX;vel=0;cv.setPointerCapture(e.pointerId)});
   cv.addEventListener("pointermove",e=>{if(dragging){const d=(e.clientX-lastX)*.012;yaw+=d;vel=d;lastX=e.clientX}});
   const up=()=>dragging=false;cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
@@ -1033,33 +938,37 @@ function initThree(){
   new ResizeObserver(resize).observe(cv);resize();
   const still=matchMedia("(prefers-reduced-motion:reduce)").matches;
   const tick=t=>{
-    if(avatar){if(!dragging){yaw+=vel;vel*=.92;if(!still&&Math.abs(vel)<.0005&&view==="body")yaw+=.0035}avatar.rotation.y=yaw;
-      avatar.position.y=still?0:Math.sin(t/900)*.004;const h=avatar.userData.head;if(h&&!still){h.rotation.y=Math.sin(t/2300)*.12;h.rotation.x=Math.sin(t/3100)*.03}}
+    if(!dragging){yaw+=vel;vel*=.92;if(!still&&Math.abs(vel)<.0005&&view==="body")yaw+=.0035}
+    if(view==="face"){const L=Math.PI/3;if(yaw>L){yaw=L;vel=0}else if(yaw<-L){yaw=-L;vel=0}}   // cadrage visage : de −60° à +60°
+    else if(Math.abs(yaw)>1e4)yaw%=2*Math.PI;
     if(motes&&!still){motes.rotation.y=t/9000;}
-    camera.position.lerp(camT.p,.08);camL.lerp(camT.l,.08);camera.lookAt(camL);
+    const ct=camTarget();camera.position.lerp(vrV.set(ct[0],ct[1],ct[2]),.08);camL.lerp(vrV.set(ct[3],ct[4],ct[5]),.08);camera.lookAt(camL);
+    try{vrTick(t,still)}catch(e){console.warn(e)}
     renderer.render(scene,camera);requestAnimationFrame(tick)};
   requestAnimationFrame(tick);
 }
-function setView(v){view=v;$("vBody").setAttribute("aria-pressed",v==="body");$("vFace").setAttribute("aria-pressed",v==="face");
-  const hy=A.headY(look)*A.rootScale(look);if(v==="face"){camT={p:new THREE.Vector3(0,hy+.015,.68),l:new THREE.Vector3(0,hy-.01,0)};yaw=0;vel=0}else camT={p:new THREE.Vector3(0,1.05,3.9),l:new THREE.Vector3(0,.95,0)}}
+function setView(v){view=v;$("vBody").setAttribute("aria-pressed",v==="body");$("vFace").setAttribute("aria-pressed",v==="face");if(v==="face"){yaw=0;vel=0}}
 $("vBody").onclick=()=>setView("body");$("vFace").onclick=()=>setView("face");
-function buildAvatar(){
-  if(!scene||!PARTS)return;
-  if(avatar){scene.remove(avatar);avatar.traverse(o=>{if(o.material)o.material.dispose()})}
-  avatar=A.build(THREE,PARTS,look);scene.add(avatar);$("stageLoading").hidden=true;
-  if(view==="face")setView("face");
-}
 
-// ---------- portraits (amis) ----------
-let pr=null;const portraits={};
+// ---------- portraits (amis) : même personnage, cadré sur le visage ----------
+const portraits={};
 function portrait(code){
-  if(portraits[code])return portraits[code];if(!PARTS||!window.THREE)return null;
-  try{if(!pr){const c=document.createElement("canvas");c.width=c.height=128;const r=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true,preserveDrawingBuffer:true});r.outputEncoding=THREE.sRGBEncoding;r.toneMapping=THREE.ACESFilmicToneMapping;
-      const s=new THREE.Scene();s.add(new THREE.HemisphereLight(0xc4d2ff,0x261d33,.85));const k=new THREE.DirectionalLight(0xfff0dc,1.1);k.position.set(1,2,2.5);s.add(k);const cam=new THREE.PerspectiveCamera(22,1,.05,10);pr={c,r,s,cam}}
-    let l=null;if(/^AE/i.test(code))l=A.decode(code);if(!l){const [lk,fc]=code.split(":");l={...A.unpack(parseInt(lk,10)>>>0),face:fc!=null?parseInt(fc,10)>>>0:A.FACE_NEUTRAL}}const a=A.build(THREE,PARTS,l);a.rotation.y=.35;pr.s.add(a);
-    const hy=a.userData.headY||1.6*l.height;pr.cam.position.set(0,hy+.01,.85);pr.cam.lookAt(0,hy-.03,0);pr.r.setClearColor(0x16224a,1);pr.r.render(pr.s,pr.cam);
-    const url=pr.c.toDataURL("image/png");pr.s.remove(a);a.traverse(o=>{if(o.material)o.material.dispose()});return portraits[code]=url;
-  }catch(e){return null}
+  if(portraits[code])return portraits[code];
+  const M=VR.man;if(!M||!M.portrait)return null;
+  const im=VR.img[M.portrait.file];
+  if(!im){if(!VR.prWait){VR.prWait=true;vrImg(M.portrait.file).then(()=>{try{renderFriends()}catch(e){}}).catch(()=>{}).then(()=>{VR.prWait=false})}return null}
+  try{
+    let l=null;if(/^AE/i.test(code))l=A.decode(code);if(!l){const [lk]=String(code).split(":");l=A.unpack(parseInt(lk,10)>>>0)}
+    const S=vrSex(l),P=vrParams(l),pe=M.portrait[S],c=M.sex[S].portrait,g=P.gs>=0&&pe.g?pe.g:null,h=P.hair>0&&pe.h[P.hair]?pe.h[P.hair]:null;
+    const r=vrCompose(pe.b,im,g,im,h,im,P);
+    const cv=document.createElement("canvas");cv.width=c.W;cv.height=c.H;const cx=cv.getContext("2d");
+    const id=cx.createImageData(c.W,c.H),d=id.data,bg=[0x16,0x22,0x4a];
+    for(let i=0;i<d.length;i+=4){d[i]=bg[0];d[i+1]=bg[1];d[i+2]=bg[2];d[i+3]=255}
+    for(let y=0;y<r.h;y++)for(let x=0;x<r.w;x++){const X=r.x+x,Y=r.y+y;if(X<0||Y<0||X>=c.W||Y>=c.H)continue;
+      const s=(y*r.w+x)*4,o=(Y*c.W+X)*4,u=1-r.data[s+3]/255;d[o]=r.data[s]+bg[0]*u;d[o+1]=r.data[s+1]+bg[1]*u;d[o+2]=r.data[s+2]+bg[2]*u}
+    cx.putImageData(id,0,0);
+    return portraits[code]=cv.toDataURL("image/png");
+  }catch(e){console.warn("portrait",e);return null}
 }
 
 // ---------- analyse de la photo ----------
@@ -1256,8 +1165,6 @@ async function analyse(img){
   fr.classList.remove("scanning");
   const chips=()=>{$("found").innerHTML="";
     const c=[["Peau",A.SKIN_NAMES[look.skin]],["Cheveux",A.HAIR_NAMES[look.hair].toLowerCase()+", "+A.HAIR_COLOR_NAMES[look.hairColor].toLowerCase()],["Yeux",A.EYE_NAMES[look.eyes].toLowerCase()]];
-    if(traits)c.push(["Visage",A.FACE_SHAPE_NAMES[look.faceShape|0].toLowerCase()+", "+traitWords(traits)]);
-    if(styles)c.push(["Yeux (forme)",A.EYE_SHAPE_NAMES[look.eyeShape|0].toLowerCase()],["Sourcils",A.BROW_NAMES[look.brows|0].toLowerCase()],["Nez",A.NOSE_NAMES[look.nose|0].toLowerCase()],["Bouche",A.MOUTH_NAMES[look.mouth|0].toLowerCase()]);
     c.push(["Barbe",look.beard?"oui":"non"],["Lunettes",look.glasses?A.GLASSES_NAMES[look.glassesStyle|0].toLowerCase():"non"]);
     c.forEach(([k,v])=>{const s=document.createElement("span");s.className="chip";s.append(k+" : ");const b=document.createElement("b");b.textContent=v;s.append(b);$("found").append(s)})};
   chips();
@@ -1275,12 +1182,12 @@ async function analyse(img){
         for(const [k,n] of [["faceShape",A.FACE_SHAPE_NAMES],["eyeShape",A.EYE_SHAPE_NAMES],["brows",A.BROW_NAMES],["nose",A.NOSE_NAMES],["mouth",A.MOUTH_NAMES],["glassesStyle",A.GLASSES_NAMES]])if(I(r[k],n.length))look[k]=r[k];
         refresh();chips();
         if(typeof r.traits==="string"&&r.traits.trim()){const s=document.createElement("span");s.className="chip ai";s.append("IA : ");const b=document.createElement("b");b.textContent=r.traits.trim().slice(0,90);s.append(b);$("found").append(s)}
-        st.textContent="Avatar recréé par l'IA d'après ta photo. Ajuste un détail si besoin.";toast("L'IA a recréé ton visage");
-      }else st.textContent="Avatar sculpté d'après ton visage ("+M.length+" points). Ajuste un détail si besoin.";
+        st.textContent="Personnage réglé par l'IA d'après ta photo. Ajuste un détail si besoin.";toast("L'IA a réglé ton personnage");
+      }else st.textContent="Personnage réglé d'après ton visage ("+M.length+" points). Ajuste un détail si besoin.";
     }catch(e){
-      const c=e&&e.code;st.textContent=c==="not_granted"?"IA refusée : avatar fait avec les "+M.length+" points du visage seulement.":c==="rate_limited"?"IA occupée : réessaie dans un moment. Avatar fait avec les points du visage.":"Avatar sculpté d'après les "+M.length+" points de ton visage.";
+      const c=e&&e.code;st.textContent=c==="not_granted"?"IA refusée : personnage réglé avec les "+M.length+" points du visage seulement.":c==="rate_limited"?"IA occupée : réessaie dans un moment. Personnage réglé avec les points du visage.":"Personnage réglé d'après les "+M.length+" points de ton visage.";
     }
-  }else{st.textContent=M?"Avatar sculpté d'après les "+M.length+" points de ton visage. Ajuste un détail si besoin.":"Essaie une photo de face, bien éclairée, pour un meilleur résultat.";toast("Avatar créé à partir de ta photo")}
+  }else{st.textContent=M?"Personnage réglé d'après les "+M.length+" points de ton visage. Ajuste un détail si besoin.":"Essaie une photo de face, bien éclairée, pour un meilleur résultat.";toast("Personnage réglé d'après ta photo")}
   setTimeout(()=>setView("body"),3200);
   }finally{busy=false}
 }
@@ -2113,6 +2020,6 @@ for(const [k,n] of [["eyeShape",A.EYE_SHAPE_NAMES],["brows",A.BROW_NAMES],["nose
 if(look.body==null)look.body=A.BODY_NEUTRAL;look.body&=0xfff;look.height=hOf(hIndex(look.height));look.female=!!look.female;
 pseudo=load("am_pseudo")||"";   // pseudo du compte (fixé à la création, non modifiable dans l'appli)
 initThree();refresh();show(load("am_tab")||"avatar");connect();
-loadParts().then(()=>{buildAvatar();renderFriends()});
+loadParts().then(()=>renderFriends());
 </script>
 </body></html>
