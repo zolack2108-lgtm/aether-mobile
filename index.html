@@ -692,7 +692,7 @@ function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTime
 // envoyés : le dossier « vroid/ » ne contient que des planches de calques déjà éclairés (un dessin par angle de vue : éclairage,
 // zones à teinter, sourcils, barbe, crâne rasé, lunettes, mèches) que l'appli teint avec les couleurs du jeu (même calcul que
 // AetherVrmLook). Une planche par corps et par cadrage, une par coiffure (chargée quand on la choisit), une pour les portraits.
-const VR={dir:"vroid/",ver:"1",man:null,img:{},wait:{},fail:{},ok:false,err:""};
+const VR={dir:"vroid/",ver:"2",man:null,img:{},wait:{},fail:{},ok:false,err:""};
 function vrImg(name,onp){
   if(VR.img[name])return Promise.resolve(VR.img[name]);
   if(VR.wait[name])return VR.wait[name];
@@ -710,12 +710,14 @@ function vrImg(name,onp){
 }
 const vrSex=l=>(l||look).female?"F":"M";
 // fichiers nécessaires pour un corps, un cadrage et une coiffure
-function vrFiles(S,v,hair){const f=[...VR.man.views[S][v].files];if(hair>0&&VR.man.hair[S][hair])f.push(VR.man.hair[S][hair].file);return f}
+// planche d'une coiffure pour un cadrage (corps / visage : une planche chacun depuis les 72 angles)
+const vrHairFile=(he,v)=>he?(he.files?he.files[v]:he.file):null;
+function vrFiles(S,v,hair){const f=[...VR.man.views[S][v].files];if(hair>0&&VR.man.hair[S][hair])f.push(vrHairFile(VR.man.hair[S][hair],v));return f}
 async function loadParts(){   // écran d'accueil : manifeste + planches du personnage actuel (corps entier)
   const bar=$("spBar"),txt=$("spTxt");
   try{
     txt.textContent="Chargement de ton personnage…";
-    const r=await fetch(VR.dir+"manifest.json?v="+VR.ver);if(!r.ok)throw new Error("manifeste : "+r.status);VR.man=await r.json();
+    const r=await fetch(VR.dir+"manifest.json?v="+VR.ver);if(!r.ok)throw new Error("manifeste : "+r.status);VR.man=await r.json();vrCount();
     const need=vrFiles(vrSex(),"body",vrHair(look.hair)),sz=VR.man.sizes||{},got={};
     const total=need.reduce((s,f)=>s+(sz[f]||400000),0);
     const upd=()=>{let g=0;for(const k in got)g+=got[k];bar.style.width=Math.min(96,6+90*g/total)+"%"};
@@ -830,7 +832,7 @@ function vrCompose(b,bim,g,gim,h,him,P){
 // image i d'un cadrage (null tant qu'une planche manque : elle est alors demandée)
 function vrFrame(S,v,i,P){
   const M=VR.man,vw=M.views[S][v],fr=vw.fr[i],bim=VR.img[vw.files[fr.b[0]]];
-  const he=P.hair>0?M.hair[S][P.hair]:null,him=he?VR.img[he.file]:null,g=P.gs>=0&&fr.g?fr.g:null,gim=g?VR.img[vw.files[g[0]]]:null;
+  const he=P.hair>0?M.hair[S][P.hair]:null,him=he?VR.img[vrHairFile(he,v)]:null,g=P.gs>=0&&fr.g?fr.g:null,gim=g?VR.img[vw.files[g[0]]]:null;
   if(!bim||(g&&!gim)||(he&&!him)){vrImgs(vrFiles(S,v,P.hair)).catch(e=>{VR.err=String(e&&e.message||e)});return null}
   return vrCompose(fr.b,bim,g,gim,he?he[v][i]||null:null,him,P);
 }
@@ -838,6 +840,8 @@ function vrFrame(S,v,i,P){
 // ---------- scène 3D : socle, poussière de cristal, et le personnage (dessins pré-éclairés posés face à la caméra) ----------
 let renderer,scene,camera,yaw=0.45,vel=0,dragging=false,lastX=0,view="body",camL=window.THREE?new THREE.Vector3(0,.95,0):null,motes;
 const VS={body:{n:24,fr:[],pl:null,S:null},face:{n:9,fr:[],pl:null,S:null}};
+// nombre d'angles de chaque cadrage (manifeste) : corps tous les 5°, visage de −60° à +60° tous les 5°
+function vrCount(){try{for(const v of ["body","face"])VS[v].n=VR.man.views.M[v].fr.length}catch(e){}}
 let vrNullTex=null;
 function vrPlane(){
   const m=new THREE.ShaderMaterial({uniforms:{tA:{value:vrNullTex},tB:{value:vrNullTex},rA:{value:new THREE.Vector4(0,0,0,0)},rB:{value:new THREE.Vector4(0,0,0,0)},f:{value:0},op:{value:1}},
@@ -866,9 +870,22 @@ function camTarget(){
   if(view==="face"&&VR.man){const c=VR.man.sex[vrSex()].face,k=hK();return [c.pos[0]*k,c.pos[1]*k,c.pos[2]*k,c.at[0]*k,c.at[1]*k,c.at[2]*k]}
   return bodyCam();
 }
+function vrPos(v){const n=VS[v].n;
+  if(v==="body"){let a=yaw/(2*Math.PI)*n;return ((a%n)+n)%n}
+  return Math.max(0,Math.min(n-1,(yaw+Math.PI/3)/(2*Math.PI/3)*(n-1)));
+}
 function vrIdx(v){
-  if(v==="body"){let a=yaw/(2*Math.PI)*24;a=((a%24)+24)%24;const i=Math.floor(a)%24;return [i,(i+1)%24,a-Math.floor(a)]}
-  const a=Math.max(0,Math.min(8,(yaw+Math.PI/3)/(Math.PI/12))),i=Math.min(7,Math.floor(a));return [i,i+1,a-i];
+  const n=VS[v].n,a=vrPos(v);
+  if(v==="body"){const i=Math.floor(a)%n;return [i,(i+1)%n,a-Math.floor(a)]}
+  const i=Math.min(n-2,Math.floor(a));return [i,i+1,a-i];
+}
+// image prête la plus proche de la position a, dans le sens s (+1 / −1) : [indice, distance] ou null
+function vrNear(v,a,s,S,key){
+  const st=VS[v],n=st.n,ring=v==="body";if(st.S!==S)return null;
+  let i=s>0?Math.ceil(a-1e-6):Math.floor(a+1e-6);
+  for(let k=0;k<n;k++){let j=i+s*k;if(ring)j=((j%n)+n)%n;else if(j<0||j>=n)return null;
+    const e=st.fr[j];if(e&&e.key===key){let d=Math.abs((ring?(s>0?(j-a+n)%n:(a-j+n)%n):Math.abs(j-a)));return [j,d]}}
+  return null;
 }
 // met à jour l'image i du cadrage v pour le look actuel (texture comprise) ; false si les planches ne sont pas encore là
 function vrUpdate(v,i,S,P,key){
@@ -890,28 +907,34 @@ function vrTick(t,still){
   // fondu corps ↔ visage selon la position de la caméra (qui glisse de l'un à l'autre)
   const bc=bodyCam(),d=Math.hypot(bc[0]-fc.pos[0]*k,bc[1]-fc.pos[1]*k,bc[2]-fc.pos[2]*k),e=Math.hypot(camera.position.x-fc.pos[0]*k,camera.position.y-fc.pos[1]*k,camera.position.z-fc.pos[2]*k);
   let tr=1-Math.min(1,e/Math.max(1e-3,d));tr=tr*tr*(3-2*tr);
-  let shown=false,miss=false;
+  let shown=false,miss=false,busy=0;
   for(const v of ["body","face"]){
     const pl=VS[v].pl,op=v==="face"?tr:1-tr;
     if(op<.01){pl.visible=false;continue}
-    const [i0,i1,f]=vrIdx(v),okA=vrUpdate(v,i0,S,vrP,key),okB=okA&&f>.004&&vrUpdate(v,i1,S,vrP,key);
-    if(!okA)miss=true;
-    const A0=VS[v].fr[i0],B0=okB?VS[v].fr[i1]:null,u=pl.material.uniforms;
-    // une image pas encore refaite (planche en route) : on garde l'ancienne si elle existe
-    const a=A0;if(!a){pl.visible=false;continue}
+    const pos=vrPos(v);let lo=vrNear(v,pos,-1,S,key),hi=vrNear(v,pos,1,S,key);
+    // rien de prêt à ce réglage (couleur changée, planche arrivée) : on teint tout de suite l'image la plus proche
+    if(!lo&&!hi&&busy<2){const [i0,i1,f]=vrIdx(v);if(vrUpdate(v,f<.5?i0:i1,S,vrP,key)){busy++;lo=vrNear(v,pos,-1,S,key);hi=vrNear(v,pos,1,S,key)}else miss=true}
+    else if((!lo||!hi||lo[1]+hi[1]>1.01)&&busy<1){const [i0,i1,f]=vrIdx(v);const w=f<.5?i0:i1,x=VS[v].fr[w];if(!x||x.key!==key){if(vrUpdate(v,w,S,vrP,key)){busy++;lo=vrNear(v,pos,-1,S,key);hi=vrNear(v,pos,1,S,key)}}}
+    let A0=lo?VS[v].fr[lo[0]]:null,B0=hi?VS[v].fr[hi[0]]:null,f=0;
+    if(A0&&B0){const t=lo[1]+hi[1];f=t>1e-6?lo[1]/t:0}else if(!A0){A0=B0;B0=null}
+    if(!A0){const [i0]=vrIdx(v);A0=VS[v].fr[i0]&&VS[v].S===S?VS[v].fr[i0]:null;miss=true}   // ancienne teinte en attendant
+    const u=pl.material.uniforms,a=A0;if(!a){pl.visible=false;continue}
     u.tA.value=a.tex;u.rA.value.set(a.r[0],a.r[1],a.r[2],a.r[3]);
     const b=B0||a;u.tB.value=b.tex;u.rB.value.set(b.r[0],b.r[1],b.r[2],b.r[3]);u.f.value=B0?f:0;u.op.value=op;
     vrPlace(pl,vrCam(v,S),k,bob);pl.visible=true;shown=true;
   }
   // une image de plus par trame, en tâche de fond : d'abord le cadrage affiché (dans l'ordre de rotation), puis l'autre
-  for(const v of view==="body"?["body","face"]:["face","body"]){
-    const st=VS[v],[c]=vrIdx(v);let done=false;
-    for(let s=0;s<st.n*2&&!done;s++){const i=v==="body"?(c+s)%st.n:Math.max(0,Math.min(8,c+(s&1?(s+1)>>1:-(s>>1))));const x=st.S===S?st.fr[i]:null;
+  if(!busy)for(const v of view==="body"?["body","face"]:["face","body"]){
+    const st=VS[v],n=st.n,c=Math.round(vrPos(v));let done=false;
+    for(const step of [3,1])for(let s=0;s<n*2&&!done;s++){
+      let i=v==="body"?c+s:c+(s&1?(s+1)>>1:-(s>>1));
+      if(v==="body")i=((i%n)+n)%n;else if(i<0||i>=n)continue;
+      if(i%step)continue;const x=st.S===S?st.fr[i]:null;
       if(!x||x.key!==key){vrUpdate(v,i,S,vrP,key);done=true}}
     if(done)break;
   }
   const ld=$("stageLoading");ld.hidden=shown;if(!shown)ld.textContent=VR.err?"Aperçu indisponible ("+VR.err+")":"Préparation de ton personnage…";
-  const hint=$("stageHint");if(hint)hint.textContent=shown&&miss?(vrP&&vrP.hair>0&&!VR.img[VR.man.hair[S][vrP.hair].file]?"Chargement de la coiffure…":"Chargement…"):"Glisse pour tourner";
+  const hint=$("stageHint");if(hint)hint.textContent=shown&&miss?(vrP&&vrP.hair>0&&!VR.img[vrHairFile(VR.man.hair[S][vrP.hair],view)]?"Chargement de la coiffure…":"Chargement…"):"Glisse pour tourner";
 }
 function initThree(){
   if(!window.THREE){$("stageLoading").textContent="Aperçu indisponible";return}
@@ -932,13 +955,15 @@ function initThree(){
   vrNullTex=new THREE.DataTexture(new Uint8Array(4),1,1,THREE.RGBAFormat);vrNullTex.needsUpdate=true;
   for(const v of ["body","face"]){VS[v].pl=vrPlane();scene.add(VS[v].pl)}
   cv.addEventListener("pointerdown",e=>{dragging=true;lastX=e.clientX;vel=0;cv.setPointerCapture(e.pointerId)});
-  cv.addEventListener("pointermove",e=>{if(dragging){const d=(e.clientX-lastX)*.012;yaw+=d;vel=d;lastX=e.clientX}});
+  cv.addEventListener("pointermove",e=>{if(dragging){const d=(e.clientX-lastX)*.012;yaw+=d;vel=vel*.6+d*.4;lastX=e.clientX}});
   const up=()=>dragging=false;cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
   const resize=()=>{const r=cv.getBoundingClientRect();if(!r.width)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix()};
   new ResizeObserver(resize).observe(cv);resize();
   const still=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  let tPrev=0;
   const tick=t=>{
-    if(!dragging){yaw+=vel;vel*=.92;if(!still&&Math.abs(vel)<.0005&&view==="body")yaw+=.0035}
+    const dt=tPrev?Math.min(.1,(t-tPrev)/1000):1/60,g=dt*60;tPrev=t;
+    if(!dragging){yaw+=vel*g;vel*=Math.pow(.92,g);if(!still&&Math.abs(vel)<.0005&&view==="body")yaw+=.21*dt}
     if(view==="face"){const L=Math.PI/3;if(yaw>L){yaw=L;vel=0}else if(yaw<-L){yaw=-L;vel=0}}   // cadrage visage : de −60° à +60°
     else if(Math.abs(yaw)>1e4)yaw%=2*Math.PI;
     if(motes&&!still){motes.rotation.y=t/9000;}
