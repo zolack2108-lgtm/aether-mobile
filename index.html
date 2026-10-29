@@ -746,7 +746,7 @@ function refresh(){
   $("nFaceShape").textContent=A.FACE_SHAPE_NAMES[look.faceShape|0];$("nEyeShape").textContent=A.EYE_SHAPE_NAMES[look.eyeShape|0];
   $("fGlasses").hidden=!look.glasses;mark($("cSex"),look.female?1:0);
   const bm=A.unpackBody(look.body);for(const k in BODY_IN){const v=Math.round(bm[k]*3);$(BODY_IN[k]).value=v;$("n"+k[0].toUpperCase()+k[1]).textContent=A.BODY_NAMES[k][v+3]}
-  $("tBeard").setAttribute("aria-pressed",!!look.beard);$("tGlasses").setAttribute("aria-pressed",!!look.glasses);
+  if(look.female&&look.beard)look.beard=false;$("tBeard").hidden=!!look.female;$("tBeard").setAttribute("aria-pressed",!!look.beard);$("tGlasses").setAttribute("aria-pressed",!!look.glasses);
   const code=A.encode(look);$("code").textContent=code;$("code").classList.toggle("long",code.length>10);$("lookBadge").textContent=code;$("lookBadge").classList.toggle("long",code.length>10);
   store("am_look",JSON.stringify(look));
 }
@@ -1178,11 +1178,11 @@ async function analyse(img){
     styles=faceStyles(M,S,res.skin);window.__styles=styles.raw;
     for(const k of ["eyeShape","brows","nose","mouth","faceShape"])res.look[k]=styles[k];
   }else{st.textContent="Lecture approximative (visage non repéré)…";res=readRough(px,W,H,S)}
-  Object.assign(look,res.look);
+  Object.assign(look,res.look);if(look.female)look.beard=false;   // pas de barbe pour une femme
   fr.classList.remove("scanning");
   const chips=()=>{$("found").innerHTML="";
     const c=[["Peau",A.SKIN_NAMES[look.skin]],["Cheveux",A.HAIR_NAMES[look.hair].toLowerCase()+", "+A.HAIR_COLOR_NAMES[look.hairColor].toLowerCase()],["Yeux",A.EYE_NAMES[look.eyes].toLowerCase()]];
-    c.push(["Barbe",look.beard?"oui":"non"],["Lunettes",look.glasses?A.GLASSES_NAMES[look.glassesStyle|0].toLowerCase():"non"]);
+    if(!look.female)c.push(["Barbe",look.beard?"oui":"non"]);c.push(["Lunettes",look.glasses?A.GLASSES_NAMES[look.glassesStyle|0].toLowerCase():"non"]);
     c.forEach(([k,v])=>{const s=document.createElement("span");s.className="chip";s.append(k+" : ");const b=document.createElement("b");b.textContent=v;s.append(b);$("found").append(s)})};
   chips();
   const warn=t=>{const s=document.createElement("span");s.className="chip warn";s.textContent=t;$("found").append(s)};
