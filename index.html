@@ -80,15 +80,8 @@ section[data-tab]{display:flex;flex-direction:column;gap:16px}
 .chip b{color:var(--text);font-weight:600}
 .chip.warn{color:var(--warn);border-color:#7a3a35}
 .status{font-size:12.5px;color:var(--crystal);min-height:1.3em}
-.aitog{display:flex;gap:10px;align-items:flex-start;text-align:left;background:#0b1228;border:1px solid var(--line);border-radius:12px;padding:9px 11px;color:var(--muted);font:inherit;font-size:12.5px;line-height:1.4;cursor:pointer}
-.aitog b{color:var(--text);font-weight:600}
-.aitog .sw2{flex:none;width:30px;height:18px;border-radius:9px;background:#26304f;position:relative;margin-top:1px;transition:background .2s}
-.aitog .sw2::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#8b96b8;transition:transform .2s,background .2s}
-.aitog[aria-pressed=true] .sw2{background:#2a5f9e}.aitog[aria-pressed=true] .sw2::after{transform:translateX(12px);background:#d6efff}
 .ai-run{display:inline-flex;align-items:center;gap:8px}.ai-run::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid #7cc4ff55;border-top-color:#d6efff;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.aibridge{display:flex;flex-direction:column;gap:8px;background:linear-gradient(90deg,#1a1640,#0b1228);border:1px solid #4a3a7a;border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--muted)}.aibridge b{color:#e6dcff}.aibridge .btn{align-self:flex-start;text-decoration:none}
-.chip.ai{border-color:#4a3a7a;background:linear-gradient(90deg,#1a1640,#0b1228)}.chip.ai b{color:#e6dcff}
 /* ---------- scan du corps ---------- */
 .shots{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .shot{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px;border:1px dashed var(--line-2);border-radius:14px;background:#0b1228;text-align:center;font-size:12.5px;color:var(--muted);min-width:0}
@@ -240,9 +233,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
       <div class="photo">
         <div class="frame" id="frame"><span id="frameTxt">Ta photo</span><canvas id="photoCv" hidden></canvas><span class="scan"></span></div>
         <div class="col">
-          <p>Visage de face, bien éclairé, cheveux visibles. L'IA du visage repère 478 points sur ton téléphone pour lire ta peau, tes yeux, tes cheveux, ta barbe et tes lunettes.</p>
-          <button type="button" class="aitog" id="tAi" aria-pressed="true"><span class="sw2" aria-hidden="true"></span><span><b>IA Claude</b> : recrée aussi ton style. Envoie un recadrage du visage à Claude, avec ton accord.</span></button>
-          <div class="aibridge" id="aiBridge" hidden></div>
+          <p>Visage de face, bien éclairé, cheveux visibles. L'IA du visage repère 478 points sur ton téléphone pour lire ta peau, tes yeux, tes cheveux, ta barbe et tes lunettes. Tout se fait sur ton téléphone : la photo n'est envoyée nulle part.</p>
           <div class="row">
             <label class="btn primary" for="fileCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Prendre une photo</label>
             <label class="btn" for="fileLib">Choisir une image</label>
@@ -1003,6 +994,37 @@ const dE=(a,b)=>{const A1=lab(a),B=lab(b);return Math.hypot(A1[0]-B[0],A1[1]-B[1
 function nearest(c,list,skipFantasy){let bi=0,bd=1e9;list.forEach((p,i)=>{if(!p)return;if(skipFantasy&&skipFantasy.includes(i))return;const d=dE(c,p);if(d<bd){bd=d;bi=i}});return bi}
 const median=l=>{if(!l.length)return null;const m=k=>{const s=l.map(c=>c[k]).sort((a,b)=>a-b);return s[s.length>>1]};return[m(0),m(1),m(2)]};
 const L=c=>lab(c)[0];
+// médiane après avoir écarté les pixels les plus sombres (ombres) et les plus clairs (reflets)
+const tmed=(l,lo=.2,hi=.8)=>{if(!l||!l.length)return null;if(l.length<8)return median(l);const s=l.map(c=>[L(c),c]).sort((a,b)=>a[0]-b[0]);return median(s.slice(Math.floor(s.length*lo),Math.ceil(s.length*hi)).map(v=>v[1]))};
+// balance des blancs : le blanc des yeux est presque neutre ; s'il paraît bleu, jaune ou orangé, c'est la lumière de la pièce.
+// On corrige toute l'image (gains par canal, bornés) avant de lire les couleurs de la peau, des cheveux et des yeux.
+function whiteBalance(px,S,M,img,W){
+  if(!M||M.length<478)return null;
+  const pts=[];
+  // le blanc de l'œil est petit : on le lit dans la photo en pleine résolution (zone des deux yeux seulement)
+  let HS=S;try{const k=Math.max(1,Math.min(4,img.width/W));if(k>1.3){
+    const xs=[33,133,263,362,159,145,386,374].map(i=>M[i][0]),ys=[33,133,263,362,159,145,386,374].map(i=>M[i][1]);
+    const x0=Math.max(0,Math.min(...xs)-6),y0=Math.max(0,Math.min(...ys)-6),x1=Math.min(W,Math.max(...xs)+6),y1=Math.max(...ys)+6;
+    const cw=Math.round((x1-x0)*k),ch=Math.round((y1-y0)*k),c=document.createElement("canvas");c.width=cw;c.height=ch;const g=c.getContext("2d",{willReadFrequently:true});
+    g.drawImage(img,x0*k,y0*k,cw,ch,0,0,cw,ch);const d=g.getImageData(0,0,cw,ch).data,inner=sampler(d,cw,ch);
+    HS={at:(x,y)=>inner.at((x-x0)*k,(y-y0)*k)}}}catch(e){HS=S}
+  for(const [o,i,c] of [[33,133,468],[263,362,473]]){
+    const C=M[c],R=Math.max(1.5,Math.hypot(M[c+1][0]-M[c+3][0],M[c+1][1]-M[c+3][1])/2);
+    for(const e of [o,i]){const E=M[e],dx=C[0]-E[0],dy=C[1]-E[1],dl=Math.hypot(dx,dy)||1;
+      for(let t=.25;t<=.8;t+=.05){const x=E[0]+dx*t,y=E[1]+dy*t;if(Math.hypot(x-C[0],y-C[1])<R*1.2)continue;for(const [ox,oy] of [[0,0],[0,-.6],[0,.6],[-.4,0],[.4,0]]){const q=HS.at(x+ox,y+oy);if(q)pts.push(q)}}}}
+  if(pts.length<10)return null;
+  const lp=pts.map(q=>[L(q),q]).sort((a,b)=>b[0]-a[0]).slice(0,Math.max(6,pts.length*.4|0)).map(v=>v[1]).filter(q=>{const [l,a,b]=lab(q);return l>38&&l<97&&Math.hypot(a,b)<24});
+  if(lp.length<6)return null;
+  // garde-fou : le « blanc » doit être nettement plus clair et moins coloré que la peau des joues, sinon ce sont des pixels de paupière → pas de correction
+  const sk=median([...S.disc(M[50][0],M[50][1],3),...S.disc(M[280][0],M[280][1],3)]),sc0=median(lp),ls=lab(sc0),lk=sk&&lab(sk);window.__sc={sc:ls.map(v=>+v.toFixed(1)),sk:lk&&lk.map(v=>+v.toFixed(1))};
+  if(!lk||ls[0]<lk[0]+6||Math.hypot(ls[1],ls[2])>Math.hypot(lk[1],lk[2])*.6+3)return null;
+  const sc=sc0,tg=[1,.97,.885],m=(sc[0]+sc[1]+sc[2])/3;   // cible : blanc légèrement chaud (un vrai blanc d'œil n'est jamais bleu)
+  let g=sc.map((v,k)=>Math.min(1.28,Math.max(.8,m*tg[k]/Math.max(.02,v))));
+  const lum=g[0]*.2126+g[1]*.7152+g[2]*.0722;g=g.map(v=>1+.6*(v/lum-1));      // garde la luminosité, correction à 60 % (prudente)
+  if(Math.max(...g.map(v=>Math.abs(v-1)))<.025)return null;
+  for(let i=0;i<px.length;i+=4){px[i]*=g[0];px[i+1]*=g[1];px[i+2]*=g[2]}
+  return g;
+}
 // ---------- IA du visage : maillage dense (Human / MediaPipe Face Mesh, 478 points) ----------
 const HUMAN_URL="https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/dist/human.js";
 let HU=null;
@@ -1114,37 +1136,6 @@ async function drawMesh(ctx,M,tri){
     await new Promise(r=>setTimeout(r,28))}
   ctx.fillStyle="#d6efff";for(let i=0;i<M.length;i++){ctx.beginPath();ctx.arc(M[i][0],M[i][1],i>=468?1.6:.9,0,7);ctx.fill();if(i%60===59)await new Promise(r=>setTimeout(r,16))}
 }
-// Claude regarde la photo (avec l'accord de la personne) et choisit les pièces qui ressemblent le plus
-let SAMPLE;
-async function getSample(){if(SAMPLE!==undefined)return SAMPLE;try{SAMPLE=window.claude&&claude.use?await claude.use("sample"):null}catch(e){SAMPLE=null}return SAMPLE}
-async function aiCrop(img,box,sc){
-  const [bx,by,bw,bh]=box.map(v=>v*sc);const x0=Math.max(0,bx-bw*.55),y0=Math.max(0,by-bh*.75),x1=Math.min(img.width,bx+bw*1.55),y1=Math.min(img.height,by+bh*1.75);
-  const w=x1-x0,h=y1-y0,k=Math.min(1,640/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);
-  c.getContext("2d").drawImage(img,x0,y0,w,h,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,"image/jpeg",.88));
-}
-async function aiRead(blob){
-  const S=await getSample();if(!S||!blob)return null;
-  const lim=await S.limits().catch(()=>null);if(!lim||!lim.images)return null;
-  const L2=n=>n.map((x,i)=>i+" = "+x).join(", ");
-  const prompt=`Tu crées l'avatar d'un joueur pour Aether, un jeu en réalité virtuelle au style anime (inspiré de Sword Art Online). Regarde la personne sur la photo et choisis, dans chaque liste, l'indice qui la recrée le plus fidèlement.
-Teint de peau : ${L2(A.SKIN_NAMES)}
-Coiffure (longueur et forme réelles) : ${L2(A.HAIR_NAMES)}
-Couleur des cheveux : ${L2(A.HAIR_COLOR_NAMES)}
-Couleur des yeux : ${L2(A.EYE_NAMES)}
-Couleur du haut porté : ${L2(A.OUTFIT_NAMES)}
-Forme du visage (faceShape) : ${L2(A.FACE_SHAPE_NAMES)}
-Forme des yeux (eyeShape) : ${L2(A.EYE_SHAPE_NAMES)}
-Sourcils (brows) : ${L2(A.BROW_NAMES)}
-Nez (nose) : ${L2(A.NOSE_NAMES)}
-Bouche (mouth) : ${L2(A.MOUTH_NAMES)}
-Monture de lunettes (glassesStyle, seulement si "glasses" = true) : ${L2(A.GLASSES_NAMES)}
-Règles : "beard" = true seulement pour une vraie barbe bien fournie (une barbe de quelques jours ou un duvet = false). Pour les cheveux, regarde attentivement la couleur réelle sous la lumière (châtain clair, châtain, brun…) et la coupe réelle (longueur, frange, épis, raie, attache). "glasses" = true seulement si la personne porte des lunettes. Pour le visage, les yeux, les sourcils, le nez et la bouche, choisis la forme la plus proche de la vraie personne (même si le rendu reste anime).
-Réponds UNIQUEMENT avec ce JSON, sans texte autour :
-{"skin":0,"hair":0,"hairColor":0,"eyes":0,"beard":false,"glasses":false,"glassesStyle":0,"top":0,"faceShape":0,"eyeShape":0,"brows":0,"nose":0,"mouth":0,"traits":"une courte phrase en français (12 mots maximum) décrivant son visage comme un personnage d'anime"}`;
-  return await S.json(prompt,{images:[blob],modelTier:"default"});
-}
-function useAi(){const t=$("tAi");return !t||t.getAttribute("aria-pressed")==="true"}
-
 function sampler(px,W,H){
   const at=(x,y)=>{x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=W||y>=H)return null;const i=(y*W+x)*4;return[px[i]/255,px[i+1]/255,px[i+2]/255]};
   const disc=(cx,cy,r)=>{const o=[];for(let y=-r;y<=r;y+=1.5)for(let x=-r;x<=r;x+=1.5)if(x*x+y*y<=r*r){const c=at(cx+x,cy+y);if(c)o.push(c)}return o};
@@ -1180,6 +1171,7 @@ async function analyse(img){
   if(M){st.textContent=M.length+" points du visage trouvés : maillage en cours…";
     show(box);const seg=segMask(h,cv);await drawMesh(dx,M,tri||[]);
     st.textContent="Détourage des cheveux et lecture des traits…";const mk=await seg;
+    const wb=whiteBalance(px,S,M,img,W);window.__wb=wb;
     const P=M68.map(i=>[M[i][0],M[i][1]]);
     res=readWithLandmarks(px,W,H,S,P,M,mk);
     traits=faceTraits(M);res.look.face=A.packFace(traits);
@@ -1193,26 +1185,12 @@ async function analyse(img){
     c.push(["Barbe",look.beard?"oui":"non"],["Lunettes",look.glasses?A.GLASSES_NAMES[look.glassesStyle|0].toLowerCase():"non"]);
     c.forEach(([k,v])=>{const s=document.createElement("span");s.className="chip";s.append(k+" : ");const b=document.createElement("b");b.textContent=v;s.append(b);$("found").append(s)})};
   chips();
-  if(!M){const s=document.createElement("span");s.className="chip warn";s.textContent="Visage mal repéré : ajuste à la main";$("found").append(s)}
+  const warn=t=>{const s=document.createElement("span");s.className="chip warn";s.textContent=t;$("found").append(s)};
+  if(!M)warn("Visage mal repéré : ajuste à la main");
+  else{const xl=M[234][0],xr=M[454][0],yaw=(M[1][0]-xl)/((xr-xl)||1)-.5;if(Math.abs(yaw)>.17)warn("Visage tourné : une photo bien de face sera plus fidèle");
+    if(res.skin&&L(res.skin)<28)warn("Photo sombre : la couleur de peau peut être faussée")}
   refresh();setView("face");
-  // ---- Claude affine les choix (couleurs, coiffure, barbe, lunettes) ----
-  if(M&&box&&useAi()){
-    st.innerHTML="";const sp=document.createElement("span");sp.className="ai-run";sp.textContent="L'IA Claude étudie ton visage…";st.append(sp);
-    try{
-      const blob=await aiCrop(img,box,img.width/W);const r=await aiRead(blob);
-      if(r&&typeof r==="object"){
-        const I=(v,n)=>Number.isInteger(v)&&v>=0&&v<n;
-        if(I(r.skin,A.SKINS.length))look.skin=r.skin;if(I(r.hair,A.HAIR_NAMES.length))look.hair=r.hair;if(I(r.hairColor,A.HAIR_COLORS.length))look.hairColor=r.hairColor;
-        if(I(r.eyes,A.EYES.length))look.eyes=r.eyes;if(I(r.top,A.OUTFITS.length))look.top=r.top;if(typeof r.beard==="boolean")look.beard=r.beard;if(typeof r.glasses==="boolean")look.glasses=r.glasses;
-        for(const [k,n] of [["faceShape",A.FACE_SHAPE_NAMES],["eyeShape",A.EYE_SHAPE_NAMES],["brows",A.BROW_NAMES],["nose",A.NOSE_NAMES],["mouth",A.MOUTH_NAMES],["glassesStyle",A.GLASSES_NAMES]])if(I(r[k],n.length))look[k]=r[k];
-        refresh();chips();
-        if(typeof r.traits==="string"&&r.traits.trim()){const s=document.createElement("span");s.className="chip ai";s.append("IA : ");const b=document.createElement("b");b.textContent=r.traits.trim().slice(0,90);s.append(b);$("found").append(s)}
-        st.textContent="Personnage réglé par l'IA d'après ta photo. Ajuste un détail si besoin.";toast("L'IA a réglé ton personnage");
-      }else st.textContent="Personnage réglé d'après ton visage ("+M.length+" points). Ajuste un détail si besoin.";
-    }catch(e){
-      const c=e&&e.code;st.textContent=c==="not_granted"?"IA refusée : personnage réglé avec les "+M.length+" points du visage seulement.":c==="rate_limited"?"IA occupée : réessaie dans un moment. Personnage réglé avec les points du visage.":"Personnage réglé d'après les "+M.length+" points de ton visage.";
-    }
-  }else{st.textContent=M?"Personnage réglé d'après les "+M.length+" points de ton visage. Ajuste un détail si besoin.":"Essaie une photo de face, bien éclairée, pour un meilleur résultat.";toast("Personnage réglé d'après ta photo")}
+  st.textContent=M?"Personnage réglé d'après les "+M.length+" points de ton visage. Ajuste un détail si besoin.":"Essaie une photo de face, bien éclairée, pour un meilleur résultat.";toast("Personnage réglé d'après ta photo");
   setTimeout(()=>setView("body"),3200);
   }finally{busy=false}
 }
@@ -1222,7 +1200,8 @@ function readWithLandmarks(px,W,H,S,P,M,mk){
   const ok=c=>{const l=L(c);return l>12&&l<92};
   // peau : deux joues + front
   const cl=avg([1,31,41,48]),cr=avg([15,35,46,54]);const r=Math.max(3,faceW*.07);
-  const skinPx=[...S.disc(cl[0],cl[1],r),...S.disc(cr[0],cr[1],r)].filter(ok);const skin=median(skinPx)||[.8,.62,.5];
+  const skinPx=[...S.disc(cl[0],cl[1],r),...S.disc(cr[0],cr[1],r),...S.disc(P[29][0],P[29][1],r*.6)].filter(ok);let skin=tmed(skinPx)||[.8,.62,.5];
+  const fhd=S.disc(cx,browY-faceH*.14,r*.8).filter(ok),fhc=tmed(fhd);if(fhc&&dE(fhc,skin)<10)skin=tmed([...skinPx,...fhd])||skin;
   // fond : coins hauts (ou tout ce qui est hors de la silhouette quand la segmentation a marché)
   const inP=(x,y)=>!mk||mk(x,y);
   const bg=(mk&&median(S.rectP(0,0,W,H,(x,y)=>!mk(x,y),6)))||median([...S.rect(0,0,W*.12,H*.12),...S.rect(W*.88,0,W,H*.12)])||[0,0,0];
@@ -1230,7 +1209,7 @@ function readWithLandmarks(px,W,H,S,P,M,mk){
   const top=browY-faceH*.95,hb=(mk?S.rectP(cx-faceW*.35,top,cx+faceW*.35,browY-faceH*.32,inP):S.rect(cx-faceW*.35,top,cx+faceW*.35,browY-faceH*.32)).filter(c=>dE(c,bg)>14);
   const nonSkin=hb.filter(c=>dE(c,skin)>16);
   const bald=hb.length>20&&nonSkin.length/hb.length<.25;
-  const hairC=median(nonSkin.length>10?nonSkin:hb)||[.2,.15,.1];
+  const hairC=tmed(nonSkin.length>10?nonSkin:hb,.25,.85)||[.2,.15,.1];
   const isHair=c=>dE(c,hairC)<20&&dE(c,skin)>12&&(mk||dE(c,bg)>12);
   const fr=(x0,y0,x1,y1)=>S.frac(x0,y0,x1,y1,(c,x,y)=>inP(x,y)&&isHair(c)),av=(...v)=>{const k=v.filter(x=>x>=0);return k.length?k.reduce((a,b)=>a+b)/k.length:-1};
   // longueur : côtés du visage sous les oreilles, sous le menton, sur la poitrine
@@ -1252,13 +1231,18 @@ function readWithLandmarks(px,W,H,S,P,M,mk){
   const hair=pickHair(hm);window.__hair=hm;
   // yeux : iris sans pupille ni reflets
   const eyeC=e=>{const ids=e?[42,43,44,45,46,47]:[36,37,38,39,40,41];const c=avg(ids),w=Math.hypot(P[ids[3]][0]-P[ids[0]][0],P[ids[3]][1]-P[ids[0]][1]);return S.disc(c[0],c[1],Math.max(2,w*.2)).filter(x=>{const l=L(x);return l>18&&l<70})};
-  const irisPx=M&&M.length>=478?[468,473].flatMap(k=>{const r=Math.max(1.5,Math.hypot(M[k+1][0]-M[k+3][0],M[k+1][1]-M[k+3][1])*.32);return S.disc(M[k][0],M[k][1],r).filter(x=>{const l=L(x);return l>12&&l<75})}):[];
-  const iris=median(irisPx.length>6?irisPx:[...eyeC(0),...eyeC(1)])||[.3,.2,.12];
+  const irisPx=M&&M.length>=478?[468,473].flatMap(k=>{const R=Math.max(1.5,Math.hypot(M[k+1][0]-M[k+3][0],M[k+1][1]-M[k+3][1])/2),o=[];for(let a=0;a<6.28;a+=.26)for(const f of [.5,.65,.8]){const x=M[k][0]+Math.cos(a)*R*f,y=M[k][1]+Math.sin(a)*R*f;if(y<M[k][1]-R*.3)continue;const c=S.at(x,y);if(c)o.push(c)}return o.filter(x=>{const l=L(x);return l>12&&l<75})}):[];
+  const iris=tmed(irisPx.length>6?irisPx:[...eyeC(0),...eyeC(1)],.15,.85)||[.3,.2,.12];
   const [il,ia,ib]=lab(iris);let eyes=0;
   if(ib<-4&&ia<6)eyes=il>48?7:1;else if(ia<-5&&ib<12)eyes=2;else if(Math.hypot(ia,ib)<7&&il>40)eyes=3;else if(ib>14&&il>38)eyes=6;else eyes=0;
   // barbe : bas du visage plus sombre que les joues et proche des cheveux
   const chin=[...S.disc(P[8][0],P[8][1]-faceH*.06,faceW*.08),...S.disc(P[57][0],(P[57][1]+P[8][1])/2,faceW*.06),...S.disc(P[33][0],(P[33][1]+P[51][1])/2,faceW*.035)].filter(c=>L(c)>5);
-  const chinC=median(chin)||skin;const beard=dE(chinC,skin)>14&&L(chinC)<L(skin)-8;
+  const chinC=tmed(chin,.1,.7)||skin,sL0=L(skin);
+  const zones=[[P[8][0],P[8][1]-faceH*.07,faceW*.09],[P[57][0],(P[57][1]+P[8][1])/2,faceW*.07],[P[33][0],(P[33][1]+P[51][1])/2,faceW*.04],[(P[5][0]*2+P[57][0])/3,(P[5][1]*2+P[57][1])/3,faceW*.05],[(P[11][0]*2+P[57][0])/3,(P[11][1]*2+P[57][1])/3,faceW*.05]];
+  const zf=zones.map(([x,y,rr])=>{const d=S.disc(x,y,rr);return d.length?d.filter(c=>L(c)<sL0-10&&dE(c,skin)>12).length/d.length:0});
+  const darkF=(zf[0]+zf[1]+zf[2]+Math.max(zf[3],zf[4]))/4;
+  const tex=lapEnergy(px,W,H,P[8][0]-faceW*.12,P[57][1],P[8][0]+faceW*.12,P[8][1])/(lapEnergy(px,W,H,cl[0]-r,cl[1]-r,cl[0]+r,cl[1]+r)+1);
+  const beard=(dE(chinC,skin)>14&&L(chinC)<sL0-8&&(darkF>.38||tex>1.35))||(darkF>.6&&zf[0]>.5);window.__beard={darkF,tex,zf};
   // lunettes : arêtes nettes sur l'arête du nez et autour des yeux
   const bridge=lapEnergy(px,W,H,P[39][0],P[27][1]-faceH*.05,P[42][0],P[28][1]);
   const cheek=lapEnergy(px,W,H,cl[0]-r,cl[1]-r,cl[0]+r,cl[1]+r)+1;
@@ -1266,7 +1250,7 @@ function readWithLandmarks(px,W,H,S,P,M,mk){
   const glasses=bridge/cheek>3.2&&ring/cheek>2.6;
   const glassesStyle=glasses?frameStyle(S,M,skin):look.glassesStyle|0;
   // vêtement : sous le menton
-  const shirt=median(S.rect(cx-faceW*.5,chinY+faceH*.55,cx+faceW*.5,chinY+faceH*1.1).filter(c=>dE(c,bg)>10))||[.15,.15,.18];
+  const shirt=tmed(S.rect(cx-faceW*.5,chinY+faceH*.55,cx+faceW*.5,chinY+faceH*1.1).filter(c=>dE(c,bg)>10))||[.15,.15,.18];
   // dessin des repères
   return{look:{skin:nearest(skin,A.SKINS),hair,hairColor:bald?look.hairColor:nearest(hairC,A.HAIR_COLORS,[4,6,7]),eyes,beard,glasses,glassesStyle,top:nearest(shirt,A.OUTFITS)},skin};
 }
@@ -1281,9 +1265,6 @@ function readRough(px,W,H,S){
 }
 function onFile(e){const file=e.target.files&&e.target.files[0];e.target.value="";if(!file)return;const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{analyse(img).catch(()=>toast("Analyse impossible, réessaie"));URL.revokeObjectURL(url)};img.onerror=()=>toast("Impossible de lire cette image");img.src=url}
 $("fileCam").onchange=onFile;$("fileLib").onchange=onFile;
-$("tAi").onclick=()=>{const t=$("tAi"),v=t.getAttribute("aria-pressed")!=="true";t.setAttribute("aria-pressed",v);store("am_ai",v?"1":"0")};
-if(load("am_ai")==="0")$("tAi").setAttribute("aria-pressed","false");
-getSample().then(S=>{if(!S)$("tAi").hidden=true;else S.limits().then(l=>{if(!l||!l.images)$("tAi").hidden=true}).catch(()=>$("tAi").hidden=true)});
 
 // ---------- scan du corps (option) : silhouette + 17 points du corps, calculés sur le téléphone ----------
 // Seules les mesures (des rapports de longueurs) sont gardées en mémoire, jamais les photos.
@@ -1591,14 +1572,11 @@ $("publish").onclick=async()=>{if(!sess){showLogin();return}
 function connect(){renderMe();if(!sess)showLogin();else{poll(true);pushResync()}}
 document.querySelectorAll('[data-go="taverne"]').forEach(b=>b.addEventListener("click",()=>setTimeout(()=>{const c=$("chat");c.scrollTop=c.scrollHeight},30)));
 
-// ----- IA Claude : la création de la tête se fait sur la page Claude, puis le code revient ici (#code=AE-…) -----
-(function(){const box=$("aiBridge");if(box&&!(window.claude&&window.claude.use)){box.hidden=false;
-  box.innerHTML='<span><b>IA Claude (option)</b> : l\'appli analyse déjà ta photo sur ton téléphone. Avec un compte Claude, l\'IA peut aussi recréer ton style : ouvre la page Claude, fais ta photo, puis touche « Envoyer dans Aether Mobile ».</span>';
-  const a=document.createElement("a");a.className="btn";a.target="_blank";a.rel="noopener";a.href="https://claude.ai/artifact/MiYEYB2CK8w19FQ3WJi84r";a.textContent="Créer ma tête avec l\'IA Claude";box.append(a)}
-  const m=/[#&]code=([^&]+)/.exec(location.hash);if(!m)return;
+// ----- code d'avatar collé dans le lien (#code=AE-…) : importé directement dans l'appli -----
+(function(){const m=/[#&]code=([^&]+)/.exec(location.hash);if(!m)return;
   const l=A.decode(decodeURIComponent(m[1]));history.replaceState(null,"",location.pathname);
   if(!l){toast("Code d'avatar illisible");return}
-  look={...look,...l};forcePush=true;refresh();toast("Avatar importé depuis l'IA Claude");if(sess)setTimeout(syncLook,500)})();
+  look={...look,...l};forcePush=true;refresh();toast("Avatar importé");if(sess)setTimeout(syncLook,500)})();
 
 // ---------- (version hébergée) réactions, notifications du téléphone, appels vocaux ----------
 
