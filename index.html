@@ -79,6 +79,8 @@ section[data-tab]{display:flex;flex-direction:column;gap:16px}
 .chip{font-size:12px;padding:4px 10px;border-radius:999px;background:#0b1228;border:1px solid var(--line);color:var(--muted)}
 .chip b{color:var(--text);font-weight:600}
 .chip.warn{color:var(--warn);border-color:#7a3a35}
+.chip.ask{color:var(--text);border-color:var(--gold);display:inline-flex;align-items:center;gap:6px}
+.chip.ask .mini{font:inherit;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:#24346a;color:var(--text);cursor:pointer}
 .status{font-size:12.5px;color:var(--crystal);min-height:1.3em}
 .ai-run{display:inline-flex;align-items:center;gap:8px}.ai-run::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid #7cc4ff55;border-top-color:#d6efff;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -273,7 +275,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
         <div class="field" hidden><span>Nez</span><div class="chips" id="cNose"></div></div>
         <div class="field" hidden><span>Bouche</span><div class="chips" id="cMouth"></div></div>
         <div class="toggles"><button type="button" class="tog" id="tBeard" aria-pressed="false">Barbe<i></i></button><button type="button" class="tog" id="tGlasses" aria-pressed="false">Lunettes<i></i></button></div>
-        <div class="field" id="fGlasses" hidden><span>Monture</span><div class="chips" id="cGlasses"></div></div>
+        <div class="field" id="fGlasses" hidden><span>Monture</span><div class="chips" id="cGlasses"></div><div class="chips" id="cFrame" style="margin-top:8px"></div></div>
       </div>
       <div class="group">
         <h3>Cheveux</h3>
@@ -639,18 +641,23 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
   const bodyCode = l => ((l.body == null ? A.BODY_NEUTRAL : l.body) & 0xfff) | ((hsteps(l.height) & 3) << 12) | (l.female ? 1 << 14 : 0);
   // code : "AE-XXXXXXX" (apparence) [+ "-YYYYY" (traits du visage)] [+ "-SSSSBBB" (styles + silhouette)] — les anciens codes restent valides
   A.encode = l => {
-    const face = l.face == null ? A.FACE_NEUTRAL : l.face >>> 0, st = A.packStyle(l), bo = bodyCode(l), ext = st !== 0 || bo !== A.BODY_NEUTRAL;
-    return "AE-" + b32(A.pack(l), 7) + (ext || face !== A.FACE_NEUTRAL ? "-" + b32(face, 5) : "") + (ext ? "-" + b32(st, 4) + b32(bo, 3) : "");
+    const det = !!A.detailDecode(l.detail);
+    const face = l.face == null ? A.FACE_NEUTRAL : l.face >>> 0, st = A.packStyle(l), bo = bodyCode(l), ext = det || st !== 0 || bo !== A.BODY_NEUTRAL;
+    return "AE-" + b32(A.pack(l), 7) + (ext || face !== A.FACE_NEUTRAL ? "-" + b32(face, 5) : "") + (ext ? "-" + b32(st, 4) + b32(bo, 3) : "") + (det ? "-D" + l.detail.toUpperCase() : "");
   };
   // lecture d'un code (même logique que MenuBootstrap.TryDecodeLook dans le jeu) → apparence complète, ou null
   A.decode = code => {
     let c = String(code || "").toUpperCase().replace(/\s/g, "");
     if (c.startsWith("AE-")) c = c.slice(3); else if (c.startsWith("AE")) c = c.slice(2);   // un code valide ne commence jamais par « A »
+    // détails du scan : segment « D » + 29 caractères (ou, sans tirets, les 30 derniers caractères d'un code de 49)
+    let detail = ""; const seg = c.split("-"), ds = seg.findIndex(t => t.length === 30 && t[0] === "D");
+    if (ds >= 0) { const t = seg[ds].slice(1); seg.splice(ds, 1); c = seg.join(""); if (A.detailDecode(t)) detail = t; }
+    else { c = c.replace(/-/g, ""); if (c.length === 49 && c[19] === "D" && A.detailDecode(c.slice(20))) { detail = c.slice(20); c = c.slice(0, 19); } }
     c = c.replace(/-/g, "");
     if (c.length !== 7 && c.length !== 12 && c.length !== 19) return null;
     const num = t => { let v = 0; for (const ch of t) { const k = A.ALPH.indexOf(ch); if (k < 0) return NaN; v = v * 32 + k; } return v; };
     const v = num(c.slice(0, 7)); if (!(v >= 0 && v <= 0xffffffff)) return null;
-    const l = A.unpack(v >>> 0); l.face = A.FACE_NEUTRAL; l.body = A.BODY_NEUTRAL; l.female = false;
+    const l = A.unpack(v >>> 0); l.face = A.FACE_NEUTRAL; l.body = A.BODY_NEUTRAL; l.female = false; l.detail = detail;
     Object.assign(l, { eyeShape: 0, brows: 0, nose: 0, mouth: 0, faceShape: 0, glassesStyle: 0 });
     if (c.length >= 12) { const f = num(c.slice(7, 12)); if (!(f >= 0 && f < 1 << 24)) return null; l.face = f; }
     if (c.length === 19) {
@@ -659,6 +666,43 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
       l.body = bo & 0xfff; l.height = Math.round((l.height + ((bo >> 12) & 3) * .0125) * 10000) / 10000; l.female = !!((bo >> 14) & 1);
     }
     return l;
+  };
+  // détails du scan (segment « -D » du code, 29 caractères) : couleurs exactes (peau, cheveux, yeux : 3 × 18 bits), 20 réglages
+  // du visage (4 bits, 7 = neutre), couleur de la monture (3 bits), densité de la barbe (2 bits), couleurs valides (1 bit).
+  // Même format que AetherDetail dans le jeu (le visage du personnage VRoid y est sculpté d'après ces réglages).
+  A.DETAIL_KEYS = ["fw","fl","jaw","chinL","chinW","cheek","es","ed","et","eo","bh","bt","ba","bs","nw","nl","np","mw","lt","mc"];
+  A.FRAME_NAMES = ["Noire","Écaille","Dorée","Argentée","Rouge","Bleue","Transparente","Blanche"];
+  A.FRAMES = [[.06,.06,.07],[.32,.18,.09],[.83,.66,.3],[.75,.77,.8],[.62,.1,.12],[.16,.26,.55],[.85,.85,.88],[.97,.97,.97]];
+  A.detailEncode = d => {
+    const bits = [], put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >> i) & 1); };
+    const rgb = c => (c || [0, 0, 0]).map(v => Math.max(0, Math.min(63, Math.round(v * 63)))).reduce((a, v) => a * 64 + v, 0);
+    put(1, 5); put(rgb(d.skin), 18); put(rgb(d.hair), 18); put(rgb(d.eye), 18);
+    for (let i = 0; i < 20; i++) put(Math.max(0, Math.min(14, Math.round(((d.m && d.m[i]) || 0) * 7) + 7)), 4);
+    put((d.frame | 0) & 7, 3); put((d.beard | 0) & 3, 2); put(d.colors ? 1 : 0, 1);
+    let out = ""; for (let i = 0; i < bits.length; i += 5) { let v = 0; for (let k = 0; k < 5; k++) v = v * 2 + (bits[i + k] || 0); out += A.ALPH[v]; }
+    return out;
+  };
+  A.detailDecode = t => {
+    t = String(t || "").toUpperCase(); if (t.length !== 29) return null;
+    const bits = []; for (const ch of t) { const k = A.ALPH.indexOf(ch); if (k < 0) return null; for (let b = 4; b >= 0; b--) bits.push((k >> b) & 1); }
+    let p = 0; const rd = n => { let v = 0; for (let i = 0; i < n; i++) v = v * 2 + bits[p++]; return v; };
+    if (rd(5) !== 1) return null;
+    const rgb = v => [((v >> 12) & 63) / 63, ((v >> 6) & 63) / 63, (v & 63) / 63];
+    const d = { skin: rgb(rd(18)), hair: rgb(rd(18)), eye: rgb(rd(18)), m: [] };
+    for (let i = 0; i < 20; i++) d.m.push((Math.min(14, rd(4)) - 7) / 7);
+    d.frame = rd(3); d.beard = rd(2); d.colors = rd(1) === 1;
+    return d;
+  };
+  // part d'un style choisi à la main (forme du visage, nez, yeux, sourcils, bouche) dans les 20 réglages — comme FromLegacy dans le jeu
+  A.styleDelta = (key, v) => {
+    const m = new Array(20).fill(0); v = v | 0;
+    if (key === "faceShape") { const f = A.FACE_SHAPES[v] || [0, 0, 0, 0]; m[4] += .6 * f[0] + .4 * f[1] - .6 * f[2]; m[2] += .2 * f[0] + .8 * f[1]; m[5] += .8 * f[2]; m[1] += .8 * f[3]; }
+    if (key === "nose") { const n = A.NOSES[v] || [0, 0, 0]; m[14] += n[0]; m[16] += n[1]; m[15] -= n[2]; }
+    const T = { eyeShape: { 1: [[9, .7]], 2: [[9, -.4], [8, .4]], 3: [[9, -.6]], 4: [[8, -.8]], 5: [[8, .8]], 6: [[9, -.5]], 7: [[6, .7]] },
+      brows: { 1: [[12, -.8]], 2: [[12, .8]], 3: [[11, .8]], 4: [[11, -.7]], 5: [[13, .8]], 6: [[13, -.6]] },
+      mouth: { 1: [[18, -.8]], 2: [[18, .8]], 3: [[17, .7]], 4: [[17, -.7]], 5: [[19, .8]] } };
+    for (const [k, x] of ((T[key] || {})[v] || [])) m[k] += x;
+    return m;
   };
   window.AetherAvatar3D = A;
 })();
@@ -723,13 +767,19 @@ async function loadParts(){   // écran d'accueil : manifeste + planches du pers
 const vrImgs=names=>Promise.all(names.map(n=>vrImg(n)));
 
 // ---------- contrôles ----------
-function swatches(el,list,key){el.innerHTML="";list.forEach((c,i)=>{if(!c)return;const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=css(c);b.dataset.i=i;b.setAttribute("aria-label",key+" "+(i+1));b.onclick=()=>{look[key]=i;refresh()};el.appendChild(b)})}
-function pills(el,names,key){el.innerHTML="";names.forEach((n,i)=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.i=i;b.onclick=()=>{look[key]=i;refresh()};el.appendChild(b)})}
+function swatches(el,list,key){el.innerHTML="";list.forEach((c,i)=>{if(!c)return;const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=css(c);b.dataset.i=i;b.setAttribute("aria-label",key+" "+(i+1));b.onclick=()=>{if(COLOR_OF[key])detailEdit(d=>{d[COLOR_OF[key][0]]=COLOR_OF[key][1][i]});look[key]=i;refresh()};el.appendChild(b)})}
+// détails du scan : une retouche à la main remplace la mesure correspondante (couleur exacte → teinte choisie, style → réglages)
+function detailEdit(fn){const d=A.detailDecode(look.detail);if(!d)return;fn(d);look.detail=A.detailEncode(d)}
+const COLOR_OF={skin:["skin",A.SKINS],eyes:["eye",A.EYES],hairColor:["hair",A.HAIR_COLORS]};
+function pills(el,names,key){el.innerHTML="";names.forEach((n,i)=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.i=i;b.onclick=()=>{
+  if(["faceShape","nose","eyeShape","brows","mouth"].includes(key)){const o=A.styleDelta(key,look[key]),nw=A.styleDelta(key,i);detailEdit(d=>{d.m=d.m.map((v,k)=>Math.max(-1,Math.min(1,v+nw[k]-o[k])))})}
+  look[key]=i;refresh()};el.appendChild(b)})}
 swatches($("swSkin"),A.SKINS,"skin");swatches($("swEyes"),A.EYES,"eyes");swatches($("swHairC"),A.HAIR_COLORS,"hairColor");
 swatches($("swTop"),A.OUTFITS,"top");swatches($("swBot"),A.OUTFITS,"bottom");
 pills($("cHair"),A.HAIR_NAMES,"hair");pills($("cCape"),A.CAPE_NAMES,"cape");
 pills($("cFaceShape"),A.FACE_SHAPE_NAMES,"faceShape");pills($("cEyeShape"),A.EYE_SHAPE_NAMES,"eyeShape");pills($("cBrows"),A.BROW_NAMES,"brows");
 pills($("cNose"),A.NOSE_NAMES,"nose");pills($("cMouth"),A.MOUTH_NAMES,"mouth");pills($("cGlasses"),A.GLASSES_NAMES,"glassesStyle");
+A.FRAME_NAMES.forEach((n,i)=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.i=i;b.onclick=()=>{if(!A.detailDecode(look.detail))look.detail=A.detailEncode({m:[],colors:false});detailEdit(d=>{d.frame=i});refresh()};$("cFrame").appendChild(b)});
 ["Homme","Femme"].forEach((n,i)=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.i=i;b.onclick=()=>{look.female=i===1;refresh()};$("cSex").appendChild(b)});
 $("tBeard").onclick=()=>{look.beard=!look.beard;refresh()};$("tGlasses").onclick=()=>{look.glasses=!look.glasses;refresh()};
 $("height").oninput=e=>{look.height=hOf(+e.target.value);refresh()};
@@ -744,7 +794,7 @@ function refresh(){
   const hi=hIndex(look.height);$("height").value=hi;$("nHeight").textContent=(Math.round(hOf(hi)*1000)/10).toString().replace(".",",")+" % · ≈ "+Math.round(hOf(hi)*REF_CM)+" cm";
   mark($("cFaceShape"),look.faceShape|0);mark($("cEyeShape"),look.eyeShape|0);mark($("cBrows"),look.brows|0);mark($("cNose"),look.nose|0);mark($("cMouth"),look.mouth|0);mark($("cGlasses"),look.glassesStyle|0);
   $("nFaceShape").textContent=A.FACE_SHAPE_NAMES[look.faceShape|0];$("nEyeShape").textContent=A.EYE_SHAPE_NAMES[look.eyeShape|0];
-  $("fGlasses").hidden=!look.glasses;mark($("cSex"),look.female?1:0);
+  $("fGlasses").hidden=!look.glasses;mark($("cSex"),look.female?1:0);{const dd=A.detailDecode(look.detail);mark($("cFrame"),dd?dd.frame:0)}
   const bm=A.unpackBody(look.body);for(const k in BODY_IN){const v=Math.round(bm[k]*3);$(BODY_IN[k]).value=v;$("n"+k[0].toUpperCase()+k[1]).textContent=A.BODY_NAMES[k][v+3]}
   if(look.female&&look.beard)look.beard=false;$("tBeard").hidden=!!look.female;$("tBeard").setAttribute("aria-pressed",!!look.beard);$("tGlasses").setAttribute("aria-pressed",!!look.glasses);
   const code=A.encode(look);$("code").textContent=code;$("code").classList.toggle("long",code.length>10);$("lookBadge").textContent=code;$("lookBadge").classList.toggle("long",code.length>10);
@@ -765,7 +815,8 @@ const lum3=c=>.2126*c[0]+.7152*c[1]+.0722*c[2];
 // réglages d'un look (couleurs : AetherVrmLook.ApplyPlayer)
 function vrParams(l){
   const pick=(L,i)=>L[Math.max(0,Math.min(L.length-1,i|0))];   // comme le jeu : indice ramené dans la palette
-  const skin=pick(A.SKINS,l.skin),hc=pick(A.HAIR_COLORS,l.hairColor),eye=pick(A.EYES,l.eyes),top=pick(A.OUTFITS,l.top),bot=pick(A.OUTFITS,l.bottom).map(v=>v*.85);
+  const dt=A.detailDecode(l.detail),dc=dt&&dt.colors;   // couleurs exactes du scan (comme AetherVrmLook.Skin / Hair / Eye)
+  const skin=dc?dt.skin:pick(A.SKINS,l.skin),hc=dc?dt.hair:pick(A.HAIR_COLORS,l.hairColor),eye=dc?dt.eye:pick(A.EYES,l.eyes),top=pick(A.OUTFITS,l.top),bot=pick(A.OUTFITS,l.bottom).map(v=>v*.85);
   const T=new Float32Array([1,1,1,...skin,...eye,...top,...bot,.3,.2,.13]);   // zones : rien, peau, iris, haut, bas, chaussures (cuir)
   const sh=Math.max(0,Math.min(1,lum3(skin.map(v=>Math.pow(v,2.2)))/.8)),sk=.6+.4*sh;
   const bc=hc.map((v,i)=>v*.8+(skin[i]*.5-v*.8)*.15),lb=lum3(bc),s=Math.max(0,Math.min(1,(lb-.3)/.45)),kB=.88*(1-.35*s*s*(3-2*s));
@@ -774,7 +825,7 @@ function vrParams(l){
 }
 // coiffure : comme AetherVrmLook.HairResource (hors liste → « Court »)
 const vrHair=h=>(h|0)>=0&&(h|0)<=22?h|0:1;
-const vrKey=l=>[l.female?1:0,l.skin|0,l.hairColor|0,l.eyes|0,l.top|0,l.bottom|0,vrHair(l.hair),l.beard?1:0,l.glasses?(l.glassesStyle|0):-1].join(",");
+const vrKey=l=>[l.female?1:0,l.skin|0,l.hairColor|0,l.eyes|0,l.top|0,l.bottom|0,vrHair(l.hair),l.beard?1:0,l.glasses?(l.glassesStyle|0):-1,(l.detail||"").slice(0,12)].join(",");
 // une image : b = [planche, x, y, fx, fy, w, h] (4 calques côte à côte), g = idem (6 montures côte à côte),
 // h = [x, y, fx, fy, w, h, (dx, dy)] (mèches + profondeur sur le cadre des lunettes) → RGBA prémultiplié sur le cadre réuni
 function vrCompose(b,bim,g,gim,h,him,P){
@@ -1177,7 +1228,12 @@ async function analyse(img){
     traits=faceTraits(M);res.look.face=A.packFace(traits);
     styles=faceStyles(M,S,res.skin);window.__styles=styles.raw;
     for(const k of ["eyeShape","brows","nose","mouth","faceShape"])res.look[k]=styles[k];
-  }else{st.textContent="Lecture approximative (visage non repéré)…";res=readRough(px,W,H,S)}
+    // détails pour le jeu : couleurs exactes, 20 réglages du visage, monture, barbe (segment « D » du code)
+    const fd=faceDetail(M,S,res.skin),rw=res.raw,bA=beardAmount(rw.beard,look.female);window.__fd=fd;
+    if(!look.female)res.look.beard=bA>0;
+    res.look.detail=A.detailEncode({skin:mixC(rw.skin,A.SKINS[res.look.skin],.25),hair:rw.bald?A.HAIR_COLORS[look.hairColor]:mixC(rw.hairC,A.HAIR_COLORS[res.look.hairColor],.2),
+      eye:mixC(rw.iris,A.EYES[res.look.eyes],.3),m:fd.m,frame:rw.frame,beard:bA,colors:true});
+  }else{st.textContent="Lecture approximative (visage non repéré)…";res=readRough(px,W,H,S);res.look.detail=""}
   Object.assign(look,res.look);if(look.female)look.beard=false;   // pas de barbe pour une femme
   fr.classList.remove("scanning");
   const chips=()=>{$("found").innerHTML="";
@@ -1187,6 +1243,12 @@ async function analyse(img){
   chips();
   const warn=t=>{const s=document.createElement("span");s.className="chip warn";s.textContent=t;$("found").append(s)};
   if(!M)warn("Visage mal repéré : ajuste à la main");
+  // lunettes incertaines : on demande (la photo ne suffit pas toujours, monture fine ou reflets)
+  const gq=res.raw&&res.raw.glassesP;
+  if(gq!=null&&gq>.25&&gq<.75){const s=document.createElement("span");s.className="chip ask";s.append("Tu portes des lunettes ? ");
+    for(const [t,v] of [["Oui",true],["Non",false]]){const b=document.createElement("button");b.type="button";b.className="mini";b.textContent=t;
+      b.onclick=()=>{look.glasses=v;if(v&&!(look.glassesStyle>=0))look.glassesStyle=0;refresh();s.remove();chips();toast(v?"Lunettes ajoutées":"Sans lunettes")};s.append(b)}
+    $("found").append(s)}
   else{const xl=M[234][0],xr=M[454][0],yaw=(M[1][0]-xl)/((xr-xl)||1)-.5;if(Math.abs(yaw)>.17)warn("Visage tourné : une photo bien de face sera plus fidèle");
     if(res.skin&&L(res.skin)<28)warn("Photo sombre : la couleur de peau peut être faussée")}
   refresh();setView("face");
@@ -1194,6 +1256,65 @@ async function analyse(img){
   setTimeout(()=>setView("body"),3200);
   }finally{busy=false}
 }
+// ---------- lunettes : arêtes de la monture autour des yeux (pont du nez, bas des cercles, bords externes), verres teintés ----------
+// f : 10 mesures (force / continuité / alignement de chaque arête, assombrissement des verres) → probabilité (GLASSES_W, réglée
+// sur des centaines de photos avec et sans lunettes) ; fp : pixels de la monture (sa couleur)
+function glassesRead(px,W,H,M){
+  const gr=(x,y)=>{x=Math.max(0,Math.min(W-2,x));y=Math.max(0,Math.min(H-2,y));const x0=x|0,y0=y|0,fx=x-x0,fy=y-y0,g=(a,b)=>{const i=(b*W+a)*4;return px[i]*.299+px[i+1]*.587+px[i+2]*.114};
+    return (g(x0,y0)*(1-fx)+g(x0+1,y0)*fx)*(1-fy)+(g(x0,y0+1)*(1-fx)+g(x0+1,y0+1)*fx)*fy};
+  const col=(x,y)=>{x=Math.max(0,Math.min(W-1,Math.round(x)));y=Math.max(0,Math.min(H-1,Math.round(y)));const i=(y*W+x)*4;return[px[i]/255,px[i+1]/255,px[i+2]/255]};
+  const cR=[(M[33][0]+M[133][0])/2,(M[33][1]+M[133][1])/2],cL=[(M[263][0]+M[362][0])/2,(M[263][1]+M[362][1])/2];
+  let ex=[cL[0]-cR[0],cL[1]-cR[1]];const D=Math.hypot(ex[0],ex[1])||1;ex=[ex[0]/D,ex[1]/D];const ey=[-ex[1],ex[0]];
+  const ew=(Math.hypot(M[33][0]-M[133][0],M[33][1]-M[133][1])+Math.hypot(M[263][0]-M[362][0],M[263][1]-M[362][1]))/2||1;
+  const P=(c,u,v)=>[c[0]+u*ex[0]+v*ey[0],c[1]+u*ex[1]+v*ey[1]];
+  const st=Math.max(.7,ew/22);
+  const nz=[];for(const k of [50,280,205,425])for(let a=-2;a<=2;a++)for(let b=-2;b<=2;b++){const x=M[k][0]+a*st,y=M[k][1]+b*st;nz.push(Math.abs(gr(x,y+st)-gr(x,y-st)),Math.abs(gr(x+st,y)-gr(x-st,y)))}
+  nz.sort((a,b)=>a-b);const noise=nz[nz.length>>1]+1.5;
+  // le long de « a », arête la plus forte en travers (gradient le long de « b ») : force médiane, continuité, alignement
+  const scan=(c,a0,a1,b0,b1,alongU)=>{const out=[];
+    for(let a=a0;a<=a1+1e-6;a+=st){let best=0,bp=0;for(let b=b0;b<=b1+1e-6;b+=st*.5){
+      const p0=alongU?P(c,a,b-st):P(c,b-st,a),p1=alongU?P(c,a,b+st):P(c,b+st,a);const g=Math.abs(gr(p1[0],p1[1])-gr(p0[0],p0[1]));if(g>best){best=g;bp=b}}
+      out.push([best,bp,a])}
+    const sv=out.map(o=>o[0]).sort((x,y)=>x-y),med=sv[sv.length>>1]/noise;
+    let cont=0;for(let i=1;i<out.length;i++)if(Math.abs(out[i][1]-out[i-1][1])<.09*ew)cont++;
+    const ps=out.map(o=>o[1]).sort((x,y)=>x-y),pm=ps[ps.length>>1],near=out.filter(o=>Math.abs(o[1]-pm)<.12*ew).length/out.length;
+    return{s:med,c:out.length>1?cont/(out.length-1):0,n:near,out,c0:c,u:alongU}};
+  const mid=[(M[133][0]+M[362][0])/2,(M[133][1]+M[362][1])/2];
+  const bridge=scan(mid,-.3*ew,.3*ew,-.6*ew,.25*ew,true);
+  const rimR=scan(cR,-.45*ew,.45*ew,.42*ew,1.15*ew,true),rimL=scan(cL,-.45*ew,.45*ew,.42*ew,1.15*ew,true);
+  const outR=scan(cR,-.35*ew,.45*ew,-1.05*ew,-.6*ew,false),outL=scan(cL,-.35*ew,.45*ew,.6*ew,1.05*ew,false);
+  const lum=(c,r)=>{let t=0,n=0;for(let a=-r;a<=r;a+=st)for(let b=-r*.5;b<=r*.5;b+=st){const q=P(c,a,b);t+=gr(q[0],q[1]);n++}return t/n};
+  let ck=0,cn=0;for(const k of [50,280])for(let a=-3;a<=3;a++)for(let b=-3;b<=3;b++){ck+=gr(M[k][0]+a*st,M[k][1]+b*st);cn++}
+  const dark=(lum(cR,.35*ew)+lum(cL,.35*ew))/2/(ck/cn+1);
+  const f=[bridge.s,bridge.c,bridge.n,(rimR.s+rimL.s)/2,(rimR.c+rimL.c)/2,(rimR.n+rimL.n)/2,(outR.s+outL.s)/2,(outR.c+outL.c)/2,(outR.n+outL.n)/2,dark];
+  const fp=[];for(const sc of [bridge,rimR,rimL])for(const o of sc.out){if(o[0]<noise*2.5)continue;
+    const a=P(sc.c0,o[2],o[1]-st*1.5),b=P(sc.c0,o[2],o[1]+st*1.5),ca=col(a[0],a[1]),cb=col(b[0],b[1]);fp.push(L(ca)<L(cb)?ca:cb)}
+  return{f,fp,ew,noise};
+}
+// réglages appris (voir plus bas) : FACE_CAL[clé] = [moyenne, écart] ; GLASSES_FIT = [biais, 10 poids, 10 moyennes, 10 écarts]
+// mesurés sur 451 visages (photos de face, hommes et femmes) ; lunettes : 234 visages avec / sans lunettes (90 % de réussite,
+// 97 % hors de la zone incertaine où l'appli demande)
+const FACE_CAL={"fw":[2.3381,0.1057],"fl":[0.8013,0.0366],"jaw":[0.8067,0.0216],"chinL":[0.2944,0.038],"chinW":[0.3279,0.0196],"cheek":[0.9099,0.0161],"es":[0.4056,0.0254],"ed":[0.5962,0.0252],"et":[0.7611,1.5048],"eo":[0.3477,0.0466],"bh":[0.4773,0.0932],"bt":[0.437,0.1568],"ba":[0.2239,0.0274],"bs":[-0.2618,0.072],"nw":[0.7242,0.0467],"nl":[0.4072,0.0418],"np":[0.1261,0.0562],"mw":[0.9309,0.1275],"lt":[0.2664,0.0618],"mc":[0.0477,0.0578]};
+const GLASSES_FIT=[1.0091,3.2732,-0.1963,0.4269,1.541,0.2116,-0.5226,-1.2506,0.0255,-0.0831,0.429,6.7972,0.7452,0.6636,6.3693,0.8455,0.7618,4.3553,0.7303,0.679,0.5234,6.8174,0.1574,0.2192,5.2391,0.1006,0.1758,2.1941,0.1006,0.1284,0.2433];
+function glassesProb(f){const w=GLASSES_FIT;if(!w)return 0;let z=w[0];for(let i=0;i<f.length;i++)z+=w[i+1]*(f[i]-w[11+i])/w[21+i];return 1/(1+Math.exp(-z))}
+function frameColor(fp){const c=tmed(fp,.1,.6);if(!c)return 0;let bi=0,bd=1e9;A.FRAMES.forEach((q,i)=>{const d=dE(c,q);if(d<bd){bd=d;bi=i}});return bi}
+// ---------- visage : 20 mesures sur le maillage, comparées à des centaines de visages (FACE_CAL : moyenne, écart) ----------
+function faceDetail(M,S,skin){
+  const cx=(M[33][0]+M[263][0])/2,cy=(M[33][1]+M[263][1])/2,an=-Math.atan2(M[263][1]-M[33][1],M[263][0]-M[33][0]),co=Math.cos(an),si=Math.sin(an);
+  const R=i=>{const x=M[i][0]-cx,y=M[i][1]-cy;return[x*co-y*si,x*si+y*co]};
+  const d=(a,b)=>{const p=R(a),q=R(b);return Math.hypot(p[0]-q[0],p[1]-q[1])};
+  const st=faceStyles(M,S,skin).raw;
+  const W=d(234,454),ew=(d(33,133)+d(362,263))/2,ipd=Math.abs((R(33)[0]+R(133)[0])/2-(R(263)[0]+R(362)[0])/2)||1;
+  const eyeY=(R(33)[1]+R(133)[1]+R(263)[1]+R(362)[1])/4,chinY=R(152)[1],Hl=(chinY-eyeY)||1;
+  const raw={fw:W/ipd,fl:Hl/W,jaw:d(172,397)/W,chinL:(chinY-R(17)[1])/Hl,chinW:d(176,400)/W,cheek:d(123,352)/W,es:ew/ipd,ed:d(133,362)/ipd,
+    et:st.tilt,eo:st.open,bh:((R(159)[1]-R(52)[1])+(R(386)[1]-R(282)[1]))/2/ew,bt:st.bth,ba:st.arch,bs:st.slope,
+    nw:d(129,358)/ipd,nl:(R(2)[1]-eyeY)/Hl,np:st.proj,mw:d(61,291)/ipd,lt:st.lips,mc:st.smile};
+  const m=A.DETAIL_KEYS.map(k=>{const c=FACE_CAL[k];if(!c)return 0;return Math.max(-1,Math.min(1,(raw[k]-c[0])/(c[1]*1.6)))});
+  return{raw,m};
+}
+// barbe : 0 aucune, 1 de quelques jours, 2 courte, 3 fournie
+function beardAmount(b,female){if(female||!b)return 0;if(b.beard)return b.darkF>.6?3:2;return b.darkF>.3&&b.tex>1.15?1:0}
+const mixC=(a,b,t)=>a.map((v,i)=>v*(1-t)+b[i]*t);
 function readWithLandmarks(px,W,H,S,P,M,mk){
   const mid=(a,b)=>[(P[a][0]+P[b][0])/2,(P[a][1]+P[b][1])/2],avg=ids=>ids.reduce((s,i)=>[s[0]+P[i][0]/ids.length,s[1]+P[i][1]/ids.length],[0,0]);
   const faceW=Math.hypot(P[16][0]-P[0][0],P[16][1]-P[0][1]),browY=Math.min(P[19][1],P[24][1]),chinY=P[8][1],faceH=chinY-browY,cx=(P[0][0]+P[16][0])/2;
@@ -1247,12 +1368,14 @@ function readWithLandmarks(px,W,H,S,P,M,mk){
   const bridge=lapEnergy(px,W,H,P[39][0],P[27][1]-faceH*.05,P[42][0],P[28][1]);
   const cheek=lapEnergy(px,W,H,cl[0]-r,cl[1]-r,cl[0]+r,cl[1]+r)+1;
   const ring=lapEnergy(px,W,H,P[36][0]-faceW*.05,P[37][1]-faceH*.12,P[45][0]+faceW*.05,P[37][1]-faceH*.05)+1;
-  const glasses=bridge/cheek>3.2&&ring/cheek>2.6;
+  const gl=glassesRead(px,W,H,M),gp=glassesProb(gl.f);window.__gl={f:gl.f.map(v=>+v.toFixed(3)),p:+gp.toFixed(3)};
+  const glasses=gp>.5;
   const glassesStyle=glasses?frameStyle(S,M,skin):look.glassesStyle|0;
   // vêtement : sous le menton
   const shirt=tmed(S.rect(cx-faceW*.5,chinY+faceH*.55,cx+faceW*.5,chinY+faceH*1.1).filter(c=>dE(c,bg)>10))||[.15,.15,.18];
   // dessin des repères
-  return{look:{skin:nearest(skin,A.SKINS),hair,hairColor:bald?look.hairColor:nearest(hairC,A.HAIR_COLORS,[4,6,7]),eyes,beard,glasses,glassesStyle,top:nearest(shirt,A.OUTFITS)},skin};
+  return{look:{skin:nearest(skin,A.SKINS),hair,hairColor:bald?look.hairColor:nearest(hairC,A.HAIR_COLORS,[4,6,7]),eyes,beard,glasses,glassesStyle,top:nearest(shirt,A.OUTFITS)},skin,
+    raw:{skin,hairC,iris,bald,beard:{beard,darkF,tex},glassesP:gp,frame:frameColor(gl.fp),glF:gl.f}};
 }
 function readRough(px,W,H,S){
   const isSkin=c=>{const [R,G,B]=c.map(v=>v*255);return R>60&&G>30&&B>15&&R>G&&R>B&&(R-Math.min(G,B))>12&&R-B<170};
