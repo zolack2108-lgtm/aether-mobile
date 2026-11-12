@@ -900,7 +900,8 @@ function vrPosMap(S,v,i){
   const key=S+v+i;if(VPOS[key])return VPOS[key];
   const e=v==="portrait"?PM.portrait[S]:(PM.views[S][v].fr[i]||null);if(!e)return VPOS[key]=0;
   const file=v==="portrait"?PM.portrait.file:PM.views[S][v].files[e[0]],qfile=v==="portrait"?PM.portrait.file:PM.views[S][v].files[e[8]];
-  const im=VR.img[file],iq=VR.img[qfile];if(!im||!iq){vrImgs([file,qfile]).catch(()=>{});return null}
+  const im=VR.img[file],iq=VR.img[qfile];
+  if(!im||!iq){if(VR.fail[file]||VR.fail[qfile])return 0;vrImgs([file,qfile]).catch(()=>{});return null}   // planche absente : aperçu sans sculpture
   const [p,x,y,fx,fy,w,h,k,,xq,yq]=e,D=vrRead(im,x,y,w,h).slice(),Q=vrRead(iq,xq,yq,w,h),R=PM.range,hd=PM.head[S];
   const P=new Float32Array(w*h*3),part=new Int8Array(w*h).fill(-1);
   const ax=(R.x[1]-R.x[0])/254,ay=(R.y[1]-R.y[0])/254,az=(R.z[1]-R.z[0])/254;
