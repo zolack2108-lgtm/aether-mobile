@@ -274,7 +274,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
         <div class="field"><span>Sourcils</span><div class="chips" id="cBrows"></div></div>
         <div class="field"><span>Nez</span><div class="chips" id="cNose"></div></div>
         <div class="field"><span>Bouche</span><div class="chips" id="cMouth"></div></div>
-        <div class="field" id="fBeard"><span>Barbe <em id="nBeard"></em></span><div class="chips" id="cBeard"></div><div class="chips" id="cBeardD" style="margin-top:8px"></div></div>
+        <div class="field" id="fBeard"><span>Barbe <em id="nBeard"></em></span><div class="chips" id="cBeard"></div><div class="chips" id="cBeardD" style="margin-top:8px"></div><div class="chips" id="cBeardT" style="margin-top:8px"></div></div>
         <div class="toggles"><button type="button" class="tog" id="tGlasses" aria-pressed="false">Lunettes<i></i></button></div>
         <div class="field" id="fGlasses" hidden><span>Monture</span><div class="chips" id="cGlasses"></div><div class="chips" id="cFrame" style="margin-top:8px"></div></div>
       </div>
@@ -674,14 +674,17 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
   A.DETAIL_KEYS = ["fw","fl","jaw","chinL","chinW","cheek","es","ed","et","eo","bh","bt","ba","bs","nw","nl","np","mw","lt","mc"];
   A.FRAME_NAMES = ["Noire","Écaille","Dorée","Argentée","Rouge","Bleue","Transparente","Blanche"];
   A.FRAMES = [[.06,.06,.07],[.32,.18,.09],[.83,.66,.3],[.75,.77,.8],[.62,.1,.12],[.16,.26,.55],[.85,.85,.88],[.97,.97,.97]];
-  // version 2 (30 caractères) : + style de la barbe (3 bits : 0 complète, 1 bouc, 2 bouc + moustache, 3 moustache, 4 collier) + 2 bits libres
+  // version 2 (30 caractères) : + style de la barbe (3 bits : 0 complète, 1 bouc, 2 bouc + moustache, 3 moustache, 4 collier) + teinte (2 bits)
   A.BEARD_NAMES = ["Complète", "Bouc", "Bouc + moustache", "Moustache", "Collier"];
+  // teinte de la barbe (2 bits) : 0 celle des cheveux, sinon brune, rousse ou claire (cheveux teints, barbe naturelle)
+  A.BEARD_TONES = [null, [.22, .15, .10], [.48, .28, .16], [.68, .6, .48]];
+  A.BEARD_TONE_NAMES = ["Comme les cheveux", "Brune", "Rousse", "Claire"];
   A.detailEncode = d => {
     const bits = [], put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >> i) & 1); };
     const rgb = c => (c || [0, 0, 0]).map(v => Math.max(0, Math.min(63, Math.round(v * 63)))).reduce((a, v) => a * 64 + v, 0);
     put(2, 5); put(rgb(d.skin), 18); put(rgb(d.hair), 18); put(rgb(d.eye), 18);
     for (let i = 0; i < 20; i++) put(Math.max(0, Math.min(14, Math.round(((d.m && d.m[i]) || 0) * 7) + 7)), 4);
-    put((d.frame | 0) & 7, 3); put((d.beard | 0) & 3, 2); put(d.colors ? 1 : 0, 1); put((d.bstyle | 0) & 7, 3); put(0, 2);
+    put((d.frame | 0) & 7, 3); put((d.beard | 0) & 3, 2); put(d.colors ? 1 : 0, 1); put((d.bstyle | 0) & 7, 3); put((d.btone | 0) & 3, 2);
     let out = ""; for (let i = 0; i < bits.length; i += 5) { let v = 0; for (let k = 0; k < 5; k++) v = v * 2 + (bits[i + k] || 0); out += A.ALPH[v]; }
     return out;
   };
@@ -693,7 +696,7 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
     const rgb = v => [((v >> 12) & 63) / 63, ((v >> 6) & 63) / 63, (v & 63) / 63];
     const d = { skin: rgb(rd(18)), hair: rgb(rd(18)), eye: rgb(rd(18)), m: [] };
     for (let i = 0; i < 20; i++) d.m.push((Math.min(14, rd(4)) - 7) / 7);
-    d.frame = rd(3); d.beard = rd(2); d.colors = rd(1) === 1; d.bstyle = ver >= 2 ? rd(3) : 0; d.ver = ver;
+    d.frame = rd(3); d.beard = rd(2); d.colors = rd(1) === 1; d.bstyle = ver >= 2 ? rd(3) : 0; d.btone = ver >= 2 ? rd(2) : 0; d.ver = ver;
     return d;
   };
   // part d'un style choisi à la main (forme du visage, nez, yeux, sourcils, bouche) dans les 20 réglages — comme FromLegacy dans le jeu
@@ -788,12 +791,13 @@ A.FRAME_NAMES.forEach((n,i)=>{const b=document.createElement("button");b.type="b
 ["Homme","Femme"].forEach((n,i)=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.i=i;b.onclick=()=>{look.female=i===1;refresh()};$("cSex").appendChild(b)});
 // barbe : style (segment D) et densité ; « Aucune » retire la barbe du code
 const BEARD_PILLS=[["Aucune",-1],["Bouc",1],["Bouc + moustache",2],["Moustache",3],["Collier",4],["Complète",0]],DENS_NAMES=["Légère","Courte","Fournie"];
-function beardState(){const d=A.detailDecode(look.detail);return{st:look.beard?(d?d.bstyle|0:0):-1,dens:d&&d.beard?d.beard:2}}
+function beardState(){const d=A.detailDecode(look.detail);return{st:look.beard?(d?d.bstyle|0:0):-1,dens:d&&d.beard?d.beard:2,tone:d?d.btone|0:0}}
 function beardSet(st,dens){if(st<0){look.beard=false;refresh();return}
   if(!A.detailDecode(look.detail))look.detail=A.detailEncode({m:[],colors:false,beard:dens||2,bstyle:st});
   detailEdit(d=>{d.bstyle=st;if(dens)d.beard=dens;else if(!d.beard)d.beard=2});look.beard=true;refresh()}
 BEARD_PILLS.forEach(([n,st])=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.st=st;b.onclick=()=>beardSet(st,0);$("cBeard").appendChild(b)});
 DENS_NAMES.forEach((n,i)=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.d=i+1;b.onclick=()=>{const s=beardState();beardSet(s.st<0?1:s.st,i+1)};$("cBeardD").appendChild(b)});
+A.BEARD_TONE_NAMES.forEach((n,i)=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=n;b.dataset.t=i;b.onclick=()=>{const s=beardState();beardSet(s.st<0?1:s.st,0);detailEdit(d=>{d.btone=i});refresh()};$("cBeardT").appendChild(b)});
 $("tGlasses").onclick=()=>{look.glasses=!look.glasses;refresh()};
 $("height").oninput=e=>{look.height=hOf(+e.target.value);refresh()};
 // silhouette : 4 réglages de −3 à +3 (packés dans look.body, même format que le jeu)
@@ -811,7 +815,7 @@ function refresh(){
   const bm=A.unpackBody(look.body);for(const k in BODY_IN){const v=Math.round(bm[k]*3);$(BODY_IN[k]).value=v;$("n"+k[0].toUpperCase()+k[1]).textContent=A.BODY_NAMES[k][v+3]}
   if(look.female&&look.beard)look.beard=false;$("fBeard").hidden=!!look.female;
   {const b=beardState();[...$("cBeard").children].forEach(x=>x.setAttribute("aria-pressed",+x.dataset.st===b.st));[...$("cBeardD").children].forEach(x=>x.setAttribute("aria-pressed",b.st>=0&&+x.dataset.d===b.dens));
-   $("cBeardD").hidden=b.st<0;$("nBeard").textContent=b.st<0?"aucune":A.BEARD_NAMES[b.st].toLowerCase()+", "+DENS_NAMES[b.dens-1].toLowerCase()}
+   [...$("cBeardT").children].forEach(x=>x.setAttribute("aria-pressed",b.st>=0&&+x.dataset.t===b.tone));$("cBeardD").hidden=$("cBeardT").hidden=b.st<0;$("nBeard").textContent=b.st<0?"aucune":A.BEARD_NAMES[b.st].toLowerCase()+", "+DENS_NAMES[b.dens-1].toLowerCase()}
   $("tGlasses").setAttribute("aria-pressed",!!look.glasses);
   const code=A.encode(look);$("code").textContent=code;$("code").classList.toggle("long",code.length>10);$("lookBadge").textContent=code;$("lookBadge").classList.toggle("long",code.length>10);
   store("am_look",JSON.stringify(look));
@@ -828,18 +832,19 @@ function vrRead(im,x,y,w,h){
   vrCx.imageSmoothingEnabled=false;vrCx.clearRect(0,0,w,h);vrCx.drawImage(im,x,y,w,h,0,0,w,h);return vrCx.getImageData(0,0,w,h).data;
 }
 const lum3=c=>.2126*c[0]+.7152*c[1]+.0722*c[2];
-// réglages d'un look (couleurs : AetherVrmLook.ApplyPlayer)
+// réglages d'un look (couleurs : AetherVrmLook.ApplyPlayer) ; barbe d'une autre teinte que les cheveux (cheveux teints) : la
+// barbe prend cette teinte, les sourcils vont à mi-chemin
 function vrParams(l){
   const pick=(L,i)=>L[Math.max(0,Math.min(L.length-1,i|0))];   // comme le jeu : indice ramené dans la palette
   const dt=A.detailDecode(l.detail),dc=dt&&dt.colors;   // couleurs exactes du scan (comme AetherVrmLook.Skin / Hair / Eye)
   const skin=dc?dt.skin:pick(A.SKINS,l.skin),hc=dc?dt.hair:pick(A.HAIR_COLORS,l.hairColor),eye=dc?dt.eye:pick(A.EYES,l.eyes),top=pick(A.OUTFITS,l.top),bot=pick(A.OUTFITS,l.bottom).map(v=>v*.85);
   const T=new Float32Array([1,1,1,...skin,...eye,...top,...bot,.3,.2,.13]);   // zones : rien, peau, iris, haut, bas, chaussures (cuir)
   const sh=Math.max(0,Math.min(1,lum3(skin.map(v=>Math.pow(v,2.2)))/.8)),sk=.6+.4*sh;
-  const bc=hc.map((v,i)=>v*.8+(skin[i]*.5-v*.8)*.15),lb=lum3(bc),s=Math.max(0,Math.min(1,(lb-.3)/.45)),kB=.88*(1-.35*s*s*(3-2*s));
+  const tb=dt&&dt.btone?A.BEARD_TONES[dt.btone]:null,bc=(tb||hc.map(v=>v*.8)).map((v,i)=>v+(skin[i]*.5-v)*.15),lb=lum3(bc),s=Math.max(0,Math.min(1,(lb-.3)/.45)),kB=.88*(1-.35*s*s*(3-2*s));
   const hair=vrHair(l.hair),gs=l.glasses?((l.glassesStyle|0)>=0&&(l.glassesStyle|0)<=5?l.glassesStyle|0:0):-1;
   // barbe : densité du scan (comme AetherVrmLook.BeardAlpha), style (segment D version 2)
   const bA=!dt||!dt.beard?.88:dt.beard===1?.42:dt.beard===2?.66:.9;
-  return {T,sk,bc,kB:kB*bA/.88,bz:hc.map((v,i)=>(v+(skin[i]-v)*.35)*.85),br:hc.map(v=>v*.75),hc,hair,gs,beard:!!l.beard&&!l.female,shaved:hair===0,m:lookM(l),bst:dt?dt.bstyle|0:0};
+  return {T,sk,bc,kB:kB*bA/.88,bz:hc.map((v,i)=>(v+(skin[i]-v)*.35)*.85),br:tb?hc.map((v,i)=>v*.75+(tb[i]-v*.75)*.6):hc.map(v=>v*.75),hc,hair,gs,beard:!!l.beard&&!l.female,shaved:hair===0,m:lookM(l),bst:dt?dt.bstyle|0:0};
 }
 // coiffure : comme AetherVrmLook.HairResource (hors liste → « Court »)
 const vrHair=h=>(h|0)>=0&&(h|0)<=22?h|0:1;
@@ -878,7 +883,8 @@ const BEARD_JAW=[[0,-.0582],[.005,-.0581],[.01,-.0574],[.015,-.0525],[.02,-.0516
   [.05,-.0294],[.055,-.025],[.06,-.0182],[.065,-.0104],[.07,-.0018],[.075,.0145],[.08,.0314],[.085,.0483],[.09,.0717]],BEARD_YL=-.019;
 function beardW(st,x,y){
   if(!(st>0))return 1;const ax=Math.abs(x);
-  const goatee=(1-SS(.017,.024,ax))*(1-SS(BEARD_YL-.003,BEARD_YL-.0005,y));
+  // bouc effilé : étroit sous la lèvre (mouche), plus large sur le menton
+  const hw=.009+.012*(1-SS(-.04,-.026,y)),goatee=(1-SS(hw-.0035,hw+.0035,ax))*(1-SS(BEARD_YL-.003,BEARD_YL-.0005,y));
   const ylow=-.006-.012*SS(.012,.026,ax),must=(1-SS(.024,.03,ax))*(1-SS(.0055,.0085,y))*SS(ylow-.002,ylow+.001,y);
   if(st===1)return goatee;if(st===3)return must;
   if(st===2){const g2=(1-SS(.021,.027,ax))*(1-SS(BEARD_YL-.002,BEARD_YL+.0005,y)),conn=SS(.016,.02,ax)*(1-SS(.027,.031,ax))*(1-SS(-.002,.001,y))*SS(BEARD_YL-.008,BEARD_YL-.004,y);return Math.max(g2,must,conn)}
@@ -1204,6 +1210,25 @@ function whiteBalance(px,S,M,img,W){
   for(let i=0;i<px.length;i+=4){px[i]*=g[0];px[i+1]*=g[1];px[i+2]*=g[2]}
   return g;
 }
+// balance par la peau, quand le blanc des yeux ne suffit pas (yeux plissés, paupières) : sous une lumière colorée (LED violette,
+// néon), la peau paraît rose-violet ou verdâtre. Une vraie peau a une teinte Lab entre 25° et 75° : on ramène la teinte du
+// visage dans cette plage (gains par canal à 70 %, luminosité gardée) avant de lire peau, cheveux, yeux et barbe.
+function labRgb(q){const fy=(q[0]+16)/116,fx=fy+q[1]/500,fz=fy-q[2]/200,inv=t=>{const t3=t*t*t;return t3>.008856?t3:(t-16/116)/7.787};
+  const X=inv(fx)*.95047,Y=inv(fy),Z=inv(fz)*1.08883;
+  const r=3.2406*X-1.5372*Y-.4986*Z,g=-.9689*X+1.8758*Y+.0415*Z,b=.0557*X-.204*Y+1.057*Z;
+  return [r,g,b].map(v=>{v=Math.max(0,v);return Math.min(1,v<=.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-.055)})}
+function skinBalance(px,S,M){
+  if(!M||M.length<468)return null;
+  const pts=[50,280,101,330,118,347,205,425,151,9,36,266].flatMap(i=>S.disc(M[i][0],M[i][1],3)).filter(c=>{const l=L(c);return l>15&&l<95});
+  const sk=tmed(pts,.2,.8);if(!sk)return null;
+  const q=lab(sk),h=Math.atan2(q[2],q[1])*180/Math.PI,C=Math.hypot(q[1],q[2]);window.__skh={h:+h.toFixed(1),C:+C.toFixed(1)};
+  if(h>=25&&h<=75)return null;
+  const th=(h<25?42:62)*Math.PI/180,cc=Math.max(14,Math.min(30,C)),tgt=labRgb([q[0],cc*Math.cos(th),cc*Math.sin(th)]);
+  let g=sk.map((v,k)=>Math.min(1.6,Math.max(.6,tgt[k]/Math.max(.02,v))));
+  const lum=g[0]*.2126+g[1]*.7152+g[2]*.0722;g=g.map(v=>1+.7*(v/lum-1));
+  for(let i=0;i<px.length;i+=4){px[i]*=g[0];px[i+1]*=g[1];px[i+2]*=g[2]}
+  return g;
+}
 // ---------- IA du visage : maillage dense (Human / MediaPipe Face Mesh, 478 points) ----------
 const HUMAN_URL="https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/dist/human.js";
 let HU=null;
@@ -1336,7 +1361,7 @@ async function analyse(img){
   if(M){st.textContent=M.length+" points du visage trouvés : maillage en cours…";
     show(box);const seg=segMask(h,cv);if(!window.__noAnim)await drawMesh(dx,M,tri||[]);
     st.textContent="Détourage des cheveux et lecture des traits…";const mk=await seg;
-    const wb=whiteBalance(px,S,M,img,W);window.__wb=wb;
+    const wb=whiteBalance(px,S,M,img,W)||skinBalance(px,S,M);window.__wb=wb;
     const P=M68.map(i=>[M[i][0],M[i][1]]);
     res=readWithLandmarks(px,W,H,S,P,M,mk);
     traits=faceTraits(M);res.look.face=A.packFace(traits);
@@ -1345,14 +1370,16 @@ async function analyse(img){
     // détails pour le jeu : couleurs exactes, 20 réglages du visage, monture, barbe (segment « D » du code)
     const fd=faceDetail(M,S,res.skin,!!look.female,{browCover:window.__hair&&window.__hair.browCover}),rw=res.raw,bA=look.female||rw.beard.style<0?0:rw.beard.dens;window.__fd=fd;
     if(!look.female)res.look.beard=bA>0;
-    res.look.detail=A.detailEncode({skin:mixC(rw.skin,A.SKINS[res.look.skin],.25),hair:rw.bald?A.HAIR_COLORS[look.hairColor]:mixC(rw.hairC,A.HAIR_COLORS[res.look.hairColor],.2),
-      eye:mixC(rw.iris,A.EYES[res.look.eyes],.3),m:fd.m,frame:rw.frame,beard:bA,bstyle:Math.max(0,rw.beard.style),colors:true});
+    const hairD=rw.bald?A.HAIR_COLORS[look.hairColor]:mixC(rw.hairC,A.HAIR_COLORS[res.look.hairColor],.2);
+    res.look.detail=A.detailEncode({skin:mixC(rw.skin,A.SKINS[res.look.skin],.25),hair:hairD,
+      eye:mixC(rw.iris,A.EYES[res.look.eyes],.3),m:fd.m,frame:rw.frame,beard:bA,bstyle:Math.max(0,rw.beard.style),btone:bA?beardTone(rw.beard.color,hairD,rw.skin):0,colors:true});
   }else{st.textContent="Lecture approximative (visage non repéré)…";res=readRough(px,W,H,S);res.look.detail=""}
   Object.assign(look,res.look);if(look.female)look.beard=false;   // pas de barbe pour une femme
   fr.classList.remove("scanning");
   const chips=()=>{$("found").innerHTML="";
-    const c=[["Peau",A.SKIN_NAMES[look.skin]],["Cheveux",A.HAIR_NAMES[look.hair].toLowerCase()+", "+A.HAIR_COLOR_NAMES[look.hairColor].toLowerCase()],["Yeux",A.EYE_NAMES[look.eyes].toLowerCase()]];
-    if(!look.female){const b=beardState();c.push(["Barbe",b.st<0?"non":A.BEARD_NAMES[b.st].toLowerCase()])}c.push(["Lunettes",look.glasses?A.GLASSES_NAMES[look.glassesStyle|0].toLowerCase():"non"]);
+    const dd=A.detailDecode(look.detail),tint=dd&&dd.colors&&!(res.raw&&res.raw.bald)?hairTint(dd.hair,A.HAIR_COLORS[look.hairColor]):"";
+    const c=[["Peau",A.SKIN_NAMES[look.skin]],["Cheveux",A.HAIR_NAMES[look.hair].toLowerCase()+", "+A.HAIR_COLOR_NAMES[look.hairColor].toLowerCase()+(tint?" à reflets "+tint:"")],["Yeux",A.EYE_NAMES[look.eyes].toLowerCase()]];
+    if(!look.female){const b=beardState();c.push(["Barbe",b.st<0?"non":A.BEARD_NAMES[b.st].toLowerCase()+(b.tone?", "+A.BEARD_TONE_NAMES[b.tone].toLowerCase():"")])}c.push(["Lunettes",look.glasses?A.GLASSES_NAMES[look.glassesStyle|0].toLowerCase():"non"]);
     c.forEach(([k,v])=>{const s=document.createElement("span");s.className="chip";s.append(k+" : ");const b=document.createElement("b");b.textContent=v;s.append(b);$("found").append(s)})};
   chips();
   const warn=t=>{const s=document.createElement("span");s.className="chip warn";s.textContent=t;$("found").append(s)};
@@ -1438,6 +1465,24 @@ function faceDetail(M,S,skin,female,opt){
   return{raw,m};
 }
 const mixC=(a,b,t)=>a.map((v,i)=>v*(1-t)+b[i]*t);
+// reflets d'une couleur de cheveux lue sur la photo, quand le nom de la teinte de la palette ne les dit pas (cheveux teints)
+function hairTint(c,pal){if(!c||!pal)return"";const q=lab(c),C=Math.hypot(q[1],q[2]);if(C<9||dE(c,pal)<10)return"";const h=(Math.atan2(q[2],q[1])*180/Math.PI+360)%360;
+  return h>=290||h<15?"prune":h<40?"acajou":h<65?"cuivrés":h<100?"dorés":h<200?"verts":"bleutés"}
+// teinte de la barbe : une barbe courte mêle poils et peau (la couleur lue est plus claire que les poils). Pour la teinte des
+// cheveux et chaque teinte proposée, on cherche le mélange peau + poils (en lumière linéaire) le plus proche de la couleur lue ;
+// une autre teinte que celle des cheveux n'est retenue que si elle l'explique nettement mieux (cheveux teints, barbe rousse ou
+// grisonnante)
+function beardTone(c,hairC,skin){
+  if(!c||!skin)return 0;
+  const lin=v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4),gam=v=>Math.min(1,Math.max(0,v<=.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-.055));
+  const S=skin.map(lin),fit=t=>{const T=t.map(lin);let b=1e9;for(let a=.2;a<=1.0001;a+=.04)b=Math.min(b,dE(c,S.map((s,i)=>gam(s+(T[i]-s)*a))));return b};
+  const e0=hairC?fit(hairC):1e9;let bi=0,bd=1e9;const er=[e0];
+  // barbe rousse : bien plus colorée (pour sa clarté) que la peau ; une ombre chaude sur la peau (lumière orangée) ne l'est pas
+  // autant, et sur une peau foncée la couleur lue d'une barbe courte est surtout celle de la peau
+  const qv=x=>{const q=lab(x);return Math.hypot(q[1],q[2])/Math.max(5,q[0])},red=L(skin)>=50&&qv(c)>=2*qv(skin);
+  for(let i=1;i<A.BEARD_TONES.length;i++){const e=i===2&&!red?1e9:fit(A.BEARD_TONES[i]);er.push(e);if(e<bd){bd=e;bi=i}}
+  return e0>8&&bd<e0-5?bi:0;
+}
 // ---------- repère du visage redressé (tête penchée) : u vers la droite de l'image, v vers le bas, en pixels de la photo ----------
 // origine : milieu des coins externes des yeux ; Wf : largeur du visage (234–454) ; contour du visage (ovale du maillage)
 const OVAL=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
@@ -1564,21 +1609,37 @@ function beardRead(px,W,H,S,M,fr,skin){
   // peau de référence : joues hautes (sous les yeux, hors nez), un côté à la fois
   const ref=s=>{const c=[];const eu=s<0?(F[33][0]+F[133][0])/2:(F[263][0]+F[362][0])/2,v0=.5*vSn,v1=.92*vSn;
     zscan(fr,S,W,H,eu-.07*Wf,eu+.07*Wf,v0,v1,st,(u,v)=>fr.inside(u,v),(cc)=>c.push(cc));zrec("peau",[eu-.07*Wf,v0,eu+.07*Wf,v1]);
-    const r=tmed(c,.25,.85);return r&&L(r)>L(skin)-12?r:skin};
+    const r=tmed(c,.25,.85);return r&&L(r)>L(skin)-30?r:skin};   // côté du visage dans l'ombre : sa propre peau sert de référence
   const rL=ref(-1),rR=ref(1),rM=mixC(rL,rR,.5);
   // pixel de barbe : plus sombre ET plus terne que la peau (une ombre assombrit sans ternir), ou bien plus terne (barbe grise),
   // ou très sombre
-  const score=(r,pts)=>{if(pts.length<6)return -1;const lr=lab(r),Lr=lr[0],Cr=Math.hypot(lr[1],lr[2]),qr=Cr/Math.max(5,Lr),thr=Math.max(8,.18*Lr);let k=0,dl=0;
+  // ou plus sombre et nettement plus jaune / orangé (barbe châtain, rousse : une ombre garde la teinte de la peau) ;
+  // strict (sous le menton, bas des côtés du menton) : sans les règles « très sombre » (ombre du cou) ni « plus terne » / « plus
+  // clair et terne » (barbe grise ou blanche : un col de chemise, une main sous le menton y ressemblent)
+  const hueOf=q=>Math.atan2(q[2],q[1])*180/Math.PI;
+  const score=(r,pts,strict)=>{if(pts.length<6)return -1;const bp=[];const lr=lab(r),Lr=lr[0],Cr=Math.hypot(lr[1],lr[2]),qr=Cr/Math.max(5,Lr),thr=Math.max(8,.18*Lr),hr=hueOf(lr);let k=0,dl=0;
     for(const c of pts){const q=lab(c),dL=Lr-q[0],C=Math.hypot(q[1],q[2]),qq=C/Math.max(5,q[0]);dl+=dL;
-      if((dL>thr&&qq<.86*qr)||(qq<.5*qr&&dL>-32)||(dL<-5&&dL>-26&&qq<.62*qr)||dL>2.2*thr)k++}
-    return{f:k/pts.length,dL:dl/pts.length}};
-  const zone=(nm,u0,u1,v0,v1,ok,r)=>{const pts=[];zscan(fr,S,W,H,u0,u1,v0,v1,st,ok,c=>pts.push(c));zrec(nm,[u0,v0,u1,v1]);return score(r,pts)};
+      let dh=hueOf(q)-hr;if(dh>180)dh-=360;if(dh<-180)dh+=360;
+      if((dL>thr&&qq<.86*qr)||(!strict&&qq<.5*qr&&dL>-32)||(!strict&&dL<-5&&dL>-26&&qq<.62*qr)||(dL>.8*thr&&dh>14&&C>8&&Cr>8)||(!strict&&dL>2.2*thr)){k++;bp.push(c)}}
+    return{f:k/pts.length,dL:dl/pts.length,n:pts.length,k,bp}};
+  const zone=(nm,u0,u1,v0,v1,ok,r,strict)=>{const pts=[];zscan(fr,S,W,H,u0,u1,v0,v1,st,ok,c=>pts.push(c));zrec(nm,[u0,v0,u1,v1]);return score(r,pts,strict)};
+  // deux parties d'une zone (la seconde jugée strictement) réunies
+  const join=(a,b)=>a===-1?b:b===-1?a:{f:(a.k+b.k)/(a.n+b.n),dL:(a.dL*a.n+b.dL*b.n)/(a.n+b.n),n:a.n+b.n,k:a.k+b.k,bp:[...a.bp,...b.bp]};
   // moustache : entre le nez et la lèvre, sous la ligne des narines, sans les coins (plis du sourire)
   const mus=zone("moustache",uc-.8*mw,uc+.8*mw,vSn+.3*hU,vUl,(u,v)=>{const t=lipAt(UP,u);return t!==null&&v<t-.12*hU},rM);
   // menton : centre (sous la lèvre jusqu'au bas du menton) et côtés du menton
   const lip=(u,v)=>{const t=lipAt(LO,u);return t===null||v>t+.12*hC};
-  const chin=zone("menton",uc-.38*mw,uc+.38*mw,vLl+.12*hC,vCh-.1*hC,(u,v)=>lip(u,v)&&fr.inside(u,v),rM);
-  const chinL=zone("menton g",uc-.95*mw,uc-.42*mw,vLl+.2*hC,vCh-.18*hC,(u,v)=>lip(u,v)&&fr.inside(u,v),rL),chinR=zone("menton d",uc+.42*mw,uc+.95*mw,vLl+.2*hC,vCh-.18*hC,(u,v)=>lip(u,v)&&fr.inside(u,v),rR);
+  // le bouc pend sous le menton de la peau (repère 152 du maillage) : la zone descend un peu plus bas, jugée strictement
+  // haut du menton (sous la lèvre) et bas du menton : un bouc peut n'occuper que le bas, et pendre sous le menton de la peau
+  // (repère 152 du maillage) ; sous ce repère, jugé strictement
+  const ok1=(u,v)=>lip(u,v)&&fr.inside(u,v);
+  const chinUp=zone("menton",uc-.38*mw,uc+.38*mw,vLl+.12*hC,vLl+.55*hC,ok1,rM);
+  const loIn=zone("menton bas",uc-.38*mw,uc+.38*mw,vLl+.55*hC,vCh-.1*hC,ok1,rM),under=zone("sous le menton",uc-.38*mw,uc+.38*mw,vCh-.1*hC,vCh+.45*hC,null,rM,true);
+  // menton : la meilleure lecture parmi le haut du menton, le menton entier (bouc qui s'arrête au bas du menton) et le bas du
+  // menton avec le dessous (bouc qui pend sous le menton)
+  const chin=[chinUp,join(chinUp,loIn),join(loIn,under)].filter(z=>z!==-1).reduce((a,b)=>a===-1||b.f>a.f?b:a,-1);
+  const chinL=join(zone("menton g",uc-.95*mw,uc-.42*mw,vLl+.3*hC,vCh-.18*hC,ok1,rL),zone("menton g bas",uc-.95*mw,uc-.42*mw,vCh-.18*hC,vCh+.3*hC,null,rL,true)),
+        chinR=join(zone("menton d",uc+.42*mw,uc+.95*mw,vLl+.3*hC,vCh-.18*hC,ok1,rR),zone("menton d bas",uc+.42*mw,uc+.95*mw,vCh-.18*hC,vCh+.3*hC,null,rR,true));
   // joues basses (barbe complète) : entre la commissure et le contour, de la lèvre au bas de la mâchoire
   const cheek=s=>{const u0=s<0?uL-.75*mw:uR+.75*mw;return zone(s<0?"joue g":"joue d",u0,u0+s*.6*Wf,vCo-.1*hC,vCo+.45*hC,(u,v)=>{const e=fr.edge(v,s);return e!==null&&(e-u)*s>.12*Wf&&fr.inside(u,v)},s<0?rL:rR)};
   const ckL=cheek(-1),ckR=cheek(1);
@@ -1595,12 +1656,16 @@ function beardRead(px,W,H,S,M,fr,skin){
   if(Ck>=.42&&chinB>=.45&&(J>=.4||M_>=.35))style=0;
   else if(Ju>=.45&&J>=.45&&Ck<.35&&M_<.4)style=4;
   else if(chinB>=.42&&M_>=.4)style=2;
-  else if(chinB>=.45)style=1;
+  else if(chinB>=.42)style=1;
   else if(M_>=.55)style=3;
   else if((M_+C+Cs+Ck)/4>=.3&&Math.min(M_,chinB,Ck)>=.2&&dLm>10)style=0;   // barbe légère sur tout le bas du visage
   if(style>=0){const key=style===0?(Ck+chinB+J+M_)/4:style===1?chinB:style===2?(chinB+M_)/2:style===3?M_:(J+chinB)/2;
-    dens=key>.72&&dLm>22?3:key>.5?2:1}
-  return{style,dens,zones:{M:M_,C,Cs,Ck,J,Ju},dLm,tex};
+    // un style localisé (bouc, moustache, collier) se voit : au moins « courte »
+    dens=key>.72&&dLm>22?3:key>.5||style>0?2:1}
+  // couleur de la barbe (elle peut différer des cheveux teints) : pixels de barbe des zones du style
+  let color=null;if(style>=0){const zz=style===3?[mus]:style===1?[chin,chinL,chinR]:style===2?[mus,chin,chinL,chinR]:style===4?[jwL,jwR,juL,juR,chin]:[mus,chin,chinL,chinR,ckL,ckR,jwL,jwR];
+    const px2=zz.filter(z=>z!==-1).flatMap(z=>z.bp);if(px2.length>=12)color=tmed(px2,.15,.75)}
+  return{style,dens,zones:{M:M_,C,Cs,Ck,J,Ju},dLm,tex,color};
 }
 
 function readWithLandmarks(px,W,H,S,P,M,mk){
@@ -1609,7 +1674,13 @@ function readWithLandmarks(px,W,H,S,P,M,mk){
   const ok=c=>{const l=L(c);return l>12&&l<92};
   // peau : deux joues + front
   const cl=avg([1,31,41,48]),cr=avg([15,35,46,54]);const r=Math.max(3,faceW*.07);
-  const skinPx=[...S.disc(cl[0],cl[1],r),...S.disc(cr[0],cr[1],r),...S.disc(P[29][0],P[29][1],r*.6)].filter(ok);let skin=tmed(skinPx)||[.8,.62,.5];
+  let skinPx=[...S.disc(cl[0],cl[1],r),...S.disc(cr[0],cr[1],r),...S.disc(P[29][0],P[29][1],r*.6)].filter(ok);
+  // lumière colorée sur les côtés du visage (LED, néon) : on garde les zones de teinte naturelle (teinte Lab de 25° à 75°) parmi
+  // les joues, les pommettes près du nez, le dessous des yeux et l'arête du nez
+  {const zs=[[cl,r],[cr,r],[M[50],r*.7],[M[280],r*.7],[M[118],r*.6],[M[347],r*.6],[P[29],r*.6]].map(([c,rr])=>S.disc(c[0],c[1],rr).filter(ok)).filter(z=>z.length>=6);
+   const hue=c=>{const q=lab(c);return Math.atan2(q[2],q[1])*180/Math.PI},nat=zs.filter(z=>{const h=hue(tmed(z));return h>=25&&h<=75});
+   if(nat.length>=2&&nat.length<zs.length)skinPx=nat.flat()}
+  let skin=tmed(skinPx)||[.8,.62,.5];
   const fhd=S.disc(cx,browY-faceH*.14,r*.8).filter(ok),fhc=tmed(fhd);if(fhc&&dE(fhc,skin)<10)skin=tmed([...skinPx,...fhd])||skin;
   // fond : coins hauts (ou tout ce qui est hors de la silhouette quand la segmentation a marché)
   const inP=(x,y)=>!mk||mk(x,y);
