@@ -371,6 +371,21 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
       <button type="button" class="btn" id="rdvIcs">Ajouter le marché nocturne à mon agenda</button>
       <p class="note">Chaque vendredi de 21 h à 22 h 30 (heure de Paris), rappel 15 minutes avant. Le Sanglier-Roi des Collines sort à 12 h 30, 18 h 30 et 21 h 45 (le vendredi 22 h 40, le week-end aussi 15 h 30).</p>
     </div>
+    <div class="card" id="feteCard">
+      <div class="vie-h"><h2 id="feteNom">La fête</h2><span class="maj" id="feteFin"></span></div>
+      <div class="vie-l"><span>Boss de la fête</span><b id="feteBoss">…</b></div>
+      <div id="feteMoi" hidden>
+        <div class="vie-g">
+          <div class="vie-t"><small>Ta bourse de fête</small><b id="feteBourse">—</b></div>
+          <div class="vie-t"><small>Trésors du jour</small><b id="feteTresors">—</b></div>
+        </div>
+        <div class="vie-q fete-obj" id="feteObjectifs"></div>
+        <h3 class="vie-s">Compagnons de fête</h3>
+        <div class="vie-pan" id="feteComp"></div>
+      </div>
+      <button type="button" class="btn" id="feteIcs">Ajouter les soirs de fête à mon agenda</button>
+      <p class="note" id="feteNote">Chaque trésor caché dans les quartiers rapporte un jeton de fête, le boss de la fête en rapporte 8 (13 avec le dernier coup). On les dépense à l'étal de la fête, sur la grande place du Hall : titre, compagnon, plat de fête ou Lumes.</p>
+    </div>
     <div class="card" id="vieCard" hidden>
       <div class="vie-h"><h2>Ma vie à Aether</h2><span class="maj" id="vieMaj"></span></div>
       <div id="vieVide" class="note">Lance le jeu : ta réputation, ton panier et ta chasse du jour apparaîtront ici.</div>
@@ -448,6 +463,14 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
 .lock{margin-left:auto;font-size:12px;color:var(--ok);white-space:nowrap}
 .dm-chat{flex:1;max-height:none;min-height:0}
 nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
+/* v164 : la fête (bourse, objectifs, compagnons) */
+#feteCard .vie-h{flex-direction:column;align-items:flex-start;gap:2px;margin-bottom:10px}
+#feteCard .btn{margin-top:12px}
+#feteCard .note{margin-top:12px}
+.fete-obj{margin-top:12px}
+.vie-pan span.acquis{border-color:var(--gold-2);color:var(--text)}
+.vie-pan span.acquis::before{content:"✓ ";color:var(--gold)}
+.vie-pan span.porte{background:#1b2850}
 /* v163 : vie de quartier et rendez-vous */
 .vie-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .vie-h h2{margin:0}
@@ -2005,7 +2028,7 @@ function marcheEtat(){
   const t=new Date(Date.UTC(p.getUTCFullYear(),p.getUTCMonth(),p.getUTCDate()+j,21)),ms=t-p;
   const jj=Math.floor(ms/864e5),hh=Math.floor(ms%864e5/36e5),mm=Math.floor(ms%36e5/6e4);
   return{on:false,txt:j===0?"ce soir à 21 h (dans "+(hh?hh+" h ":"")+mm+" min)":(j===1?"demain":"vendredi")+" à 21 h — dans "+(jj?jj+" j ":"")+hh+" h"}}
-function rdvUI(){const m=marcheEtat();const e=$("rdvMarche");if(!e)return;e.textContent=m.txt;e.classList.toggle("on",m.on);$("rdvBoss").textContent=bossProchain()}
+function rdvUI(){const m=marcheEtat();const e=$("rdvMarche");if(!e)return;e.textContent=m.txt;e.classList.toggle("on",m.on);$("rdvBoss").textContent=bossProchain();if(typeof feteUI==="function")feteUI()}
 function icsMarche(){
   const p=parisNow();const j=(5-p.getUTCDay()+7)%7;const d=new Date(Date.UTC(p.getUTCFullYear(),p.getUTCMonth(),p.getUTCDate()+j));
   const ymd=d.toISOString().slice(0,10).replace(/-/g,""),stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z");
@@ -2016,6 +2039,52 @@ function icsMarche(){
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="marche-nocturne-aether.ics";document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast("Ouvre le fichier pour ajouter le rappel à ton agenda")}
 $("rdvIcs").addEventListener("click",icsMarche);
+// ---------- v164 : la fête en cours (mêmes règles que le jeu : AetherSaisons, AetherJetonsFete, AetherBossFete) ----------
+const FJ_ID=["","automne","citrouilles","hiver","veillees","printemps","ete"];
+const FJ_NOM=["","La fête des moissons","La nuit des citrouilles","La fête des lanternes d'hiver","Les veillées d'hiver","La fête du renouveau","La fête du solstice"];
+const FJ_JET=["","épis d'or","bonbons-citrouilles","étoiles de givre","flammes de veillée","œufs peints","soleils d'or"];
+const FJ_TIT=["","Moissonneur d'or","Seigneur des citrouilles","Porteur de lanternes","Gardien des veillées","Enfant du renouveau","Cœur du solstice"];
+const FJ_COMP=["","Feu follet des moissons","Petite citrouille-lanterne","Flocon de cristal","Lumignon des veillées","Fleur des fées","Lanterne du solstice"];
+const FJ_BOSS=["","le Gardien des Moissons","le Chevalier Citrouille","le Roi de Givre","la Sentinelle des Veillées","le Gardien des Floraisons","le Seigneur du Solstice"];
+const FJ_PT=30,FJ_PC=60,FJ_JOURS=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+function feteDu(p){const m=p.getUTCMonth()+1,d=p.getUTCDate();
+  if(m===12||(m===1&&d<=6))return 3;
+  if((m===1&&d>=7)||m===2||(m===3&&d<20))return 4;
+  if((m===3&&d>=20)||m===4||m===5||(m===6&&d<15))return 5;
+  if((m===6&&d>=15)||m===7||m===8||(m===9&&d<22))return 6;
+  if((m===10&&d>=20)||(m===11&&d<=2))return 2;
+  return 1}
+function feteFin(k,p){const m=p.getUTCMonth()+1;return k===3?"jusqu'au 6 janvier":k===4?"jusqu'au 19 mars":k===5?"jusqu'au 14 juin":k===6?"jusqu'au 21 septembre":k===2?"jusqu'au 2 novembre":(m===9||m===10?"jusqu'au 19 octobre":"jusqu'au 30 novembre")}
+function feteHoraires(j){const m=j.getUTCMonth()+1,d=j.getUTCDate(),grand=(m===10&&d===31)||(m===12&&d===24)||(m===2&&d===2)||(m===6&&d===21);return j.getUTCDay()===6?[20.5]:(grand?[21]:[])}
+function feteProchain(){
+  const p=parisNow();
+  for(let k=0;k<9;k++){const j=new Date(Date.UTC(p.getUTCFullYear(),p.getUTCMonth(),p.getUTCDate()+k));
+    for(const h of feteHoraires(j)){const t=new Date(j.getTime()+h*36e5),qui=FJ_BOSS[feteDu(j)];
+      if(p>=t&&p<t.getTime()+15*6e4)return"EN CE MOMENT — "+qui+", au pré de la fête";
+      if(t>p)return qui.charAt(0).toUpperCase()+qui.slice(1)+" — "+(k===0?"ce soir":k===1?"demain soir":FJ_JOURS[j.getUTCDay()])+" à "+vH(h)}}
+  return"—"}
+const FJ_JET1=["","épi d'or","bonbon-citrouille","étoile de givre","flamme de veillée","œuf peint","soleil d'or"];
+const fjN=(n,k)=>n+" "+(n>1?FJ_JET[k]:FJ_JET1[k]);
+function feteUI(){
+  const p=parisNow(),k=feteDu(p);
+  $("feteNom").textContent=FJ_NOM[k];$("feteFin").textContent=feteFin(k,p);$("feteBoss").textContent=feteProchain();
+  const fj=vie&&vie.fj&&vie.fj.k===k?vie.fj:null;$("feteMoi").hidden=!(sess&&fj);if(!fj)return;
+  const n=fj.n|0;$("feteBourse").textContent=fjN(n,k);
+  const f=vie.fete||{};$("feteTresors").textContent=(f.n|0)+" / "+(f.t||8)+((f.n|0)>=(f.t||8)?" ✓":"");
+  const obj=(nom,prix,acquis)=>{const pr=acquis?100:Math.round(100*Math.min(n,prix)/prix);
+    return'<div class="vie-qr"><span class="n">'+vEsc(nom)+'</span><span class="t">'+(acquis?"acquis":Math.min(n,prix)+" / "+prix)+'</span><div class="jauge" role="progressbar" aria-valuenow="'+(acquis?prix:Math.min(n,prix))+'" aria-valuemax="'+prix+'" aria-label="'+vEsc(nom)+'"><i style="width:'+Math.max(3,pr)+'%"></i></div></div>'};
+  $("feteObjectifs").innerHTML=obj("Compagnon : "+FJ_COMP[k],FJ_PC,!!(fj.c&(1<<k)))+obj("Titre « "+FJ_TIT[k]+" »",FJ_PT,!!(fj.t&(1<<k)));
+  $("feteComp").innerHTML=FJ_COMP.slice(1).map((c,i)=>{const a=!!(fj.c&(1<<(i+1)));return'<span class="'+(a?"acquis":"vide")+((fj.p|0)===i+1?" porte":"")+'">'+vEsc(c)+((fj.p|0)===i+1?" · porté":"")+"</span>"}).join("")}
+function icsFete(){
+  const p=parisNow();const j=(6-p.getUTCDay()+7)%7;const d=new Date(Date.UTC(p.getUTCFullYear(),p.getUTCMonth(),p.getUTCDate()+j));
+  const ymd=d.toISOString().slice(0,10).replace(/-/g,""),stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z");
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Aether//Soir de la fete//FR","CALSCALE:GREGORIAN","BEGIN:VEVENT","UID:soir-de-la-fete@aether-royaume","DTSTAMP:"+stamp,
+    "DTSTART;TZID=Europe/Paris:"+ymd+"T203000","DTEND;TZID=Europe/Paris:"+ymd+"T204500","RRULE:FREQ=WEEKLY;BYDAY=SA","SUMMARY:Aether — Boss de la fête",
+    "LOCATION:Pré de la fête\\, au sud des remparts (Aether)","DESCRIPTION:Le boss de la fête en cours sort au pré de la fête. Il rapporte des jetons de fête pour l'étal de la grande place.",
+    "BEGIN:VALARM","TRIGGER:-PT15M","ACTION:DISPLAY","DESCRIPTION:Le boss de la fête d'Aether sort dans 15 minutes","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="boss-de-la-fete-aether.ics";document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast("Ouvre le fichier pour ajouter le rappel à ton agenda")}
+$("feteIcs").addEventListener("click",icsFete);
 async function chargerVie(){if(!sess)return;const r=await sb("GET","/rest/v1/profils?select=vie&id=eq."+sess.id);if(r.ok&&Array.isArray(r.data)&&r.data[0]){vie=r.data[0].vie||null;if(vie&&Array.isArray(vie.sites)&&vie.sites.length)store("am_sites",JSON.stringify(vie.sites));vieUI()}}
 function vieUI(){
   const c=$("vieCard");if(!c)return;c.hidden=!sess;if(!sess)return;
@@ -2030,7 +2099,8 @@ function vieUI(){
   $("vieTitre").textContent=vie.titre||"—";
   const pan=vie.pan||{},mx=vie.panMax||9;$("viePan").innerHTML=Object.keys(VING).map(k=>'<span class="'+((pan[k]|0)?"":"vide")+'">'+VING[k]+'<b>'+(pan[k]|0)+"/"+mx+"</b></span>").join("");
   const art=(vie.art||[]).map((p,k)=>p>0?VART[k][Math.min(2,p)-1]:null).filter(Boolean);
-  $("vieArt").innerHTML=art.length?art.map(a=>"<span>"+vEsc(a)+"</span>").join(""):'<span class="vide">aucun pour l\'instant</span>'}
+  $("vieArt").innerHTML=art.length?art.map(a=>"<span>"+vEsc(a)+"</span>").join(""):'<span class="vide">aucun pour l\'instant</span>';
+  feteUI()}
 rdvUI();setInterval(rdvUI,30000);
 setInterval(()=>{if(sess&&!document.hidden&&Date.now()-vieT>60000){vieT=Date.now();chargerVie()}},5000);
 
