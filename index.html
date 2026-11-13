@@ -364,6 +364,30 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
       <svg aria-hidden="true"><use href="#emblem"/></svg>
       <div class="wordmark">AETHER<small>Le royaume flottant</small></div>
     </div>
+    <div class="card" id="rdvCard">
+      <h2>Rendez-vous du royaume</h2>
+      <div class="vie-l"><span>Marché nocturne</span><b id="rdvMarche">…</b></div>
+      <div class="vie-l"><span>Boss de terrain</span><b id="rdvBoss">…</b></div>
+      <button type="button" class="btn" id="rdvIcs">Ajouter le marché nocturne à mon agenda</button>
+      <p class="note">Chaque vendredi de 21 h à 22 h 30 (heure de Paris), rappel 15 minutes avant. Le Sanglier-Roi des Collines sort à 12 h 30, 18 h 30 et 21 h 45 (le vendredi 22 h 40, le week-end aussi 15 h 30).</p>
+    </div>
+    <div class="card" id="vieCard" hidden>
+      <div class="vie-h"><h2>Ma vie à Aether</h2><span class="maj" id="vieMaj"></span></div>
+      <div id="vieVide" class="note">Lance le jeu : ta réputation, ton panier et ta chasse du jour apparaîtront ici.</div>
+      <div id="viePlein" hidden>
+        <div class="vie-q" id="vieQuartiers"></div>
+        <div class="vie-g">
+          <div class="vie-t"><small>Affaires des quartiers</small><b id="vieAff">—</b></div>
+          <div class="vie-t"><small>Contrats du jour</small><b id="vieContrats">—</b></div>
+          <div class="vie-t"><small id="vieFeteN">Chasse de la fête</small><b id="vieFete">—</b></div>
+          <div class="vie-t"><small>Titre affiché</small><b id="vieTitre">—</b></div>
+        </div>
+        <h3 class="vie-s">Panier de cuisine</h3>
+        <div class="vie-pan" id="viePan"></div>
+        <h3 class="vie-s">Ouvrages des artisans</h3>
+        <div class="vie-pan" id="vieArt"></div>
+      </div>
+    </div>
     <div class="card">
       <h2>Installer l'appli sur ton téléphone</h2>
       <ol class="steps">
@@ -424,6 +448,31 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
 .lock{margin-left:auto;font-size:12px;color:var(--ok);white-space:nowrap}
 .dm-chat{flex:1;max-height:none;min-height:0}
 nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
+/* v163 : vie de quartier et rendez-vous */
+.vie-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.vie-h h2{margin:0}
+.vie-h .maj{font-size:12px;color:var(--muted);white-space:nowrap}
+.vie-l{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px;color:var(--muted)}
+.vie-l span{white-space:nowrap}
+.vie-l b{color:var(--text);font-weight:600;text-align:right}
+.vie-l b.on{color:var(--ok)}
+.vie-q{display:flex;flex-direction:column;gap:10px}
+.vie-qr{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline}
+.vie-qr .n{font-size:14px;font-weight:600}
+.vie-qr .t{font-size:12.5px;color:var(--gold);text-align:right}
+.vie-qr .jauge{grid-column:1/-1;display:block;width:100%;height:6px;border-radius:3px;background:#0b1228;border:1px solid var(--line);overflow:hidden}
+.vie-qr .jauge i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold-2),var(--gold))}
+.vie-g{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.vie-t{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:14px;background:#0b1228;border:1px solid var(--line);min-width:0}
+.vie-t small{font-size:11.5px;color:var(--muted)}
+.vie-t b{font-size:15px;font-weight:600;overflow-wrap:anywhere;line-height:1.25}
+.vie-s{font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px;text-transform:none;letter-spacing:0;font-family:inherit}
+.vie-pan{display:flex;flex-wrap:wrap;gap:6px}
+.vie-pan span{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#0b1228}
+.vie-pan span b{font-family:var(--mono);color:var(--gold);font-weight:500;margin-left:4px}
+.vie-pan span.vide{opacity:.55}
+#rdvIcs{align-self:flex-start}
+#rdvIcs:active{transform:scale(.97)}
 </style>
 
 <nav class="tabs" role="tablist">
@@ -1931,6 +1980,60 @@ async function poll(full){
     afterPoll();
   }finally{polling=false}
 }
+// ---------- v163 : la vie de quartier (résumé publié par le jeu dans profils.vie) et les rendez-vous du royaume ----------
+const VQ=["nord-est","sud-est","sud-ouest","nord-ouest"],VN=["inconnu","visage connu","habitué","ami du quartier","enfant du quartier"],VSEUIL=[0,15,40,80,140],VREM=[0,3,6,10,15];
+const VING={fromage:"Fromage",miel:"Miel",jambon:"Lard fumé",epices:"Épices",legumes:"Légumes",oeufs:"Œufs",fleurs:"Fleurs à croquer",bouquet:"Bouquet des champs"};
+const VFETE={automne:"Épis d'or",citrouilles:"Citrouilles-lanternes",hiver:"Paquets-cadeaux",veillees:"Bougies de veillée",printemps:"Œufs peints",ete:"Fleurs du solstice"};
+const VART=[["Bottes de marche","Bottes de coureur des toits"],["Cape doublée","Cape de laine d'ombre"],["Jarres du garde-manger","Grandes jarres"],["Fioles soufflées","Fioles de cristal"]];
+let vie=null,vieT=0;
+const vEsc=x=>String(x==null?"":x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function parisNow(){const u=new Date(),y=u.getUTCFullYear();const dim=m=>{let d=new Date(Date.UTC(y,m+1,0,1));while(d.getUTCDay())d=new Date(d.getTime()-864e5);return d};return new Date(u.getTime()+((u>=dim(2)&&u<dim(9))?2:1)*36e5)}
+const vH=h=>{let hh=Math.floor(h),mm=Math.round((h-hh)*60);if(mm===60){hh++;mm=0}return hh+" h"+(mm?" "+String(mm).padStart(2,"0"):"")};
+function bossHoraires(j){const d=j.getUTCDay(),h=[12.5,18.5];if(d===6||d===0)h.push(15.5);h.push(d===5?22+40/60:21.75);return h.sort((a,b)=>a-b)}
+function bossSite(cle){let s=[];try{s=JSON.parse(load("am_sites")||"[]")}catch(e){}if(!s.length)return"les collines";return s[(Math.imul(cle,2654435761)>>>0)%s.length]}
+function bossProchain(){
+  const p=parisNow();
+  for(let k=0;k<2;k++){const j=new Date(Date.UTC(p.getUTCFullYear(),p.getUTCMonth(),p.getUTCDate()+k));const hs=bossHoraires(j);
+    for(let i=0;i<hs.length;i++){const t=new Date(j.getTime()+hs[i]*36e5),cle=((j.getUTCFullYear()%100)*10000+(j.getUTCMonth()+1)*100+j.getUTCDate())*10+i;
+      if(p>=t&&p<t.getTime()+15*6e4)return"EN CE MOMENT — "+bossSite(cle);
+      if(t>p)return(k?"demain":"aujourd'hui")+" à "+vH(hs[i])+" — "+bossSite(cle)}}
+  return"—"}
+function marcheEtat(){
+  const p=parisNow(),d=p.getUTCDay(),h=p.getUTCHours()+p.getUTCMinutes()/60;
+  if(d===5&&h>=21&&h<22.5)return{on:true,txt:"OUVERT jusqu'à 22 h 30"};
+  let j=(5-d+7)%7;if(j===0&&h>=22.5)j=7;
+  const t=new Date(Date.UTC(p.getUTCFullYear(),p.getUTCMonth(),p.getUTCDate()+j,21)),ms=t-p;
+  const jj=Math.floor(ms/864e5),hh=Math.floor(ms%864e5/36e5),mm=Math.floor(ms%36e5/6e4);
+  return{on:false,txt:j===0?"ce soir à 21 h (dans "+(hh?hh+" h ":"")+mm+" min)":(j===1?"demain":"vendredi")+" à 21 h — dans "+(jj?jj+" j ":"")+hh+" h"}}
+function rdvUI(){const m=marcheEtat();const e=$("rdvMarche");if(!e)return;e.textContent=m.txt;e.classList.toggle("on",m.on);$("rdvBoss").textContent=bossProchain()}
+function icsMarche(){
+  const p=parisNow();const j=(5-p.getUTCDay()+7)%7;const d=new Date(Date.UTC(p.getUTCFullYear(),p.getUTCMonth(),p.getUTCDate()+j));
+  const ymd=d.toISOString().slice(0,10).replace(/-/g,""),stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z");
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Aether//Marche nocturne//FR","CALSCALE:GREGORIAN","BEGIN:VEVENT","UID:marche-nocturne@aether-royaume","DTSTAMP:"+stamp,
+    "DTSTART;TZID=Europe/Paris:"+ymd+"T210000","DTEND;TZID=Europe/Paris:"+ymd+"T223000","RRULE:FREQ=WEEKLY;BYDAY=FR","SUMMARY:Aether — Marché nocturne",
+    "LOCATION:Grande place du Hall (Aether)","DESCRIPTION:Étals\\, spécialités du soir et lanternes sur la grande place du Hall.",
+    "BEGIN:VALARM","TRIGGER:-PT15M","ACTION:DISPLAY","DESCRIPTION:Le marché nocturne d'Aether ouvre dans 15 minutes","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="marche-nocturne-aether.ics";document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast("Ouvre le fichier pour ajouter le rappel à ton agenda")}
+$("rdvIcs").addEventListener("click",icsMarche);
+async function chargerVie(){if(!sess)return;const r=await sb("GET","/rest/v1/profils?select=vie&id=eq."+sess.id);if(r.ok&&Array.isArray(r.data)&&r.data[0]){vie=r.data[0].vie||null;if(vie&&Array.isArray(vie.sites)&&vie.sites.length)store("am_sites",JSON.stringify(vie.sites));vieUI()}}
+function vieUI(){
+  const c=$("vieCard");if(!c)return;c.hidden=!sess;if(!sess)return;
+  const ok=!!(vie&&Array.isArray(vie.rep));$("vieVide").hidden=ok;$("viePlein").hidden=!ok;if(!ok){$("vieMaj").textContent="";return}
+  const age=vie.maj?Math.max(0,Math.round((Date.now()-Date.parse(vie.maj))/6e4)):null;
+  $("vieMaj").textContent=age==null?"":(age<2?"à l'instant":age<60?"il y a "+age+" min":age<1440?"il y a "+Math.round(age/60)+" h":"il y a "+Math.round(age/1440)+" j");
+  $("vieQuartiers").innerHTML=VQ.map((q,i)=>{const r=vie.rep[i]|0,n=Math.min(4,(vie.niv&&vie.niv[i])|0),nx=n<4?VSEUIL[n+1]:VSEUIL[4],pr=n<4?Math.round(100*(r-VSEUIL[n])/Math.max(1,nx-VSEUIL[n])):100;
+    return'<div class="vie-qr"><span class="n">Quartier '+q+'</span><span class="t">'+VN[n]+(VREM[n]?" · −"+VREM[n]+" %":"")+'</span><div class="jauge" role="progressbar" aria-valuenow="'+r+'" aria-valuemax="'+nx+'" aria-label="Réputation quartier '+q+'"><i style="width:'+Math.max(3,Math.min(100,pr))+'%"></i></div></div>'}).join("");
+  $("vieAff").textContent=vie.aff>=0?(vie.aff?vie.aff+" en attente":"toutes rendues"):"—";
+  $("vieContrats").textContent=vie.contrats>=0?vie.contrats+" / 3":"—";
+  const f=vie.fete||{};$("vieFeteN").textContent=VFETE[f.f]||"Chasse de la fête";$("vieFete").textContent=(f.n|0)+" / "+(f.t||8)+((f.n|0)>=(f.t||8)?" ✓":"");
+  $("vieTitre").textContent=vie.titre||"—";
+  const pan=vie.pan||{},mx=vie.panMax||9;$("viePan").innerHTML=Object.keys(VING).map(k=>'<span class="'+((pan[k]|0)?"":"vide")+'">'+VING[k]+'<b>'+(pan[k]|0)+"/"+mx+"</b></span>").join("");
+  const art=(vie.art||[]).map((p,k)=>p>0?VART[k][Math.min(2,p)-1]:null).filter(Boolean);
+  $("vieArt").innerHTML=art.length?art.map(a=>"<span>"+vEsc(a)+"</span>").join(""):'<span class="vide">aucun pour l\'instant</span>'}
+rdvUI();setInterval(rdvUI,30000);
+setInterval(()=>{if(sess&&!document.hidden&&Date.now()-vieT>60000){vieT=Date.now();chargerVie()}},5000);
+
 let beatT=0;
 setInterval(()=>{if(!sess)return;poll();if(Date.now()-beatT>45000){beatT=Date.now();sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{vu_le:new Date().toISOString()})}},4000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)poll()});
