@@ -390,6 +390,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
       <div class="vie-h"><h2>Ma vie à Aether</h2><span class="maj" id="vieMaj"></span></div>
       <div id="vieVide" class="note">Lance le jeu : ta réputation, ton panier et ta chasse du jour apparaîtront ici.</div>
       <div id="viePlein" hidden>
+        <div class="vie-uv" id="vieUv" hidden></div>
         <div class="vie-q" id="vieQuartiers"></div>
         <div class="vie-g">
           <div class="vie-t"><small>Affaires des quartiers</small><b id="vieAff">—</b></div>
@@ -473,6 +474,12 @@ nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
 .vie-pan span.porte{background:#1b2850}
 /* v163 : vie de quartier et rendez-vous */
 .vie-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.vie-uv{margin:0 0 12px;padding:10px 12px;border-radius:14px;background:#140c1e;border:1px solid #6e2a3a}
+.vie-uv p{margin:0;font-size:14px;line-height:1.45}
+.vie-uv p+p{margin-top:6px}
+.vie-uv .uv-on b{color:var(--warn)}
+.vie-uv .uv-m{color:var(--muted)}
+.vie-uv s{text-decoration-thickness:2px}
 .vie-h h2{margin:0}
 .vie-h .maj{font-size:12px;color:var(--muted);white-space:nowrap}
 .vie-l{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px;color:var(--muted)}
@@ -2097,6 +2104,12 @@ function vieUI(){
   $("vieContrats").textContent=vie.contrats>=0?vie.contrats+" / 3":"—";
   const f=vie.fete||{};$("vieFeteN").textContent=VFETE[f.f]||"Chasse de la fête";$("vieFete").textContent=(f.n|0)+" / "+(f.t||8)+((f.n|0)>=(f.t||8)?" ✓":"");
   $("vieTitre").textContent=vie.titre||"—";
+  // une seule vie (✦), vies perdues, bête apprivoisée
+  const uv=vie.uv||{},bt=vie.bete||{};let uh="";
+  if(uv.on)uh+='<p class="uv-on">✦ <b>Une seule vie</b> — vie n°'+(uv.vie|0)+(uv.j?" · "+uv.j+(uv.j>1?" jours":" jour")+" sans tomber":"")+'</p>';
+  if(Array.isArray(uv.m)&&uv.m.length)uh+='<p class="uv-m">Vies perdues : '+uv.m.slice(-4).reverse().map(m=>"<s>vie "+(m.v|0)+"</s> (niv. "+(m.n|0)+(m.d?", "+vEsc(m.d):"")+(m.c?" — "+vEsc(m.c):"")+")").join(" · ")+"</p>";
+  if(bt.e>0&&bt.e<4)uh+='<p>Compagnon : <b>'+vEsc(bt.n||"")+"</b>, "+["","gelée","lapin des prés","dragonnet de brume"][bt.e]+"</p>";
+  $("vieUv").innerHTML=uh;$("vieUv").hidden=!uh;
   const pan=vie.pan||{},mx=vie.panMax||9;$("viePan").innerHTML=Object.keys(VING).map(k=>'<span class="'+((pan[k]|0)?"":"vide")+'">'+VING[k]+'<b>'+(pan[k]|0)+"/"+mx+"</b></span>").join("");
   const art=(vie.art||[]).map((p,k)=>p>0?VART[k][Math.min(2,p)-1]:null).filter(Boolean);
   $("vieArt").innerHTML=art.length?art.map(a=>"<span>"+vEsc(a)+"</span>").join(""):'<span class="vide">aucun pour l\'instant</span>';
