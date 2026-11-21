@@ -221,7 +221,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
   <section data-tab="avatar">
     <div>
       <h2>Ton avatar</h2>
-      <p class="sub">Prends une photo de face : l'appli repère ta peau, tes yeux, ta coupe et ta couleur de cheveux, ta barbe et tes lunettes, et les donne à ton personnage du jeu (modèle VRoid). Ajoute ta taille pour sa hauteur.</p>
+      <p class="sub">Prends une photo de face : l'appli repère ta peau, tes yeux, ta coupe et ta couleur de cheveux, ta barbe et tes lunettes, et les donne à ton personnage du jeu (modèle VRoid). Ajoute ta taille pour sa hauteur. Ensuite, ton personnage vit dans le jeu : la coupe et la barbe se changent chez le coiffeur-barbier, la tenue chez le tailleur.</p>
     </div>
     <div class="stage" id="stage">
       <canvas id="three" aria-label="Aperçu de ton personnage du jeu"></canvas>
@@ -266,6 +266,10 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
 
     <div class="card">
       <div class="group">
+        <h3>Coiffure, barbe et tenue</h3>
+        <p class="note">Ton personnage a ton visage, lu sur ta photo : il ne se retouche pas ici. Dans le jeu, va chez le coiffeur-barbier (boutiques à l'enseigne aux ciseaux) pour une nouvelle coupe, un rasage ou une barbe taillée, et chez le tailleur pour une tenue. Comme dans la vraie vie, tes cheveux et ta barbe poussent au fil des jours : il faudra y retourner de temps en temps. Pas de barbe pour un corps de femme.</p>
+      </div>
+      <div class="group" hidden>
         <h3>Visage</h3>
         <div class="field"><span>Peau <em id="nSkin"></em></span><div class="swatches" id="swSkin"></div></div>
         <div class="field"><span>Yeux <em id="nEyes"></em></span><div class="swatches" id="swEyes"></div></div>
@@ -278,12 +282,12 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
         <div class="toggles"><button type="button" class="tog" id="tGlasses" aria-pressed="false">Lunettes<i></i></button></div>
         <div class="field" id="fGlasses" hidden><span>Monture</span><div class="chips" id="cGlasses"></div><div class="chips" id="cFrame" style="margin-top:8px"></div></div>
       </div>
-      <div class="group">
+      <div class="group" hidden>
         <h3>Cheveux</h3>
         <div class="field"><span>Coupe</span><div class="chips" id="cHair"></div></div>
         <div class="field"><span>Couleur <em id="nHairC"></em></span><div class="swatches" id="swHairC"></div></div>
       </div>
-      <div class="group">
+      <div class="group" hidden>
         <h3>Tenue</h3>
         <div class="field"><span>Haut <em id="nTop"></em></span><div class="swatches" id="swTop"></div></div>
         <div class="field"><span>Bas <em id="nBot"></em></span><div class="swatches" id="swBot"></div></div>
@@ -293,7 +297,7 @@ nav.tabs button[aria-selected=true]::after{content:"";position:absolute;top:-9px
         <h3>Silhouette</h3>
         <div class="field"><span>Corps <em>de ton personnage dans le jeu</em></span><div class="chips" id="cSex"></div></div>
         <label class="field" for="height"><span>Taille <em id="nHeight"></em></span><input id="height" type="range" min="0" max="28" step="1"></label>
-        <p class="note">Ton personnage du jeu est un modèle VRoid : l'appli sculpte son visage d'après ta photo (forme, yeux, sourcils, nez, bouche), et règle sa peau, ses yeux, sa coiffure, sa barbe, ses lunettes, sa tenue, son corps et sa taille. L'aperçu montre exactement le visage du jeu.</p>
+        <p class="note">Ton personnage du jeu est un modèle VRoid : l'appli sculpte son visage d'après ta photo (forme, yeux, sourcils, nez, bouche) et règle sa peau, ses yeux, sa coiffure de départ, sa barbe, ses lunettes, son corps et sa taille. L'aperçu montre exactement le visage du jeu.</p>
         <label class="field" for="bBd" hidden><span>Corpulence <em id="nBd"></em></span><input id="bBd" type="range" min="-3" max="3" step="1"></label>
         <label class="field" for="bSh" hidden><span>Épaules <em id="nSh"></em></span><input id="bSh" type="range" min="-3" max="3" step="1"></label>
         <label class="field" for="bHp" hidden><span>Hanches <em id="nHp"></em></span><input id="bHp" type="range" min="-3" max="3" step="1"></label>
@@ -1462,7 +1466,7 @@ async function analyse(img){
     c.forEach(([k,v])=>{const s=document.createElement("span");s.className="chip";s.append(k+" : ");const b=document.createElement("b");b.textContent=v;s.append(b);$("found").append(s)})};
   chips();
   const warn=t=>{const s=document.createElement("span");s.className="chip warn";s.textContent=t;$("found").append(s)};
-  if(!M)warn("Visage mal repéré : ajuste à la main");
+  if(!M)warn("Visage mal repéré : reprends une photo bien de face");
   // lunettes incertaines : on demande (la photo ne suffit pas toujours, monture fine ou reflets)
   const gq=res.raw&&res.raw.glassesP;
   if(gq!=null&&gq>.25&&gq<.75){const s=document.createElement("span");s.className="chip ask";s.append("Tu portes des lunettes ? ");
@@ -1472,7 +1476,7 @@ async function analyse(img){
   else{const xl=M[234][0],xr=M[454][0],yaw=(M[1][0]-xl)/((xr-xl)||1)-.5;if(Math.abs(yaw)>.17)warn("Visage tourné : une photo bien de face sera plus fidèle");
     if(res.skin&&L(res.skin)<28)warn("Photo sombre : la couleur de peau peut être faussée")}
   refresh();setView("face");
-  st.textContent=M?"Personnage réglé d'après les "+M.length+" points de ton visage. Ajuste un détail si besoin.":"Essaie une photo de face, bien éclairée, pour un meilleur résultat.";toast("Personnage réglé d'après ta photo");
+  st.textContent=M?"Personnage réglé d'après les "+M.length+" points de ton visage.":"Essaie une photo de face, bien éclairée, pour un meilleur résultat.";toast("Personnage réglé d'après ta photo");
   setTimeout(()=>setView("body"),3200);
   }finally{busy=false}
 }
@@ -1918,7 +1922,7 @@ async function onBodyFile(e,side){
     drawBody($(side?"cvS":"cvF"),m.draw);$(side?"shotS":"shotF").classList.add("done");
     bodyApply();
     const miss=[];if(!$("cm").value)miss.push("indique ta taille pour estimer ton poids");if(!BODY.s)miss.push("ajoute la photo de profil pour affiner la corpulence");if(!BODY.f)miss.push("ajoute la photo de face");
-    st.textContent=(m.armsDown?"Bras le long du corps : écarte-les à l'horizontale pour une mesure plus juste. ":"")+"Estimation appliquée à ton avatar"+(miss.length?" — "+miss.join(", ")+".":". Ajuste si besoin.");
+    st.textContent=(m.armsDown?"Bras le long du corps : écarte-les à l'horizontale pour une mesure plus juste. ":"")+"Estimation appliquée à ton avatar"+(miss.length?" — "+miss.join(", ")+".":".");
     if(!R.mk)st.textContent+=" (Silhouette non détourée : corpulence non estimée.)";
     window.__bodyF=BODY.f;window.__bodyS=BODY.s;
   }catch(err){console.warn(err);st.textContent="Impossible de lire cette image."}
