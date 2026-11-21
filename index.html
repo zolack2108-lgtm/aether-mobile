@@ -12,7 +12,7 @@
   --text:#eef2fb; --muted:#99a5c7;
   --accent:#f1cf7a; --accent-2:#b98a35; --accent-soft:#2a2412; --accent-line:#5b4a1f; --on-accent:#1b1406;
   --accent-grad:linear-gradient(180deg,#f8e2a0,#d9ae4f);
-  --crystal:#7cc4ff; --ok:#6fe0a0; --warn:#ff8f7f; --warn-soft:#2a1416; --warn-line:#7a3a35;
+  --crystal:#7cc4ff; --ok:#6fe0a0; --warn:#ff8f7f; --warn-soft:#2a1416; --warn-line:#7a3a35; --on-warn:#1b0806;
   --bar:rgba(10,15,32,.72); --sheet:rgba(16,24,48,.9); --shadow:0 10px 30px rgba(0,0,0,.32);
   --stage-a:#2a3d78; --stage-b:#141f42; --stage-c:#0a1024;
   --sky:radial-gradient(ellipse 120% 55% at 50% -12%,var(--bg-glow) 0%,transparent 60%),radial-gradient(1px 1px at 12% 18%,#fff6 50%,transparent 51%),radial-gradient(1px 1px at 78% 9%,#fff5 50%,transparent 51%),radial-gradient(1.5px 1.5px at 55% 27%,#fff6 50%,transparent 51%),radial-gradient(1px 1px at 33% 40%,#fff4 50%,transparent 51%),radial-gradient(1px 1px at 88% 36%,#fff5 50%,transparent 51%);
@@ -72,7 +72,7 @@
   --text:#13203a; --muted:#5a6a85;
   --accent:#996a12; --accent-2:#c79a3e; --accent-soft:#fbf1dc; --accent-line:#e3c98f; --on-accent:#1c1300;
   --accent-grad:linear-gradient(180deg,#f2c869,#d6a23a);
-  --crystal:#2b66d6; --ok:#1d8f55; --warn:#c8433a; --warn-soft:#fdeceb; --warn-line:#efb3ad;
+  --crystal:#2b66d6; --ok:#1d8f55; --warn:#c8433a; --warn-soft:#fdeceb; --warn-line:#efb3ad; --on-warn:#ffffff;
   --bar:rgba(247,250,254,.76); --sheet:rgba(255,255,255,.92); --shadow:0 8px 24px rgba(20,40,80,.10);
   --stage-a:#c4daf6; --stage-b:#e2ecf9; --stage-c:#f5f8fd;
   --sky:radial-gradient(ellipse 120% 55% at 50% -12%,var(--bg-glow) 0%,transparent 62%),linear-gradient(180deg,#e7f0fb 0%,var(--bg) 40%);
@@ -268,7 +268,7 @@ button.stat{cursor:pointer;transition:transform .1s ease}button.stat:active{tran
 .li-t{display:flex;flex-direction:column;min-width:0}
 .li-t b{font-weight:600;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .li-t small{font-size:13.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.li-n{min-width:22px;height:22px;padding:0 7px;border-radius:var(--r-pill);background:var(--warn);color:#1b0806;font-size:12px;font-weight:700;display:grid;place-items:center}
+.li-n{min-width:22px;height:22px;padding:0 7px;border-radius:var(--r-pill);background:var(--warn);color:var(--on-warn,#1b0806);font-size:12px;font-weight:700;display:grid;place-items:center}
 .chev{color:var(--muted);font-size:22px;line-height:1;padding-right:4px}
 .li.calme{cursor:default}.li.calme:active{transform:none;background:transparent}
 details.start>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
@@ -334,7 +334,7 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
 .toast{position:fixed;left:50%;bottom:calc(var(--tabs-h) + 20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--sheet);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
   box-shadow:inset 0 0 0 1px var(--edge),0 8px 24px rgba(0,0,0,.3);color:var(--text);padding:10px 16px;border-radius:var(--r-pill);font-size:14.5px;z-index:80;max-width:calc(100% - 32px);text-align:center}
 @media (max-width:400px){.toggles{grid-template-columns:1fr}.photo{grid-template-columns:100px 1fr}.frame{width:100px}h1{font-size:28px}}
-@media (max-width:350px){nav.tabs button{font-size:10.5px}nav.tabs button .tic{width:44px}.stats{grid-template-columns:1fr 1fr}}
+@media (max-width:360px){nav.tabs button{font-size:10.5px}nav.tabs button .tic{width:44px}.stats{grid-template-columns:1fr 1fr}.stats .stat:nth-child(3){display:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01s!important}.sheet.anim{transition:opacity .15s ease!important}}
 @media (prefers-reduced-transparency:reduce){nav.tabs,.sheet,.toast,.badge,.views{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:var(--surface)!important}}
 @media (prefers-contrast:more){.card,.friend,.stat,.theme{box-shadow:inset 0 0 0 1px var(--line-2)!important}nav.tabs{background:var(--surface)}}
@@ -734,7 +734,7 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
   <p class="note" id="mSEtat" aria-live="polite"></p>
   <div class="s-row" id="mSBtns"></div>
 </div>
-<style>.badge-n{position:absolute;top:1px;left:calc(50% + 7px);min-width:18px;height:18px;border-radius:9px;background:var(--warn);color:#1b0806;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px;box-shadow:0 0 0 2px var(--bg)}
+<style>.badge-n{position:absolute;top:1px;left:calc(50% + 7px);min-width:18px;height:18px;border-radius:9px;background:var(--warn);color:var(--on-warn,#1b0806);font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px;box-shadow:0 0 0 2px var(--bg)}
 h2 .opt{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:4px}</style>
   <!-- ===================== (version hébergée) réactions, notifications, appels ===================== -->
   <div class="card push-card" id="pushCard" hidden>
