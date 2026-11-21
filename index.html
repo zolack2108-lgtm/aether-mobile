@@ -229,7 +229,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 /* ---------- amis ---------- */
 .friends{display:flex;flex-direction:column;gap:8px}
 .friend{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:8px 10px;border-radius:var(--r-m);background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge)}
-.friend img,.friend .ph{width:48px;height:48px;border-radius:50%;background:var(--surface-3);object-fit:cover}
+/* v201 : la photo de profil, sur son fond (acheté au marché) : le portrait est transparent, le fond est dessiné derrière */
+.av{display:block;position:relative;flex:none;border-radius:50%;overflow:hidden;background-color:var(--surface-3);background-size:cover;background-position:center}
+.av img{display:block;width:100%;height:100%;object-fit:cover}
+.friend .av{width:48px;height:48px}
+.me-pic .av,.dm-pic .av,.hello-pic .av,.call-pic .av{width:100%;height:100%}
 .friend .n{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .friend .c{font-family:var(--mono);font-size:11px;color:var(--muted)}
 .dot{font-size:12.5px;display:flex;align-items:center;gap:6px;color:var(--muted)}
@@ -295,6 +299,18 @@ details.start .in{display:flex;flex-direction:column;gap:14px;margin-top:4px}
 .theme .tp{font-size:13.5px;color:var(--muted);padding:0 6px;display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
 .theme .tp.a{color:var(--ok)}
 .theme .tp.u{color:var(--accent);font-weight:600}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:3px;border-radius:var(--r-pill);background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge)}
+.seg button{min-height:40px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--muted);font-weight:650;font-size:15px;cursor:pointer;transition:background-color .2s ease,color .2s ease,transform .1s ease}
+.seg button:active{transform:scale(.97)}
+.seg button[aria-selected=true]{background:var(--hi);color:var(--text)}
+.fprev{aspect-ratio:4/3;border-radius:var(--r-m);background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);display:grid;place-items:center}
+.fprev .av{width:62%;aspect-ratio:1;height:auto}
+.fprev.grand{aspect-ratio:auto;padding:14px 0;background:transparent;box-shadow:none}
+.fprev.grand .av{width:136px;height:136px}
+.eprev{aspect-ratio:4/3;border-radius:var(--r-m);background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);display:grid;grid-template-columns:1fr 1fr;place-items:center;padding:6px;
+  font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",var(--body);font-size:32px;line-height:1}
+.eprev.grand{aspect-ratio:auto;grid-template-columns:repeat(4,1fr);font-size:46px;padding:16px 6px;background:transparent;box-shadow:none}
+.s-vis{display:block}
 .mock{position:relative;aspect-ratio:4/3;border-radius:var(--r-m);overflow:hidden;background:var(--bg);background-image:var(--sky);padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 0 0 1px var(--edge);color:var(--text)}
 .mock .m-h{display:flex;align-items:center;justify-content:space-between}
 .mock .m-w{width:34%;height:7px;border-radius:4px;background:var(--accent);opacity:.9}
@@ -560,7 +576,7 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
         <button type="button" class="li" data-aller="avatar"><span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><span class="li-t"><b>Avatar</b><small>Ton visage dans le jeu, d'après une photo</small></span><span class="chev" aria-hidden="true">›</span></button>
         <button type="button" class="li" data-aller="amis"><span class="li-ic c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.6 3.6-5.5 6.5-5.5s5.5 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.9.7 3 2.4 3.6 5.2"/></svg></span><span class="li-t"><b>Amis</b><small>Demandes, messages et appels</small></span><span class="chev" aria-hidden="true">›</span></button>
         <button type="button" class="li" data-aller="taverne"><span class="li-ic c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></span><span class="li-t"><b>Taverne</b><small>Le chat de tous les aventuriers</small></span><span class="chev" aria-hidden="true">›</span></button>
-        <button type="button" class="li" data-aller="marche"><span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></span><span class="li-t"><b>Marché</b><small>Thèmes de l'appli, payés en Lumes</small></span><span class="chev" aria-hidden="true">›</span></button>
+        <button type="button" class="li" data-aller="marche"><span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></span><span class="li-t"><b>Marché</b><small>Thèmes, fonds de photo, émojis du jeu</small></span><span class="chev" aria-hidden="true">›</span></button>
       </div>
     </div>
 
@@ -628,13 +644,15 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
 
   <!-- ===================== MARCHÉ ===================== -->
   <section data-tab="marche" hidden>
-    <div class="page-h"><h1>Marché</h1><p class="sub">Des thèmes pour l'appli, payés avec les Lumes que tu gagnes dans le jeu.</p></div>
+    <div class="page-h"><h1>Marché</h1><p class="sub">Des thèmes pour l'appli, des fonds pour ta photo et des émojis pour le jeu, payés avec les Lumes que tu gagnes en jouant.</p></div>
     <div class="card bourse">
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#lume"/></svg></span>
       <div style="min-width:0"><small>Ta bourse</small><b id="mLumes">—</b><p class="sub" id="mNote"></p></div>
     </div>
+    <div class="seg" role="tablist" aria-label="Rayons du marché"><button type="button" role="tab" data-seg="themes" aria-selected="true">Thèmes</button><button type="button" role="tab" data-seg="fonds" aria-selected="false">Fonds</button><button type="button" role="tab" data-seg="emojis" aria-selected="false">Émojis</button></div>
     <div class="themes" id="mThemes"></div>
-    <p class="note">Touche un thème : toute l'appli le prend derrière la fiche, pour le voir avant de l'acheter. Les Lumes sont retirées de ta bourse dans le jeu à ta prochaine partie (en moins d'une minute si tu joues déjà).</p>
+    <p class="note" id="mInfo"></p>
+    <p class="note">Les Lumes sont retirées de ta bourse dans le jeu à ta prochaine partie (en moins d'une minute si tu joues déjà).</p>
   </section>
 
   <!-- ===================== MESSAGES PRIVÉS ===================== -->
@@ -729,6 +747,7 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
 <div class="sheet-v" id="mVoile" hidden></div>
 <div class="sheet" id="mSheet" role="dialog" aria-modal="true" aria-labelledby="mSNom" hidden>
   <div class="grab" aria-hidden="true"></div>
+  <div class="s-vis" id="mSVis" hidden></div>
   <div class="s-h"><h2 id="mSNom">Thème</h2><span class="s-p" id="mSPrix"></span></div>
   <p class="sub" id="mSDesc"></p>
   <p class="note" id="mSEtat" aria-live="polite"></p>
@@ -1464,10 +1483,10 @@ function portrait(code){
     if(WP===null){if(!VR.prWait){VR.prWait=true;vrImg(M.pos.portrait.file).then(()=>{try{renderFriends()}catch(e){}}).catch(()=>{}).then(()=>{VR.prWait=false})}return null}
     const r=vrCompose(pe.b,im,g,im,h,im,P,WP||null);
     const cv=document.createElement("canvas");cv.width=c.W;cv.height=c.H;const cx=cv.getContext("2d");
-    const id=cx.createImageData(c.W,c.H),d=id.data,bg=[0x16,0x22,0x4a];
-    for(let i=0;i<d.length;i+=4){d[i]=bg[0];d[i+1]=bg[1];d[i+2]=bg[2];d[i+3]=255}
+    const id=cx.createImageData(c.W,c.H),d=id.data;   // v201 : fond transparent (le fond de la photo est dessiné derrière)
     for(let y=0;y<r.h;y++)for(let x=0;x<r.w;x++){const X=r.x+x,Y=r.y+y;if(X<0||Y<0||X>=c.W||Y>=c.H)continue;
-      const s=(y*r.w+x)*4,o=(Y*c.W+X)*4,u=1-r.data[s+3]/255;d[o]=r.data[s]+bg[0]*u;d[o+1]=r.data[s+1]+bg[1]*u;d[o+2]=r.data[s+2]+bg[2]*u}
+      const s=(y*r.w+x)*4,o=(Y*c.W+X)*4,al=r.data[s+3];if(!al)continue;const k=255/al;
+      d[o]=Math.min(255,r.data[s]*k);d[o+1]=Math.min(255,r.data[s+1]*k);d[o+2]=Math.min(255,r.data[s+2]*k);d[o+3]=al}
     cx.putImageData(id,0,0);
     return portraits[code]=cv.toDataURL("image/png");
   }catch(e){console.warn("portrait",e);return null}
@@ -2210,7 +2229,7 @@ async function auth(create){
 // ----- données -----
 const me=()=>profils[sess&&sess.id]||{};
 function isOnline(p){return p&&p.vu_le&&(Date.now()-Date.parse(p.vu_le))<120000}
-function info(id){const p=profils[id]||{};return{id,pseudo:p.pseudo||"Aventurier",look:p.look,face:p.face,code:/^AE/.test(p.styles||"")?p.styles:null,niveau:p.niveau|0,online:isOnline(p),enJeu:isOnline(p)&&p.en_jeu}}
+function info(id){const p=profils[id]||{};return{id,pseudo:p.pseudo||"Aventurier",look:p.look,face:p.face,fond:p.fond||null,code:/^AE/.test(p.styles||"")?p.styles:null,niveau:p.niveau|0,online:isOnline(p),enJeu:isOnline(p)&&p.en_jeu}}
 function relation(id){const l=links.find(a=>(a.demandeur===id&&a.destinataire===sess.id)||(a.demandeur===sess.id&&a.destinataire===id));
   if(!l)return"aucun";if(l.statut==="ami")return"ami";return l.demandeur===sess.id?"envoye":"demande"}
 let polling=false;
@@ -2221,7 +2240,7 @@ async function poll(full){
     const [a,m,p]=await Promise.all([
       sb("GET","/rest/v1/amities?select=demandeur,destinataire,statut&or=(demandeur.eq."+sess.id+",destinataire.eq."+sess.id+")"),
       sb("GET",lastId?"/rest/v1/messages?select=*&id=gt."+lastId+"&order=id.asc&limit=200":"/rest/v1/messages?select=*&order=id.desc&limit=150"),
-      sb("GET","/rest/v1/profils?select=id,pseudo,look,face,styles,niveau,vu_le,en_jeu&order=vu_le.desc&limit=300")]);
+      sb("GET","/rest/v1/profils?select=id,pseudo,look,face,styles,niveau,vu_le,en_jeu,fond&order=vu_le.desc&limit=300")]);
     if(a.ok&&Array.isArray(a.data))links=a.data;
     if(p.ok&&Array.isArray(p.data)){profils={};for(const x of p.data)profils[x.id]=x;everyone=p.data.map(x=>x.id)}
     if(m.ok&&Array.isArray(m.data)&&m.data.length){const arr=lastId?m.data:m.data.slice().reverse();for(const x of arr)if(x.id>lastId){msgs.push(x);lastId=x.id}if(msgs.length>600)msgs=msgs.slice(-600)}
@@ -2361,12 +2380,13 @@ function syncLook(){
 let myLevel=parseInt(load("am_lv")||"0",10)||0;
 function lvTxt(n){return n>0?"Nv "+n:"Nv ?"}
 function pic(i){let src=null;if(i.code||i.look!=null)try{src=portrait(i.code||(String(i.look>>>0)+":"+((i.face==null?A.FACE_NEUTRAL:i.face)>>>0)))}catch(e){}
-  if(src){const im=document.createElement("img");im.src=src;im.alt="";return im}const ph=document.createElement("div");ph.className="ph";return ph}
+  const w=document.createElement("span");const f=i.fond&&typeof FONDS!=="undefined"&&FONDS.some(x=>x.id===i.fond&&x.c)?i.fond:null;
+  w.className="av"+(f?" fd-"+f:"")+(src?"":" ph");if(src){const im=document.createElement("img");im.src=src;im.alt="";w.append(im)}return w}
 // le nom affiché partout = pseudo du compte (profils.pseudo, non modifiable par l'appli)
 function myName(){return sess?(me().pseudo||sess.pseudo||pseudo||"Aventurier"):(pseudo||"Aventurier")}
 function renderMe(){const nm=myName();$("meName").textContent=nm;
   $("meLv").textContent=myLevel?"Niveau "+myLevel:"Ton niveau s'affiche dès que tu joues à Aether";
-  const mp=$("mePic");mp.innerHTML="";mp.append(pic({code:A.encode(look)}));
+  const mp=$("mePic");mp.innerHTML="";mp.append(pic({code:A.encode(look),fond:typeof monFond==="function"?monFond():null}));
   $("who").hidden=false;$("whoName").textContent=nm;const wl=$("whoLv");wl.textContent=myLevel?"Nv "+myLevel:"";wl.hidden=!myLevel;renderJour()}
 $("lvForm").hidden=true;$("lvForm").nextElementSibling.textContent="Ton niveau se met à jour tout seul quand tu joues à Aether, avec le même compte.";
 
@@ -2696,7 +2716,7 @@ function incoming(row){if(inCall()||seenCalls.has(row.id))return;seenCalls.add(r
   const c=call={dir:"in",id:row.id,peer:row.appelant,row,phase:"incoming",t1:Date.now()};
   if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
   callUI();tone("ring");watch(c);
-  if(!profils[c.peer])sb("GET","/rest/v1/profils?select=id,pseudo,look,face,styles,niveau,vu_le,en_jeu&id=eq."+c.peer).then(r=>{
+  if(!profils[c.peer])sb("GET","/rest/v1/profils?select=id,pseudo,look,face,styles,niveau,vu_le,en_jeu,fond&id=eq."+c.peer).then(r=>{
     if(r.ok&&Array.isArray(r.data)&&r.data[0]){profils[c.peer]=r.data[0];if(call===c){$("callPic").dataset.p="";callUI()}}})}
 async function acceptCall(){const c=call;if(!c||c.dir!=="in"||c.phase!=="incoming")return;c.phase="answering";stopTones();callUI();ac();
   let offer;try{offer=JSON.parse(c.row.offre)}catch(e){endCall("Appel illisible","refuse");return}
@@ -2890,72 +2910,128 @@ var THEMES=[
   {id:"crypte",obj:"theme_crypte",nom:"Crypte de l'Aube",court:"Crypte",prix:2000,desc:"La pierre froide de la crypte et la première lueur rose du matin."},
   {id:"ciel",obj:"theme_ciel",nom:"Ciel d'Aether",court:"Ciel",prix:2500,desc:"Le seul thème clair : bleu ciel et blanc, pour lire en plein soleil."},
   {id:"cristal",obj:"theme_cristal",nom:"Éclat de cristal",court:"Cristal",prix:3000,desc:"Le plus rare : noir profond, liserés irisés et boutons de cristal."}];
+// v201 (Louis : « des fonds à acheter pour notre photo de profil, derrière nous, avec des émojis utilisables en jeu »)
+var FONDS=[
+  {id:"aucun",obj:null,nom:"Sans fond",prix:0,desc:"Ta photo sur la couleur de l'appli.",c:null,em:[]},
+  {id:"etoiles",obj:"fond_etoiles",nom:"Nuit étoilée",prix:500,desc:"Un ciel de nuit semé d'étoiles qui scintillent derrière toi.",c:["#3550b0","#0a1030"],em:["✨","⭐","✨","⭐","✨"]},
+  {id:"coeurs",obj:"fond_coeurs",nom:"Pluie de cœurs",prix:1000,desc:"Des cœurs roses tout autour de ta photo.",c:["#ff9cc0","#b0245a"],em:["💖","❤️","💕","💖","❤️"]},
+  {id:"flammes",obj:"fond_flammes",nom:"Brasier",prix:1500,desc:"Un feu orange qui monte derrière toi.",c:["#ffbb5c","#a3260c"],em:["🔥","🔥","🔥","🔥","🔥"]},
+  {id:"fleurs",obj:"fond_fleurs",nom:"Jardin fleuri",prix:2000,desc:"Un pré de printemps plein de fleurs.",c:["#d4f5c4","#3d8a4b"],em:["🌸","🌼","🌷","🌸","🌼"]},
+  {id:"couronne",obj:"fond_couronne",nom:"Salle du trône",prix:2500,desc:"Velours pourpre, couronnes et pierres précieuses.",c:["#9a68ea","#2a1257"],em:["👑","✨","💎","✨","👑"]},
+  {id:"dragon",obj:"fond_dragon",nom:"Antre du dragon",prix:3000,desc:"Le plus rare : l'antre d'un dragon, ses flammes et son trésor.",c:["#3a9a72","#06231a"],em:["🐉","🔥","💎","🐉","🔥"]}];
+var EMOS=[
+  {id:"base",obj:null,nom:"De base",prix:0,e:["👋","👍","❤️","😂"],desc:"Pour tout le monde, dès la première partie."},
+  {id:"joie",obj:"emo_joie",nom:"Bonne humeur",prix:500,e:["😄","😎","🥳","😉"],desc:"Pour saluer, frimer, fêter une victoire."},
+  {id:"combat",obj:"emo_combat",nom:"Combat",prix:1000,e:["⚔️","🛡️","💥","🏹"],desc:"Pour lancer l'assaut, appeler à la garde ou viser de loin."},
+  {id:"taverne",obj:"emo_taverne",nom:"Taverne",prix:1500,e:["🍻","🍖","🎶","🎲"],desc:"Pour trinquer, manger, chanter et jouer aux dés."},
+  {id:"nature",obj:"emo_nature",nom:"Nature",prix:2000,e:["🌸","🍀","🌙","☀️"],desc:"Pour les promenades, la chance, la nuit et le grand soleil."},
+  {id:"emotions",obj:"emo_emotions",nom:"Émotions fortes",prix:2500,e:["😭","😡","😱","🤔"],desc:"Pour pleurer, enrager, avoir peur ou réfléchir."},
+  {id:"legende",obj:"emo_legende",nom:"Légendes",prix:3000,e:["🐉","👑","💎","🔥"],desc:"Le plus rare : dragon, couronne, trésor et feu."}];
 var TCOL={nuit:"#070c1a",prairie:"#08130e",lac:"#061316",forge:"#120a07",crypte:"#0d0b14",ciel:"#eef3fa",cristal:"#05060c"};
-var achats=[],achatsOk=false,themeActuel=(function(){const t=load("am_theme");return t&&TCOL[t]?t:"nuit"})(),sheetTheme=null,sheetEtape=0,jourPret=false,routeTab=null;
-const fmtL=n=>Number(n||0).toLocaleString("fr-FR").replace(/\u202f/g,"\u00a0");
+var achats=[],achatsOk=false,themeActuel=(function(){const t=load("am_theme");return t&&TCOL[t]?t:"nuit"})(),sheetArt=null,sheetEtape=0,jourPret=false,routeTab=null,
+  segActuel=(function(){const v=load("am_seg");return v==="fonds"||v==="emojis"?v:"themes"})();
+const fmtL=n=>Number(n||0).toLocaleString("fr-FR").replace(/ /g," ");
+const LUME='<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><use href="#lume"/></svg>';
 function lumesConnues(){return !!(sess&&vie&&typeof vie.lumes==="number")}
 function enAttente(){const m=+(vie&&vie.achats)||0;return achats.filter(a=>a.id>m).reduce((s,a)=>s+(a.prix|0),0)}
 function solde(){return lumesConnues()?Math.max(0,Math.floor(vie.lumes)-enAttente()):null}
+const aAchete=obj=>!obj||achats.some(a=>a.objet===obj);
 const possede=id=>id==="nuit"||achats.some(a=>a.objet==="theme_"+id);
+function monFond(){const p=sess&&profils[sess.id];const f=p&&p.fond;return f&&FONDS.some(x=>x.id===f&&x.obj)?f:"aucun"}
 function appliquerTheme(id,garder){const r=document.documentElement;if(!TCOL[id])id="nuit";if(id==="nuit")delete r.dataset.theme;else r.dataset.theme=id;
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",TCOL[id]);
   if(garder){themeActuel=id;store("am_theme",id)}}
+// les fonds : un dégradé et des émojis tout autour de la photo (dessinés derrière le portrait, qui est transparent)
+(function(){const P=[[19,24,19],[80,21,16],[86,61,18],[13,66,15],[50,8,12]];let css="";
+  for(const f of FONDS){if(!f.c)continue;let t="";
+    for(let k=0;k<P.length;k++)t+="<text x='"+P[k][0]+"' y='"+P[k][1]+"' font-size='"+P[k][2]+"' text-anchor='middle' dominant-baseline='central'>"+f.em[k%f.em.length]+"</text>";
+    const svg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='g' cx='50%' cy='42%' r='72%'><stop offset='0' stop-color='"+f.c[0]+"'/><stop offset='1' stop-color='"+f.c[1]+"'/></radialGradient></defs><rect width='100' height='100' fill='url(#g)'/><g font-family='Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif'>"+t+"</g></svg>";
+    css+=".fd-"+f.id+"{background-image:url(\"data:image/svg+xml,"+encodeURIComponent(svg)+"\")}\n"}
+  const st=document.createElement("style");st.id="fondsCss";st.textContent=css;document.head.append(st)})();
 async function chargerAchats(){if(!sess)return;const r=await sb("GET","/rest/v1/achats_appli?select=id,objet,prix,cree_le&order=id.asc");
   if(r.ok&&Array.isArray(r.data)){achats=r.data;achatsOk=true;
     if(themeActuel!=="nuit"&&!possede(themeActuel)){appliquerTheme("nuit",true)}}   // thème d'un autre compte sur ce téléphone
   else achatsOk=false;
-  renderMarche();renderJour();if(sheetTheme)remplirSheet()}
+  renderMarche();renderJour();if(sheetArt)remplirSheet()}
 
-// ----- le marché -----
+// ----- le marché : trois rayons -----
+function art(kind,id){const L=kind==="theme"?THEMES:kind==="fond"?FONDS:EMOS;const a=L.find(x=>x.id===id);return a?Object.assign({kind},a):null}
+function actif(a){return a.kind==="theme"?themeActuel===a.id:a.kind==="fond"?monFond()===a.id:aAchete(a.obj)}
+function apercu(a,grand){
+  if(a.kind==="theme")return'<div class="mock" data-theme="'+a.id+'" aria-hidden="true"><div class="m-h"><span class="m-w"></span><span class="m-l"></span></div><div class="m-c"><span class="m-t"></span><span class="m-t s"></span><span class="m-b"></span></div><div class="m-r"><span class="m-m"></span></div></div>';
+  if(a.kind==="fond"){let src=null;try{src=portrait(A.encode(look))}catch(e){}
+    return'<div class="fprev'+(grand?" grand":"")+'" aria-hidden="true"><span class="av'+(a.c?" fd-"+a.id:"")+(src?"":" ph")+'">'+(src?'<img alt="" src="'+src+'">':"")+'</span></div>'}
+  return'<div class="eprev'+(grand?" grand":"")+'" aria-hidden="true">'+a.e.map(x=>"<span>"+x+"</span>").join("")+'</div>'}
 function renderMarche(){const g=$("mThemes");if(!g||!jourPret)return;const so=solde();
   $("mLumes").textContent=so==null?"—":fmtL(so);
   const att=lumesConnues()?enAttente():0;
   $("mNote").textContent=!sess?"Connecte-toi avec ton compte Aether pour voir ta bourse.":so==null?"Lance Aether une fois avec ce compte : ta bourse apparaîtra ici."
     :(att?fmtL(att)+" Lumes dépensées ici seront retirées dans le jeu à ta prochaine partie.":"Lumes disponibles, à jour à chaque partie.");
-  g.innerHTML="";
-  for(const t of THEMES){const own=possede(t.id),on=themeActuel===t.id;const b=document.createElement("button");b.type="button";b.className="theme"+(on?" on":"");
-    b.setAttribute("aria-label",t.nom+(on?", thème utilisé":own?", à toi":", "+fmtL(t.prix)+" Lumes"));
-    b.innerHTML='<div class="mock" data-theme="'+t.id+'" aria-hidden="true"><div class="m-h"><span class="m-w"></span><span class="m-l"></span></div><div class="m-c"><span class="m-t"></span><span class="m-t s"></span><span class="m-b"></span></div><div class="m-r"><span class="m-m"></span></div></div>'+
-      '<div class="tn">'+vEsc(t.nom)+'</div><div class="tp'+(on?" u":own?" a":"")+'">'+(on?"Utilisé":own?"À toi":(t.prix?'<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><use href="#lume"/></svg>'+fmtL(t.prix):"Offert"))+'</div>';
-    b.onclick=()=>ouvrirTheme(t.id);g.append(b)}
+  document.querySelectorAll("[data-seg]").forEach(b=>b.setAttribute("aria-selected",b.dataset.seg===segActuel));
+  const kind=segActuel==="fonds"?"fond":segActuel==="emojis"?"emo":"theme",L=kind==="theme"?THEMES:kind==="fond"?FONDS:EMOS;
+  $("mInfo").textContent=kind==="theme"?"Touche un thème : toute l'appli le prend derrière la fiche, pour le voir avant de l'acheter."
+    :kind==="fond"?"Ton fond s'affiche derrière ta photo partout dans l'appli : chez toi, dans la liste de tes amis, dans les messages et les appels."
+    :"Dans le jeu : menu → Amis → Émojis. Touche un émoji : il apparaît à côté de ta tête et les joueurs autour de toi le voient.";
+  g.className="themes"+(kind==="emo"?" emos":"");g.innerHTML="";
+  for(const a0 of L){const a=Object.assign({kind},a0),own=aAchete(a.obj),on=actif(a);const b=document.createElement("button");b.type="button";b.className="theme"+(on&&kind!=="emo"?" on":"");
+    const etat=kind==="emo"?(own?"Dans ton jeu":""):(on?(kind==="theme"?"Utilisé":"Sur ta photo"):own?"À toi":"");
+    b.setAttribute("aria-label",a.nom+", "+(etat||(a.prix?fmtL(a.prix)+" Lumes":"offert")));
+    b.innerHTML=apercu(a,false)+'<div class="tn">'+vEsc(a.nom)+'</div><div class="tp'+(etat?(on&&kind!=="emo"?" u":" a"):"")+'">'+(etat||(a.prix?LUME+fmtL(a.prix):"Offert"))+'</div>';
+    b.onclick=()=>ouvrirArticle(kind,a.id);g.append(b)}
   const h=$("hLumesN");if(h)h.textContent=so==null?"—":fmtL(so)}
-function ouvrirTheme(id){const t=THEMES.find(x=>x.id===id);if(!t)return;const s=$("mSheet");const deja=!!sheetTheme;sheetTheme=t;sheetEtape=0;
-  appliquerTheme(id,false);remplirSheet();$("mVoile").hidden=false;s.hidden=false;
+function choisirRayon(v){segActuel=v;store("am_seg",v);renderMarche();window.scrollTo({top:0})}
+document.querySelectorAll("[data-seg]").forEach(b=>b.addEventListener("click",()=>choisirRayon(b.dataset.seg)));
+function ouvrirArticle(kind,id){const a=art(kind,id);if(!a)return;const s=$("mSheet");const deja=!!sheetArt;sheetArt=a;sheetEtape=0;
+  appliquerTheme(kind==="theme"?id:themeActuel,false);remplirSheet();$("mVoile").hidden=false;s.hidden=false;
   if(!deja){s.classList.remove("anim");s.style.transform="translateY(100%)";void s.offsetHeight;s.classList.add("anim");s.style.transform="translateY(0)"}
   s.setAttribute("tabindex","-1");setTimeout(()=>{try{s.focus({preventScroll:true})}catch(e){}},80)}
-function fermerTheme(){if(!sheetTheme)return;const s=$("mSheet");s.classList.add("anim");s.style.transform="translateY(110%)";$("mVoile").hidden=true;
-  sheetTheme=null;appliquerTheme(themeActuel,false);setTimeout(()=>{if(!sheetTheme)s.hidden=true},360);renderMarche();renderJour()}
-function remplirSheet(){const t=sheetTheme;if(!t)return;const own=possede(t.id),on=themeActuel===t.id,so=solde();
-  $("mSNom").textContent=t.nom;$("mSPrix").textContent=t.prix?fmtL(t.prix)+" Lumes":"Offert";$("mSDesc").textContent=t.desc;
-  const box=$("mSBtns");box.innerHTML="";let etat="Aperçu : toute l'appli est déjà dans ce thème, derrière cette fiche.";
-  const fermer=btn("Fermer",false,fermerTheme);const off=(l)=>{const b=btn(l,false,()=>{});b.disabled=true;return b};
-  if(on){box.append(fermer,off("Thème utilisé"));etat="C'est le thème de ton appli."}
-  else if(own)box.append(fermer,btn("Utiliser ce thème",true,()=>{appliquerTheme(t.id,true);toast("Thème « "+t.nom+" » appliqué");fermerTheme()}));
-  else if(!sess){box.append(fermer,btn("Se connecter",true,()=>{fermerTheme();showLogin()}));etat="Connecte-toi avec ton compte Aether pour l'acheter avec tes Lumes."}
+function fermerArticle(){if(!sheetArt)return;const s=$("mSheet");s.classList.add("anim");s.style.transform="translateY(110%)";$("mVoile").hidden=true;
+  sheetArt=null;appliquerTheme(themeActuel,false);setTimeout(()=>{if(!sheetArt)s.hidden=true},360);renderMarche();renderJour()}
+const ouvrirTheme=id=>ouvrirArticle("theme",id),fermerTheme=fermerArticle;   // anciens noms
+async function mettreFond(id){const f=id==="aucun"?null:id;
+  const r=await sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{fond:f});
+  if(r.ok){const p=profils[sess.id];if(p)p.fond=f;renderFriends();return true}
+  return false}
+function remplirSheet(){const a=sheetArt;if(!a)return;const own=aAchete(a.obj),on=actif(a),so=solde(),k=a.kind;
+  const vis=$("mSVis");vis.hidden=k==="theme";vis.innerHTML=k==="theme"?"":apercu(a,true);
+  $("mSNom").textContent=a.nom;$("mSPrix").textContent=a.prix?fmtL(a.prix)+" Lumes":"Offert";$("mSDesc").textContent=a.desc;
+  const box=$("mSBtns");box.innerHTML="";
+  let etat=k==="theme"?"Aperçu : toute l'appli est déjà dans ce thème, derrière cette fiche.":k==="fond"?"Aperçu : ta photo avec ce fond. Tes amis le verront aussi.":"Utilisables dans le jeu : menu → Amis → Émojis.";
+  const fermer=btn("Fermer",false,fermerArticle);const off=(l)=>{const b=btn(l,false,()=>{});b.disabled=true;return b};
+  if(own&&k==="emo"){box.append(fermer,off(a.prix?"Dans ton jeu":"Offert à tous"));etat="Dans le jeu : menu → Amis → Émojis, puis touche un émoji : il apparaît à côté de ta tête pendant 3 secondes."}
+  else if(on){box.append(fermer,off(k==="theme"?"Thème utilisé":"Sur ta photo"));etat=k==="theme"?"C'est le thème de ton appli.":"C'est le fond de ta photo."}
+  else if(own&&k==="theme")box.append(fermer,btn("Utiliser ce thème",true,()=>{appliquerTheme(a.id,true);toast("Thème « "+a.nom+" » appliqué");fermerArticle()}));
+  else if(own&&k==="fond"){if(!sess){box.append(fermer,btn("Se connecter",true,()=>{fermerArticle();showLogin()}))}
+    else box.append(fermer,btn(a.id==="aucun"?"Retirer mon fond":"Mettre ce fond",true,async()=>{box.querySelectorAll("button").forEach(b=>b.disabled=true);
+      if(await mettreFond(a.id)){toast(a.id==="aucun"?"Fond retiré":"Fond « "+a.nom+" » sur ta photo");fermerArticle()}else{$("mSEtat").textContent="Impossible pour le moment, réessaie dans un instant.";remplirSheet()}}))}
+  else if(!sess){box.append(fermer,btn("Se connecter",true,()=>{fermerArticle();showLogin()}));etat="Connecte-toi avec ton compte Aether pour l'acheter avec tes Lumes."}
   else if(!achatsOk){box.append(fermer);etat="Le marché ne répond pas pour le moment. Réessaie dans un instant."}
   else if(so==null){box.append(fermer);etat="Lance Aether une fois avec ce compte : l'appli verra ta bourse de Lumes."}
-  else if(so<t.prix){box.append(fermer,off("Il te manque "+fmtL(t.prix-so)));etat="Ta bourse : "+fmtL(so)+" Lumes. Les Lumes se gagnent en jouant."}
-  else if(sheetEtape===0)box.append(fermer,btn("Acheter · "+fmtL(t.prix),true,()=>{sheetEtape=1;remplirSheet()}));
-  else{box.append(btn("Annuler",false,()=>{sheetEtape=0;remplirSheet()}),btn("Confirmer l'achat",true,()=>acheter(t)));
-    etat=fmtL(t.prix)+" Lumes seront retirées de ta bourse dans le jeu ; il t'en restera "+fmtL(so-t.prix)+". Le thème reste à toi pour toujours."}
+  else if(so<a.prix){box.append(fermer,off("Il te manque "+fmtL(a.prix-so)));etat="Ta bourse : "+fmtL(so)+" Lumes. Les Lumes se gagnent en jouant."}
+  else if(sheetEtape===0)box.append(fermer,btn("Acheter · "+fmtL(a.prix),true,()=>{sheetEtape=1;remplirSheet()}));
+  else{box.append(btn("Annuler",false,()=>{sheetEtape=0;remplirSheet()}),btn("Confirmer l'achat",true,()=>acheter(a)));
+    etat=fmtL(a.prix)+" Lumes seront retirées de ta bourse dans le jeu ; il t'en restera "+fmtL(so-a.prix)+". "+(k==="emo"?"Le pack reste à toi pour toujours.":"Il reste à toi pour toujours.")}
   $("mSEtat").textContent=etat}
-async function acheter(t){const box=$("mSBtns");box.querySelectorAll("button").forEach(b=>b.disabled=true);$("mSEtat").textContent="Achat en cours…";
-  const r=await sb("POST","/rest/v1/rpc/acheter_appli",{p_objet:t.obj},true,"return=representation");
+async function acheter(a){const box=$("mSBtns");box.querySelectorAll("button").forEach(b=>b.disabled=true);$("mSEtat").textContent="Achat en cours…";
+  const r=await sb("POST","/rest/v1/rpc/acheter_appli",{p_objet:a.obj},true,"return=representation");
   const d=r.data&&!Array.isArray(r.data)?r.data:(Array.isArray(r.data)?r.data[0]:null);
-  if(r.ok&&d&&d.id!=null){achats.push({id:d.id,objet:d.objet||t.obj,prix:d.prix||t.prix});appliquerTheme(t.id,true);
+  if(r.ok&&d&&d.id!=null){achats.push({id:d.id,objet:d.objet||a.obj,prix:d.prix||a.prix});
     try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}
-    toast("« "+t.nom+" » est à toi");fermerTheme();return}
+    if(a.kind==="theme"){appliquerTheme(a.id,true);toast("« "+a.nom+" » est à toi")}
+    else if(a.kind==="fond"){const ok=await mettreFond(a.id);toast(ok?"« "+a.nom+" » est sur ta photo":"« "+a.nom+" » est à toi")}
+    else toast("Pack « "+a.nom+" » ajouté : dans le jeu, menu → Amis → Émojis");
+    fermerArticle();return}
   const msg=String((r.data&&(r.data.message||r.data.hint))||"");sheetEtape=0;
-  remplirSheet();$("mSEtat").textContent=/pas assez/.test(msg)?"Pas assez de Lumes pour le moment.":/deja/.test(msg)?"Tu as déjà ce thème.":/inconnues/.test(msg)?"Lance Aether une fois avec ce compte : l'appli verra ta bourse.":"Achat impossible pour le moment, réessaie dans un instant.";
+  remplirSheet();$("mSEtat").textContent=/pas assez/.test(msg)?"Pas assez de Lumes pour le moment.":/deja/.test(msg)?"Tu l'as déjà.":/inconnues/.test(msg)?"Lance Aether une fois avec ce compte : l'appli verra ta bourse.":"Achat impossible pour le moment, réessaie dans un instant.";
   chargerAchats()}
-$("mVoile").addEventListener("click",fermerTheme);
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheetTheme)fermerTheme()});
+$("mVoile").addEventListener("click",fermerArticle);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheetArt)fermerArticle()});
 // la fiche suit le doigt ; lâchée assez bas (ou d'un geste vif), elle se referme
 (function(){const s=$("mSheet");let y0=null,dy=0,ly=0,lt=0,v=0;
   s.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;y0=ly=e.clientY;lt=e.timeStamp;dy=0;v=0;s.classList.remove("anim");try{s.setPointerCapture(e.pointerId)}catch(x){}});
   s.addEventListener("pointermove",e=>{if(y0==null)return;dy=e.clientY-y0;s.style.transform="translateY("+(dy<0?-Math.sqrt(-dy)*2:dy)+"px)";
     const dt=e.timeStamp-lt;if(dt>0){v=(e.clientY-ly)/dt;ly=e.clientY;lt=e.timeStamp}});
-  const fin=()=>{if(y0==null)return;y0=null;s.classList.add("anim");if(dy>110||v>0.6)fermerTheme();else s.style.transform="translateY(0)"};
+  const fin=()=>{if(y0==null)return;y0=null;s.classList.add("anim");if(dy>110||v>0.6)fermerArticle();else s.style.transform="translateY(0)"};
   s.addEventListener("pointerup",fin);s.addEventListener("pointercancel",fin)})();
 
 // ----- aujourd'hui -----
@@ -2972,7 +3048,7 @@ function versCarte(id){const c=$(id);if(c&&!c.hidden)c.scrollIntoView({behavior:
 function renderJour(){if(!jourPret||!$("jFaire"))return;
   const h=parisNow().getUTCHours();$("jSal").textContent=h>=5&&h<18?"Bonjour,":"Bonsoir,";
   $("jNom").textContent=myName();$("jLv").textContent=myLevel?"Niveau "+myLevel:(sess?"Ton niveau s'affiche dès que tu joues":"Pas encore connecté");
-  const jp=$("jPic");jp.innerHTML="";try{jp.append(pic({code:A.encode(look)}))}catch(e){}
+  const jp=$("jPic");jp.innerHTML="";try{jp.append(pic({code:A.encode(look),fond:monFond()}))}catch(e){}
   const so=solde();$("jLumes").textContent=so==null?"—":fmtL(so);const hl=$("hLumesN");if(hl)hl.textContent=so==null?"—":fmtL(so);
   $("jEnLigne").textContent=sess?String(everyone.filter(id=>id!==sess.id&&relation(id)==="ami"&&online.has(id)).length):"—";
   $("jTheme").textContent=(THEMES.find(t=>t.id===themeActuel)||THEMES[0]).court;

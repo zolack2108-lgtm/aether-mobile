@@ -5,5 +5,5 @@ Appli compagnon du jeu VR Aether, en cinq onglets :
 - **Avatar** : ton visage dans le jeu, lu sur une photo ;
 - **Amis** : demandes, messages privés, appels ;
 - **Taverne** : le chat de tous les aventuriers ;
-- **Marché** : des thèmes pour l'appli, payés avec les Lumes gagnées dans le jeu (table `achats_appli`,
+- **Marché** : thèmes de l'appli, fonds pour la photo de profil (vus par les amis) et packs d'émojis du jeu, payés avec les Lumes (table `achats_appli`,
   fonction `acheter_appli` côté Supabase ; le jeu retire les Lumes à la partie suivante).
