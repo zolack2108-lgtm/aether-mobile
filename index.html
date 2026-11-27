@@ -518,6 +518,9 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
       </div>
       <form class="send" id="lvForm"><input id="lvCode" type="text" maxlength="9" placeholder="Code profil du jeu (NV-XXXX)" autocomplete="off" autocapitalize="characters"><button class="btn" id="lvBtn">Valider</button></form>
       <p class="note">Dans Aether : <b>Menu → Amis</b>, ton code profil est affiché en bas. Il met ton niveau à jour ici.</p>
+      <label class="field" for="meBio"><span>Ma bio <em id="meBioN">0 / 160</em></span><textarea id="meBio" maxlength="160" rows="3" placeholder="Quelques mots sur toi : ton arme préférée, ta guilde, ce que tu cherches…"></textarea></label>
+      <div class="me-btns"><button class="btn" id="meBan" type="button">Ma bannière</button><button class="btn" id="meFiche" type="button">Voir ma fiche</button><button class="btn primary" id="meBioOk" type="button" disabled>Enregistrer</button></div>
+      <p class="note">Ta fiche s'ouvre quand on touche ton nom dans Général ou dans les listes : ta bio, ta bannière (une photo prise dans le jeu), ton thème et le fond de ta photo.</p>
     </div>
 
     <div class="card" id="reqCard" hidden>
@@ -537,16 +540,16 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
     <p class="note" id="soNote" hidden></p>
   </section>
 
-  <!-- ===================== TAVERNE ===================== -->
+  <!-- ===================== GÉNÉRAL (v219 : l'ancienne « Taverne » ; la clé interne reste « taverne ») ===================== -->
   <section data-tab="taverne" hidden>
     <div class="page-h">
-      <h1>Taverne</h1>
-      <p class="sub">Le chat de tous les aventuriers. Le point vert montre qui a l'appli ouverte.</p>
+      <h1>Général</h1>
+      <p class="sub">La discussion de tous les aventuriers. Touche un nom pour voir sa fiche et l'ajouter en ami.</p>
     </div>
     <div class="card">
       <div class="online" id="onlineBar"></div>
       <div class="chat" id="chat" aria-live="polite"><div class="empty">Aucun message. Lance la conversation !</div></div>
-      <form class="send" id="sendForm"><input id="msg" type="text" maxlength="280" placeholder="Écris à la taverne…" autocomplete="off"><button class="btn primary" id="sendBtn">Envoyer</button></form>
+      <form class="send" id="sendForm"><input id="msg" type="text" maxlength="280" placeholder="Écris à tout le monde…" autocomplete="off"><button class="btn primary" id="sendBtn">Envoyer</button></form>
       <p class="note" id="chatNote" hidden></p>
     </div>
   </section>
@@ -575,7 +578,7 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
       <div class="list">
         <button type="button" class="li" data-aller="avatar"><span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><span class="li-t"><b>Avatar</b><small>Ton visage dans le jeu, d'après une photo</small></span><span class="chev" aria-hidden="true">›</span></button>
         <button type="button" class="li" data-aller="amis"><span class="li-ic c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.6 3.6-5.5 6.5-5.5s5.5 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.9.7 3 2.4 3.6 5.2"/></svg></span><span class="li-t"><b>Amis</b><small>Demandes, messages et appels</small></span><span class="chev" aria-hidden="true">›</span></button>
-        <button type="button" class="li" data-aller="taverne"><span class="li-ic c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></span><span class="li-t"><b>Taverne</b><small>Le chat de tous les aventuriers</small></span><span class="chev" aria-hidden="true">›</span></button>
+        <button type="button" class="li" data-aller="taverne"><span class="li-ic c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></span><span class="li-t"><b>Général</b><small>La discussion de tous les aventuriers</small></span><span class="chev" aria-hidden="true">›</span></button>
         <button type="button" class="li" data-aller="marche"><span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></span><span class="li-t"><b>Marché</b><small>Thèmes, fonds de photo, émojis du jeu</small></span><span class="chev" aria-hidden="true">›</span></button>
       </div>
     </div>
@@ -740,7 +743,7 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
     <button role="tab" data-go="jour" aria-selected="true"><span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg></span>Aujourd'hui</button>
     <button role="tab" data-go="avatar" aria-selected="false"><span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>Avatar</button>
     <button role="tab" data-go="amis" aria-selected="false"><span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.6 3.6-5.5 6.5-5.5s5.5 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.9.7 3 2.4 3.6 5.2"/></svg></span>Amis<span class="badge-n" id="reqBadge" hidden></span></button>
-    <button role="tab" data-go="taverne" aria-selected="false"><span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></span>Taverne</button>
+    <button role="tab" data-go="taverne" aria-selected="false"><span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></span>Général</button>
     <button role="tab" data-go="marche" aria-selected="false"><span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></span>Marché</button>
   </div>
 </nav>
@@ -753,6 +756,90 @@ nav.tabs button[aria-selected=true] .tic{background:var(--accent-soft)}
   <p class="note" id="mSEtat" aria-live="polite"></p>
   <div class="s-row" id="mSBtns"></div>
 </div>
+<!-- v219 : la fiche d'un aventurier (touche un nom dans Général ou dans les listes) et le choix de sa bannière -->
+<div class="sheet-v dim" id="fVoile" hidden></div>
+<div class="sheet fiche" id="fSheet" role="dialog" aria-modal="true" aria-labelledby="fNom" hidden>
+  <div class="grab" aria-hidden="true"></div>
+  <div class="f-in" id="fIn">
+    <div class="f-ban" id="fBan" aria-hidden="true"></div>
+    <div class="f-top"><div class="f-pic" id="fPic"></div><div class="f-id"><h2 id="fNom">Aventurier</h2><div class="f-meta" id="fMeta"></div></div></div>
+    <p class="f-titre" id="fTitre" hidden></p>
+    <p class="f-bio" id="fBio"></p>
+    <div class="f-style" id="fStyle"></div>
+    <div class="f-don" id="fDon" hidden>
+      <h3 id="fDonT">Envoyer des Lumes</h3>
+      <label class="field" for="fDonN"><span>Combien ? <em id="fDonSo"></em></span><input id="fDonN" type="number" inputmode="numeric" min="1" max="50000" step="1" placeholder="0" autocomplete="off"></label>
+      <div class="chips" id="fDonChips"></div>
+    </div>
+  </div>
+  <div class="f-pied"><p class="note" id="fEtat" aria-live="polite"></p><div class="f-act" id="fAct"></div></div>
+</div>
+<div class="sheet-v dim" id="bVoile" hidden></div>
+<div class="sheet ban-sheet" id="bSheet" role="dialog" aria-modal="true" aria-labelledby="bTitre" hidden>
+  <div class="grab" aria-hidden="true"></div>
+  <div class="s-h"><h2 id="bTitre">Ma bannière</h2></div>
+  <p class="sub">Une photo prise dans le jeu. Dans Aether : Menu › Monde › Photo › Album, puis « Envoyer à l'appli » ou « En bannière ».</p>
+  <div class="ban-grille" id="bGrille"></div>
+  <p class="note" id="bEtat" aria-live="polite"></p>
+  <button type="button" class="lien" id="bRetirer" hidden>Retirer cette photo de l'appli</button>
+  <div class="s-row" id="bBtns"></div>
+</div>
+<style>
+/* v219 : fiche d'aventurier — la fiche prend le thème de la personne (data-theme), sa bannière vient d'une photo du jeu */
+.sheet-v.dim{background:rgba(0,0,0,.38)}
+.fiche{gap:0;padding:0 0 calc(18px + env(safe-area-inset-bottom,0px));overflow:hidden;max-height:min(92vh,760px);max-height:min(92dvh,760px)}
+.fiche .grab{position:absolute;top:8px;left:50%;margin:0 0 0 -22px;z-index:3;background:rgba(255,255,255,.6);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.fiche .grab::before{content:"";position:absolute;left:-90px;right:-90px;top:-8px;bottom:-34px}
+.f-ban{position:relative;flex:none;aspect-ratio:16/7;max-height:34vh;margin:0 -20px;overflow:hidden;
+  background:radial-gradient(ellipse 90% 90% at 25% 0%,var(--bg-glow) 0%,transparent 70%),linear-gradient(160deg,var(--stage-a),var(--stage-b) 55%,var(--stage-c))}
+.f-ban img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .35s ease}
+.f-ban img.ok{opacity:1}
+.f-ban::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(transparent,var(--sheet))}
+.f-in{flex:1 1 auto;display:flex;flex-direction:column;gap:12px;padding:0 20px 4px;overflow-y:auto;min-height:0;touch-action:pan-y;overscroll-behavior:contain}
+.f-pied{flex:none;display:flex;flex-direction:column;gap:10px;padding:12px 20px 0;box-shadow:0 -12px 18px -14px rgba(0,0,0,.45)}
+.f-pied .note:empty{display:none}
+.lien{align-self:flex-start;border:0;background:transparent;color:var(--warn);font:600 14px var(--body);min-height:40px;padding:0 2px;cursor:pointer}
+.lien:active{opacity:.6}
+.f-top{display:flex;align-items:flex-end;gap:14px;margin-top:-46px;position:relative;z-index:2}
+.f-pic{width:92px;height:92px;flex:none;border-radius:50%;box-shadow:0 0 0 4px var(--surface),0 10px 26px rgba(0,0,0,.35)}
+.f-pic .av{width:100%;height:100%}
+.f-id{min-width:0;padding-bottom:2px}
+.f-id h2{font-size:23px;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.f-meta{display:flex;align-items:center;gap:4px 10px;flex-wrap:wrap;margin-top:4px}
+.f-meta .lvb{margin-left:0}
+.f-titre{margin:0;font-size:14.5px;color:var(--accent);font-weight:600}
+.f-bio{margin:0;font-size:15.5px;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}
+.f-bio.vide{color:var(--muted)}
+.f-style{display:flex;gap:6px;flex-wrap:wrap}
+.f-style span{font-size:12.5px;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line);border-radius:var(--r-pill);padding:4px 10px;background:var(--surface-2)}
+.f-style b{color:var(--text);font-weight:600}
+.f-act{display:flex;gap:10px;flex-wrap:wrap}
+.f-act .btn{flex:1 1 auto;white-space:nowrap;padding:0 16px}
+.f-don{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:var(--r-m);background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge)}
+.f-don input{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;min-height:54px}
+.f-don .chips .pill{font-variant-numeric:tabular-nums}
+textarea{font:500 16px/1.45 var(--body);color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-s);padding:11px 13px;width:100%;box-sizing:border-box;resize:vertical;min-height:84px}
+textarea::placeholder{color:var(--muted);opacity:.8}
+.me-btns{display:flex;gap:8px;flex-wrap:wrap}.me-btns .btn{flex:1 1 120px;min-height:42px;font-size:14.5px;padding:0 14px}
+/* les noms touchables (Général, listes, en ligne) */
+.qui{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:2px 4px 2px 0;margin:-2px 0;color:inherit;font:inherit;cursor:pointer;border-radius:var(--r-pill);min-height:28px}
+.qui:active{opacity:.65}
+.qui .av{width:22px;height:22px}
+.friend .who-t{cursor:pointer}
+.online button.o{border:0;color:inherit;font:inherit;cursor:pointer;min-height:30px}
+.online button.o:active{transform:scale(.97)}
+.dm-top .dm-pic,.dm-top .dm-id{cursor:pointer}
+/* choix de la bannière */
+.ban-sheet{max-height:min(90vh,760px);max-height:min(90dvh,760px)}
+.ban-grille{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow-y:auto;min-height:0;touch-action:pan-y;overscroll-behavior:contain;padding:2px}
+.ban-t{position:relative;aspect-ratio:16/9;border:0;padding:0;border-radius:var(--r-m);overflow:hidden;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);cursor:pointer;color:var(--muted);font:600 13.5px var(--body);transition:transform .1s ease}
+.ban-t:active{transform:scale(.97)}
+.ban-t img{width:100%;height:100%;object-fit:cover;display:block}
+.ban-t[aria-pressed=true]{box-shadow:0 0 0 3px var(--accent)}
+.ban-t .m{position:absolute;left:6px;bottom:6px;font-size:11px;font-weight:700;color:var(--on-accent);background:var(--accent-grad);border-radius:var(--r-pill);padding:2px 8px}
+@media (prefers-reduced-motion: reduce){.f-ban img{transition:none}}
+@media (prefers-reduced-transparency: reduce){.sheet{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface)}}
+</style>
 <style>.badge-n{position:absolute;top:1px;left:calc(50% + 7px);min-width:18px;height:18px;border-radius:9px;background:var(--warn);color:var(--on-warn,#1b0806);font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px;box-shadow:0 0 0 2px var(--bg)}
 h2 .opt{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:4px}</style>
   <!-- ===================== (version hébergée) réactions, notifications, appels ===================== -->
@@ -2249,7 +2336,7 @@ async function poll(full){
     const mp=me();if(mp.niveau&&mp.niveau!==myLevel){myLevel=mp.niveau|0;store("am_lv",String(myLevel))}
     syncLook();
     await fetchReacts();
-    renderFriends();renderChat();if(dmWith)renderDM();
+    renderFriends();renderChat();if(dmWith)renderDM();if(ficheId&&ficheData)remplirFiche();
     afterPoll();
   }finally{polling=false}
 }
@@ -2335,7 +2422,7 @@ function icsFete(){
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="boss-de-la-fete-aether.ics";document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast("Ouvre le fichier pour ajouter le rappel à ton agenda")}
 $("feteIcs").addEventListener("click",icsFete);
-async function chargerVie(){if(!sess)return;const r=await sb("GET","/rest/v1/profils?select=vie&id=eq."+sess.id);if(r.ok&&Array.isArray(r.data)&&r.data[0]){vie=r.data[0].vie||null;if(vie&&Array.isArray(vie.sites)&&vie.sites.length)store("am_sites",JSON.stringify(vie.sites));vieUI()}chargerAchats()}
+async function chargerVie(){if(!sess)return;const r=await sb("GET","/rest/v1/profils?select=vie,bio,theme,banniere&id=eq."+sess.id);if(r.ok&&Array.isArray(r.data)&&r.data[0]){vie=r.data[0].vie||null;monProfilLu(r.data[0]);if(vie&&Array.isArray(vie.sites)&&vie.sites.length)store("am_sites",JSON.stringify(vie.sites));vieUI()}chargerAchats()}
 function vieUI(){
   const c=$("vieCard");if(!c)return;c.hidden=!sess;if(!sess)return;
   const ok=!!(vie&&Array.isArray(vie.rep));$("vieVide").hidden=ok;$("viePlein").hidden=!ok;if(!ok){$("vieMaj").textContent="";return}
@@ -2398,7 +2485,10 @@ function row(i,actions,extra){
   const m=document.createElement("div");m.className="meta";const b=document.createElement("span");b.className="lvb";b.style.marginLeft="0";b.textContent=lvTxt(i.niveau);m.append(b);
   const d=document.createElement("span");d.className="dot"+(i.enJeu?" on jeu":i.online?" on":"");d.textContent=i.enJeu?"en jeu":i.online?"en ligne":"absent";m.append(d);
   if(extra){const t=document.createElement("span");t.className="tag";t.textContent=extra;m.append(t)}
-  mid.append(n,m);const act=document.createElement("div");act.className="act";for(const a of actions)act.append(a);r.append(mid,act);return r}
+  mid.append(n,m);const act=document.createElement("div");act.className="act";for(const a of actions)act.append(a);r.append(mid,act);
+  if(i.id){mid.className="who-t";mid.setAttribute("role","button");mid.tabIndex=0;mid.setAttribute("aria-label","Voir la fiche de "+i.pseudo);
+    const f=()=>ouvrirFiche(i.id);mid.onclick=f;r.firstChild.style.cursor="pointer";r.firstChild.onclick=f;mid.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();f()}}}
+  return r}
 const unread=id=>msgs.filter(m=>m.auteur===id&&m.destinataire===sess.id&&!m.lu_le).length;
 function renderFriends(){
   renderMe();if(!sess)return;
@@ -2415,14 +2505,21 @@ function renderFriends(){
   if(!others.length)ev.innerHTML='<div class="empty">'+(ids.length?"Tu es ami avec tout le monde !":"Personne pour l'instant.")+'</div>';
   for(const id of others.sort(sortFn).slice(0,60))ev.append(row(info(id),[btn("Ajouter",true,()=>ask(id))]));
   const ob=$("onlineBar");ob.innerHTML="";const on=[...online].filter(id=>id!==sess.id);if(!on.length)ob.textContent="Personne d'autre en ligne pour l'instant.";
-  for(const id of on){const s=document.createElement("span");s.className="o";s.textContent=info(id).pseudo+" · "+lvTxt(info(id).niveau)+(info(id).enJeu?" · en jeu":"");ob.append(s)}
+  for(const id of on){const s=document.createElement("button");s.type="button";s.className="o";s.textContent=info(id).pseudo+" · "+lvTxt(info(id).niveau)+(info(id).enJeu?" · en jeu":"");s.onclick=()=>ouvrirFiche(id);ob.append(s)}
 }
-async function ask(id){const r=await sb("POST","/rest/v1/amities",{demandeur:sess.id,destinataire:id});if(r.ok)notify({table:"amities",demandeur:sess.id,destinataire:id});toast(r.ok?"Demande d'ami envoyée":"Demande impossible");poll()}
-async function accept(id){const r=await sb("PATCH","/rest/v1/amities?demandeur=eq."+id+"&destinataire=eq."+sess.id,{statut:"ami"});toast(r.ok?"Vous êtes amis !":"Impossible pour le moment");poll()}
-async function unlink(id){await sb("DELETE","/rest/v1/amities?or=(and(demandeur.eq."+id+",destinataire.eq."+sess.id+"),and(demandeur.eq."+sess.id+",destinataire.eq."+id+"))");poll()}
+async function ask(id){const r=await sb("POST","/rest/v1/amities",{demandeur:sess.id,destinataire:id});if(r.ok){notify({table:"amities",demandeur:sess.id,destinataire:id});if(relation(id)==="aucun")links.push({demandeur:sess.id,destinataire:id,statut:"attente"})}
+  toast(r.ok?"Demande d'ami envoyée":"Demande impossible");renderFriends();poll()}
+async function accept(id){const r=await sb("PATCH","/rest/v1/amities?demandeur=eq."+id+"&destinataire=eq."+sess.id,{statut:"ami"});
+  if(r.ok)for(const l of links)if(l.demandeur===id&&l.destinataire===sess.id)l.statut="ami";
+  toast(r.ok?"Vous êtes amis !":"Impossible pour le moment");renderFriends();poll()}
+async function unlink(id){const r=await sb("DELETE","/rest/v1/amities?or=(and(demandeur.eq."+id+",destinataire.eq."+sess.id+"),and(demandeur.eq."+sess.id+",destinataire.eq."+id+"))");
+  if(r.ok)links=links.filter(l=>!((l.demandeur===id&&l.destinataire===sess.id)||(l.demandeur===sess.id&&l.destinataire===id)));renderFriends();poll()}
 
-// ----- taverne -----
-function bubble(m,mine,name,lv,full){const el=document.createElement("div");el.className="msg"+(mine?" me":"");const a=document.createElement("div");a.className="a";a.textContent=name;
+// ----- Général (l'ancienne taverne) -----
+function bubble(m,mine,name,lv,full,auteur){const el=document.createElement("div");el.className="msg"+(mine?" me":"");const a=document.createElement("div");a.className="a";
+  if(auteur){const q=document.createElement("button");q.type="button";q.className="qui";q.setAttribute("aria-label","Voir la fiche de "+name);
+    try{q.append(pic(auteur===(sess&&sess.id)?{code:A.encode(look),fond:monFond()}:info(auteur)))}catch(e){}
+    q.append(document.createTextNode(name));q.onclick=()=>ouvrirFiche(auteur);a.append(q)}else a.textContent=name;
   if(lv!=null){const b=document.createElement("span");b.className="lvb";b.textContent=lvTxt(lv);a.append(b)}
   const tm=document.createElement("time");const d=new Date(m.cree_le);tm.textContent=full?d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});a.append(tm);
   if(m.vocal){el.classList.add("voice");el.append(a,voiceBody(m,mine))}   // message vocal (conversations privées)
@@ -2434,7 +2531,7 @@ function keepScroll(box,stick,fill){const atEnd=stick||box.scrollHeight-box.scro
   box.scrollTop=atEnd?box.scrollHeight:top;clearTimeout(scrollKeepT);scrollKeepT=setTimeout(()=>scrollKeep=false,120)}
 function renderChat(){if(!sess)return;const all=msgs.filter(m=>!m.destinataire);const box=$("chat");
   keepScroll(box,false,()=>{box.innerHTML="";if(!all.length){box.innerHTML='<div class="empty">Aucun message. Lance la conversation !</div>';return}
-    for(const m of all.slice(-150))box.append(bubble(m,m.auteur===sess.id,m.auteur===sess.id?myName():info(m.auteur).pseudo,info(m.auteur).niveau,false))})}
+    for(const m of all.slice(-150))box.append(bubble(m,m.auteur===sess.id,m.auteur===sess.id?myName():info(m.auteur).pseudo,info(m.auteur).niveau,false,m.auteur))})}
 $("sendForm").onsubmit=async e=>{e.preventDefault();const t=$("msg").value.trim();if(!t||!sess)return;
   const r=await sb("POST","/rest/v1/messages",{texte:clip280(t)});if(r.ok){$("msg").value="";poll()}else toast("Message non envoyé, réessaie")};
 
@@ -2578,7 +2675,7 @@ async function pushResync(){if(!pushOK()||!sess||Notification.permission!=="gran
 {const card=$("meName").closest(".card"),d=document.createElement("div");d.className="me-act";d.id="meAct";
   const b=btn("Se déconnecter",false,async()=>{if(!sess)return;if(call)hangup();recCancel();vStop();b.disabled=true;try{await pushForget(false)}catch(e){}
     sess=null;store("am_sb","");links=[];msgs=[];lastId=0;reacts={};profils={};everyone=[];online.clear();achats=[];achatsOk=false;vie=null;renderMarche();renderJour();
-    b.disabled=false;$("dm").hidden=true;dmWith=null;renderFriends();renderChat();$("chat").innerHTML='<div class="empty">Connecte-toi pour lire la taverne.</div>';pushUI("horsligne");showLogin()});
+    b.disabled=false;$("dm").hidden=true;dmWith=null;renderFriends();renderChat();$("chat").innerHTML='<div class="empty">Connecte-toi pour lire la discussion générale.</div>';pushUI("horsligne");showLogin()});
   b.id="logout";d.append(b);card.append(d)}
 
 // ===== liens d'une notification : #dm=<id>, #amis, #appel=<id> =====
@@ -2928,19 +3025,20 @@ var EMOS=[
   {id:"emotions",obj:"emo_emotions",nom:"Émotions fortes",prix:2500,e:["😭","😡","😱","🤔"],desc:"Pour pleurer, enrager, avoir peur ou réfléchir."},
   {id:"legende",obj:"emo_legende",nom:"Légendes",prix:3000,e:["🐉","👑","💎","🔥"],desc:"Le plus rare : dragon, couronne, trésor et feu."}];
 var TCOL={nuit:"#070c1a",prairie:"#08130e",lac:"#061316",forge:"#120a07",crypte:"#0d0b14",ciel:"#eef3fa",cristal:"#05060c"};
+var dons=[],donsOk=false,monProfil={bio:"",theme:null,banniere:null,lu:false};   // v219 : mes envois de Lumes, ma fiche
 var achats=[],achatsOk=false,themeActuel=(function(){const t=load("am_theme");return t&&TCOL[t]?t:"nuit"})(),sheetArt=null,sheetEtape=0,jourPret=false,routeTab=null,
   segActuel=(function(){const v=load("am_seg");return v==="fonds"||v==="emojis"?v:"themes"})();
 const fmtL=n=>Number(n||0).toLocaleString("fr-FR").replace(/ /g," ");
 const LUME='<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><use href="#lume"/></svg>';
 function lumesConnues(){return !!(sess&&vie&&typeof vie.lumes==="number")}
-function enAttente(){const m=+(vie&&vie.achats)||0;return achats.filter(a=>a.id>m).reduce((s,a)=>s+(a.prix|0),0)}
+function enAttente(){const m=+(vie&&vie.achats)||0,d=+(vie&&vie.dons)||0;return achats.filter(a=>a.id>m).reduce((s,a)=>s+(a.prix|0),0)+dons.filter(x=>x.id>d).reduce((s,x)=>s+(x.montant|0),0)}
 function solde(){return lumesConnues()?Math.max(0,Math.floor(vie.lumes)-enAttente()):null}
 const aAchete=obj=>!obj||achats.some(a=>a.objet===obj);
 const possede=id=>id==="nuit"||achats.some(a=>a.objet==="theme_"+id);
 function monFond(){const p=sess&&profils[sess.id];const f=p&&p.fond;return f&&FONDS.some(x=>x.id===f&&x.obj)?f:"aucun"}
 function appliquerTheme(id,garder){const r=document.documentElement;if(!TCOL[id])id="nuit";if(id==="nuit")delete r.dataset.theme;else r.dataset.theme=id;
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",TCOL[id]);
-  if(garder){themeActuel=id;store("am_theme",id)}}
+  if(garder){themeActuel=id;store("am_theme",id);if(typeof publierTheme==="function")publierTheme()}}
 // les fonds : un dégradé et des émojis tout autour de la photo (dessinés derrière le portrait, qui est transparent)
 (function(){const P=[[19,24,19],[80,21,16],[86,61,18],[13,66,15],[50,8,12]];let css="";
   for(const f of FONDS){if(!f.c)continue;let t="";
@@ -2952,6 +3050,7 @@ async function chargerAchats(){if(!sess)return;const r=await sb("GET","/rest/v1/
   if(r.ok&&Array.isArray(r.data)){achats=r.data;achatsOk=true;
     if(themeActuel!=="nuit"&&!possede(themeActuel)){appliquerTheme("nuit",true)}}   // thème d'un autre compte sur ce téléphone
   else achatsOk=false;
+  chargerDons();
   renderMarche();renderJour();if(sheetArt)remplirSheet()}
 
 // ----- le marché : trois rayons -----
@@ -3077,6 +3176,166 @@ $("hLumes").addEventListener("click",()=>show("marche"));
 jourPret=true;appliquerTheme(themeActuel,false);renderMarche();renderJour();
 
 route();
+
+// ---------- v219 : fiches d'aventurier, bannières (photos du jeu), Lumes envoyées à un ami ----------
+// Louis : « quand une personne parle je peux cliquer sur son profil et voir sa bio, son style de profil avec ses thèmes/fonds,
+// ses bannières (seulement avec les photos prises dans le jeu, envoyées à l'appli) ; je peux l'ajouter aux amis » et
+// « une fonctionnalité pour envoyer notre argent à nos amis ». Côté serveur : Aether/Sql/appli_profils_dons_v219.sql
+// (colonnes bio/theme/banniere, stockage « photos », fonction envoyer_lumes : amis seulement, bourse vérifiée, plafonds).
+const signes=new Map();   // chemin d'une photo → adresse signée (une heure)
+async function signer(paths){const now=Date.now(),manque=[...new Set(paths.filter(x=>x&&!(signes.has(x)&&signes.get(x).t>now)))];
+  if(manque.length&&sess){const r=await sb("POST","/storage/v1/object/sign/photos",{expiresIn:3600,paths:manque});
+    if(r.ok&&Array.isArray(r.data))for(const x of r.data)if(x&&x.signedURL&&!x.error&&x.path)signes.set(x.path,{u:SB_URL+"/storage/v1"+x.signedURL,t:now+3300e3})}
+  return paths.map(x=>x&&signes.has(x)?signes.get(x).u:null)}
+async function chargerDons(){if(!sess)return;const r=await sb("GET","/rest/v1/dons_lumes?select=id,a,montant,cree_le&de=eq."+sess.id+"&order=id.desc&limit=60");
+  if(r.ok&&Array.isArray(r.data)){dons=r.data;donsOk=true;renderMarche();renderJour();if(ficheId)remplirFiche()}}
+
+// ----- ma fiche : bio, thème publié, bannière -----
+function monProfilLu(d){monProfil={bio:d.bio||"",theme:d.theme||null,banniere:d.banniere||null,lu:true};remplirMonProfil();publierTheme()}
+let themePub=null;
+function publierTheme(){if(!sess||!monProfil.lu)return;const t=themeActuel;if(monProfil.theme===t||themePub===t)return;themePub=t;
+  sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{theme:t}).then(r=>{if(r.ok)monProfil.theme=t;themePub=null})}
+function compteBio(){const t=$("meBio");if(!t)return;$("meBioN").textContent=Array.from(t.value).length+" / 160";$("meBioOk").disabled=!sess||t.value.trim()===(monProfil.bio||"").trim()}
+function remplirMonProfil(){const t=$("meBio");if(!t)return;if(!t.dataset.modif)t.value=monProfil.bio||"";compteBio()}
+$("meBio").addEventListener("input",()=>{$("meBio").dataset.modif="1";compteBio()});
+$("meBioOk").addEventListener("click",async()=>{if(!sess){showLogin();return}const b=$("meBioOk");const v=Array.from($("meBio").value.trim()).slice(0,160).join("");b.disabled=true;
+  const r=await sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{bio:v||null});
+  if(r.ok){monProfil.bio=v;delete $("meBio").dataset.modif;$("meBio").value=v;toast(v?"Bio enregistrée":"Bio retirée")}else toast("Enregistrement impossible, réessaie");compteBio()});
+$("meFiche").addEventListener("click",()=>{if(!sess){showLogin();return}ouvrirFiche(sess.id)});
+$("meBan").addEventListener("click",()=>ouvrirBannieres());
+
+// ----- les fiches (sheet du bas, au thème de la personne) -----
+function montrerSheet(sid,vid){const s=$(sid),deja=!s.hidden&&s.style.transform!=="translateY(110%)";$(vid).hidden=false;s.hidden=false;
+  if(!deja){s.classList.remove("anim");s.style.transform="translateY(100%)";void s.offsetHeight;s.classList.add("anim");s.style.transform="translateY(0)"}
+  s.setAttribute("tabindex","-1");setTimeout(()=>{try{s.focus({preventScroll:true})}catch(e){}},80)}
+function cacherSheet(sid,vid){const s=$(sid);if(s.hidden)return;s.classList.add("anim");s.style.transform="translateY(110%)";$(vid).hidden=true;
+  setTimeout(()=>{if(s.style.transform==="translateY(110%)")s.hidden=true},360)}
+// la fiche suit le doigt vers le bas ; lâchée assez bas (ou d'un geste vif), elle se referme
+function glisserPourFermer(s,fermer,zone){let y0=null,dy=0,ly=0,lt=0,v=0;
+  s.addEventListener("pointerdown",e=>{if(e.target.closest("button,input,textarea,label,a"))return;const z=zone&&e.target.closest(zone);if(z&&z.scrollHeight>z.clientHeight+2)return;
+    y0=ly=e.clientY;lt=e.timeStamp;dy=0;v=0;s.classList.remove("anim");try{s.setPointerCapture(e.pointerId)}catch(x){}});
+  s.addEventListener("pointermove",e=>{if(y0==null)return;dy=e.clientY-y0;s.style.transform="translateY("+(dy<0?-Math.sqrt(-dy)*2:dy)+"px)";
+    const dt=e.timeStamp-lt;if(dt>0){v=(e.clientY-ly)/dt;ly=e.clientY;lt=e.timeStamp}});
+  const fin=()=>{if(y0==null)return;y0=null;s.classList.add("anim");if(dy>110||v>0.6)fermer();else s.style.transform="translateY(0)"};
+  s.addEventListener("pointerup",fin);s.addEventListener("pointercancel",fin)}
+
+let ficheId=null,ficheData=null,ficheDon=false,ficheEtape=0;
+const RANGS={chef:"Chef",officier:"Officier",membre:"Membre",recrue:"Recrue"};
+// « Officier des Lames d'Aube », « Chef du Cercle », « Membre de la Garde », « Membre de l'Aube », « Membre de Brasier »
+function deNom(n){n=String(n||"");let m=/^(les|le|la)\s+(.+)$/i.exec(n);if(m){const a=m[1].toLowerCase();return(a==="les"?"des ":a==="le"?"du ":"de la ")+m[2]}
+  m=/^l['’]\s*(.+)$/i.exec(n);return m?"de l'"+m[1]:"de "+n}
+async function ouvrirFiche(id){if(!id)return;if(!sess){showLogin();return}
+  const autre=ficheId!==id;ficheId=id;if(autre){ficheData=null;ficheDon=false;ficheEtape=0;$("fEtat").textContent="";$("fDonN").value=""}
+  remplirFiche();montrerSheet("fSheet","fVoile");
+  const [r,g]=await Promise.all([sb("GET","/rest/v1/profils?select=id,pseudo,bio,theme,banniere,fond,niveau,vu_le,en_jeu,titre:vie->>titre&id=eq."+id),
+    sb("GET","/rest/v1/guilde_membres?select=guilde,rang&joueur=eq."+id+"&limit=1")]);
+  if(ficheId!==id)return;
+  const d=r.ok&&Array.isArray(r.data)&&r.data[0];
+  if(!d){ficheData={erreur:true};remplirFiche();return}
+  ficheData=d;if(profils[id])Object.assign(profils[id],{fond:d.fond,niveau:d.niveau,vu_le:d.vu_le,en_jeu:d.en_jeu});
+  remplirFiche();
+  const gm=g.ok&&Array.isArray(g.data)&&g.data[0];
+  if(gm&&gm.guilde){const q=await sb("GET","/rest/v1/guildes?select=nom,devise&id=eq."+gm.guilde);const gg=q.ok&&Array.isArray(q.data)&&q.data[0];
+    if(gg&&ficheId===id){ficheData.guilde={nom:gg.nom,devise:gg.devise,rang:RANGS[gm.rang]||gm.rang||""};remplirFiche()}}
+  if(d.banniere){const [u]=await signer([d.banniere]);if(ficheId===id&&u){ficheData.banUrl=u;remplirFiche()}}}
+function fermerFiche(){if(!ficheId)return;ficheId=null;ficheDon=false;ficheEtape=0;cacherSheet("fSheet","fVoile")}
+function etatFiche(t){$("fEtat").textContent=t||""}
+function remplirFiche(){const id=ficheId;if(!id)return;const s=$("fSheet"),i=info(id),d=ficheData||{},moi=!!(sess&&id===sess.id);
+  const th=d.theme&&TCOL[d.theme]?d.theme:(moi?themeActuel:"nuit");s.dataset.theme=th;
+  // bannière : la photo du jeu, ou le ciel de son thème
+  const ban=$("fBan");const im=ban.querySelector("img");
+  if(d.banUrl){if(!im||im.dataset.u!==d.banUrl){ban.innerHTML="";const x=new Image();x.alt="";x.decoding="async";x.dataset.u=d.banUrl;x.onload=()=>x.classList.add("ok");x.src=d.banUrl;ban.append(x)}}
+  else if(im)ban.innerHTML="";
+  const fp=$("fPic");fp.innerHTML="";fp.append(pic(moi?{code:A.encode(look),fond:monFond()}:Object.assign({},i,{fond:d.fond||i.fond})));
+  const nom=moi?myName():(d.pseudo||i.pseudo);$("fNom").textContent=nom;
+  const niv=moi?myLevel:(d.niveau|0||i.niveau);const en=moi||(d.vu_le?isOnline(d):i.online),jeu=moi?false:(d.vu_le?(isOnline(d)&&d.en_jeu):i.enJeu);
+  const mt=$("fMeta");mt.innerHTML="";const lb=document.createElement("span");lb.className="lvb";lb.textContent=lvTxt(niv);mt.append(lb);
+  if(!moi){const dt=document.createElement("span");dt.className="dot"+(jeu?" on jeu":en?" on":"");dt.textContent=jeu?"en jeu":en?"en ligne":"absent";mt.append(dt);
+    const rel=relation(id);if(rel==="ami"){const t=document.createElement("span");t.className="tag";t.textContent="ami";mt.append(t)}}
+  else{const t=document.createElement("span");t.className="tag";t.textContent="ta fiche";mt.append(t)}
+  const ti=$("fTitre");const tt=[d.titre?"« "+d.titre+" »":"",d.guilde?(d.guilde.rang?d.guilde.rang+" "+deNom(d.guilde.nom):"Guilde "+d.guilde.nom):""].filter(Boolean).join(" · ");ti.textContent=tt;ti.hidden=!tt||ficheDon;
+  const bio=moi&&$("meBio").dataset.modif?$("meBio").value.trim():(moi?monProfil.bio:d.bio);const bo=$("fBio");
+  bo.textContent=ficheData==null?"…":d.erreur?"Fiche introuvable pour le moment.":(bio||(moi?"Pas encore de bio : écris-la dans Amis › Mon profil.":"Pas encore de bio."));bo.classList.toggle("vide",!bio);bo.hidden=ficheDon;
+  // son style : thème de l'appli et fond de la photo
+  const st=$("fStyle");st.innerHTML="";st.hidden=ficheDon;const th0=THEMES.find(t=>t.id===th),fo=FONDS.find(f=>f.id===(moi?monFond():d.fond)&&f.obj);
+  const chip=(k,v)=>{const e=document.createElement("span");e.append(k+" ");const b=document.createElement("b");b.textContent=v;e.append(b);st.append(e)};
+  if(th0)chip("Thème",th0.nom);if(fo)chip("Fond",fo.nom);if(d.guilde&&d.guilde.devise)chip("Devise",d.guilde.devise);
+  // envoi de Lumes
+  const so=solde(),don=$("fDon");don.hidden=!ficheDon;
+  if(ficheDon){$("fDonT").textContent="Envoyer des Lumes à "+nom;$("fDonSo").textContent=so==null?"":"ta bourse : "+fmtL(so);
+    const ch=$("fDonChips");if(!ch.childElementCount)for(const v of [100,500,1000,5000,10000]){const p=document.createElement("button");p.type="button";p.className="pill";p.textContent=fmtL(v);
+      p.onclick=()=>{$("fDonN").value=String(v);ficheEtape=0;remplirFiche()};ch.append(p)}
+    ch.querySelectorAll(".pill").forEach(p=>{const v=+p.textContent.replace(/\D/g,"");p.disabled=so!=null&&v>so;p.setAttribute("aria-pressed",String(+$("fDonN").value===v))})}
+  // actions
+  const box=$("fAct");box.innerHTML="";const rel=moi?"moi":relation(id);
+  if(d.erreur){box.append(btn("Fermer",false,fermerFiche));return}
+  if(rel==="moi"){box.append(btn("Fermer",false,fermerFiche),btn("Modifier ma fiche",true,()=>{fermerFiche();show("amis");setTimeout(()=>{try{$("meBio").focus()}catch(e){}},350)}));return}
+  if(ficheDon){const n=Math.floor(+$("fDonN").value||0),ok=n>=1&&n<=50000&&so!=null&&n<=so;
+    if(so==null){etatFiche("Lance Aether une fois avec ce compte : l'appli verra ta bourse de Lumes.");box.append(btn("Retour",false,()=>{ficheDon=false;etatFiche("");remplirFiche()}));return}
+    if(ficheEtape===1&&ok){box.append(btn("Annuler",false,()=>{ficheEtape=0;etatFiche("");remplirFiche()}),btn("Confirmer l'envoi",true,()=>envoyerLumes(id,n)));
+      etatFiche(fmtL(n)+" Lumes partent de ta bourse pour "+nom+" : son jeu les reçoit dans un colis ; ta bourse du jeu baisse à ta prochaine partie. Il te restera "+fmtL(so-n)+".");return}
+    ficheEtape=0;const e=btn(ok?"Envoyer "+fmtL(n):"Envoyer",true,()=>{ficheEtape=1;remplirFiche()});e.disabled=!ok;
+    box.append(btn("Retour",false,()=>{ficheDon=false;etatFiche("");remplirFiche()}),e);
+    if(n>50000)etatFiche("50 000 Lumes au plus par envoi.");else if(n>so)etatFiche("Ta bourse : "+fmtL(so)+" Lumes.");else if(!/Envoyé/.test($("fEtat").textContent))etatFiche("Seulement entre amis · 50 000 Lumes au plus par envoi, 100 000 par jour.");
+    return}
+  if(rel==="ami")box.append(btn("Message",true,()=>{fermerFiche();openDM(id)}),btn("Envoyer des Lumes",false,()=>{ficheDon=true;ficheEtape=0;etatFiche("");remplirFiche();setTimeout(()=>{try{$("fDonN").focus()}catch(e){}},60)}));
+  else if(rel==="demande")box.append(btn("Refuser",false,async()=>{await unlink(id);remplirFiche()}),btn("Accepter",true,async()=>{await accept(id);remplirFiche()}));
+  else if(rel==="envoye"){const w=btn("Demande envoyée",false,()=>{});w.disabled=true;box.append(btn("Annuler la demande",false,async()=>{await unlink(id);remplirFiche()}),w)}
+  else box.append(btn("Fermer",false,fermerFiche),btn("Ajouter en ami",true,async()=>{box.querySelectorAll("button").forEach(b=>b.disabled=true);await ask(id);remplirFiche()}))}
+$("fDonN").addEventListener("input",()=>{ficheEtape=0;if(/Envoyé/.test($("fEtat").textContent))etatFiche("");remplirFiche()});
+async function envoyerLumes(id,n){const box=$("fAct");box.querySelectorAll("button").forEach(b=>b.disabled=true);etatFiche("Envoi en cours…");
+  const r=await sb("POST","/rest/v1/rpc/envoyer_lumes",{p_a:id,p_montant:n},true,"return=representation");
+  const d=r.data&&!Array.isArray(r.data)?r.data:(Array.isArray(r.data)?r.data[0]:null);
+  if(r.ok&&d&&d.id!=null){dons.unshift({id:d.id,a:id,montant:n,cree_le:new Date().toISOString()});try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}
+    const nom=info(id).pseudo;toast(fmtL(n)+" Lumes envoyées à "+nom);ficheDon=false;ficheEtape=0;$("fDonN").value="";renderMarche();renderJour();remplirFiche();
+    etatFiche("Envoyé ! "+nom+" reçoit "+fmtL(n)+" Lumes dans son jeu (un colis, récupéré tout seul).");return}
+  const msg=String((r.data&&(r.data.message||r.data.hint))||"");ficheEtape=0;remplirFiche();
+  etatFiche(/pas assez/.test(msg)?"Pas assez de Lumes pour le moment.":/plafond par envoi/.test(msg)?"50 000 Lumes au plus par envoi.":/plafond du jour/.test(msg)?"Tu as déjà envoyé 100 000 Lumes ces dernières 24 heures.":/pas amis/.test(msg)?"Vous devez être amis pour vous envoyer des Lumes.":/inconnues/.test(msg)?"Lance Aether une fois avec ce compte : l'appli verra ta bourse.":"Envoi impossible pour le moment, réessaie dans un instant.");
+  chargerDons()}
+$("fVoile").addEventListener("click",fermerFiche);
+glisserPourFermer($("fSheet"),fermerFiche,".f-in");
+// la conversation privée : la photo et le nom ouvrent la fiche
+$("dmPic").addEventListener("click",()=>{if(dmWith)ouvrirFiche(dmWith)});
+{const n=$("dmName").parentElement;n.classList.add("dm-id");n.addEventListener("click",()=>{if(dmWith)ouvrirFiche(dmWith)})}
+
+// ----- ma bannière : une photo envoyée par le jeu -----
+let banPhotos=[],banUrls=[],banChoix=null,banOuvert=false;
+async function ouvrirBannieres(){if(!sess){showLogin();return}banOuvert=true;banChoix=monProfil.banniere||null;
+  $("bGrille").innerHTML='<div class="empty" style="grid-column:1/-1">Tes photos arrivent…</div>';$("bEtat").textContent="";remplirBan(true);montrerSheet("bSheet","bVoile");
+  const r=await sb("POST","/storage/v1/object/list/photos",{prefix:sess.id+"/",limit:60,offset:0,sortBy:{column:"name",order:"desc"}});
+  if(!banOuvert)return;
+  banPhotos=r.ok&&Array.isArray(r.data)?r.data.filter(x=>x&&x.name&&/\.jpg$/i.test(x.name)).map(x=>sess.id+"/"+x.name):[];
+  if(monProfil.banniere&&!banPhotos.includes(monProfil.banniere))banPhotos.unshift(monProfil.banniere);
+  banUrls=await signer(banPhotos);if(!banOuvert)return;remplirBan(false)}
+function fermerBannieres(){if(!banOuvert)return;banOuvert=false;cacherSheet("bSheet","bVoile")}
+function remplirBan(attente){const g=$("bGrille");
+  if(!attente){g.innerHTML="";
+    const sans=document.createElement("button");sans.type="button";sans.className="ban-t";sans.textContent="Sans bannière";sans.setAttribute("aria-pressed",String(banChoix==null));sans.onclick=()=>{banChoix=null;remplirBan(false)};g.append(sans);
+    banPhotos.forEach((ph,k)=>{const b=document.createElement("button");b.type="button";b.className="ban-t";b.setAttribute("aria-pressed",String(banChoix===ph));
+      b.setAttribute("aria-label","Photo du "+ph.replace(/^.*Aether_(\d{4})-(\d\d)-(\d\d)_(\d\d)-(\d\d).*$/,"$3/$2/$1 à $4 h $5"));
+      if(banUrls[k]){const im=new Image();im.alt="";im.loading="lazy";im.decoding="async";im.src=banUrls[k];b.append(im)}else b.append("photo");
+      if(ph===monProfil.banniere){const m=document.createElement("span");m.className="m";m.textContent="ta bannière";b.append(m)}
+      b.onclick=()=>{banChoix=ph;remplirBan(false)};g.append(b)});
+    $("bEtat").textContent=banPhotos.length?"":"Pas encore de photo ici. Dans le jeu : prends une photo (Menu › Monde › Photo), puis dans l'Album touche « Envoyer à l'appli »."}
+  const box=$("bBtns");box.innerHTML="";const change=banChoix!==(monProfil.banniere||null);
+  box.append(btn("Fermer",false,fermerBannieres));
+  const rt=$("bRetirer");rt.hidden=!banChoix||!!attente;rt.onclick=()=>retirerPhoto(banChoix);
+  const ok=btn(banChoix?"Mettre en bannière":"Sans bannière",true,()=>mettreBanniere(banChoix));ok.disabled=!change||!!attente;box.append(ok)}
+async function mettreBanniere(ph){$("bBtns").querySelectorAll("button").forEach(b=>b.disabled=true);
+  const r=await sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{banniere:ph||null});
+  if(r.ok){monProfil.banniere=ph||null;toast(ph?"Bannière mise : elle s'affiche sur ta fiche":"Bannière retirée");fermerBannieres();if(ficheId===sess.id)ouvrirFiche(sess.id)}
+  else{$("bEtat").textContent="Impossible pour le moment, réessaie dans un instant.";remplirBan(false)}}
+async function retirerPhoto(ph){if(!ph||!confirm("Retirer cette photo de l'appli ? Elle reste dans ton album, dans le jeu."))return;
+  $("bBtns").querySelectorAll("button").forEach(b=>b.disabled=true);$("bRetirer").disabled=true;
+  if(ph===monProfil.banniere){const q=await sb("PATCH","/rest/v1/profils?id=eq."+sess.id,{banniere:null});if(q.ok)monProfil.banniere=null}
+  const r=await sb("DELETE","/storage/v1/object/photos",{prefixes:[ph]});
+  if(r.ok){const k=banPhotos.indexOf(ph);if(k>=0){banPhotos.splice(k,1);banUrls.splice(k,1)}signes.delete(ph);banChoix=monProfil.banniere||null;toast("Photo retirée de l'appli")}
+  else $("bEtat").textContent="Impossible de la retirer pour le moment.";
+  $("bRetirer").disabled=false;remplirBan(false)}
+$("bVoile").addEventListener("click",fermerBannieres);
+glisserPourFermer($("bSheet"),fermerBannieres,".ban-grille");
+document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(banOuvert)fermerBannieres();else if(ficheId)fermerFiche()});
+
 
 
 // ---------- démarrage ----------
